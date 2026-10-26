@@ -1,0 +1,5 @@
+.TH QUIREWISE-SAMPLE 1
+.SH NAME
+quirewise-sample \- sample manual page
+.SH DESCRIPTION
+A tiny generated troff manual page fixture.

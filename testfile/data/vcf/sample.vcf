@@ -1,0 +1,7 @@
+BEGIN:VCARD
+VERSION:4.0
+FN:Quirewise Sample
+N:Sample;Quirewise;;;
+EMAIL;TYPE=work:sample@example.invalid
+UID:urn:uuid:00000000-0000-4000-8000-000000000001
+END:VCARD

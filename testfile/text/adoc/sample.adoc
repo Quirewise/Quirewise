@@ -1,0 +1,8 @@
+= Quirewise Sample
+
+This is a small **AsciiDoc** fixture.
+
+== Section
+
+* First item
+* Second item

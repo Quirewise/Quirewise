@@ -1,0 +1,245 @@
+format_id,label,category,extensions,sample_status,sample_paths,license_status
+png,PNG,Image,png,sample collected,image/png/lorem-ipsum.png;image/png/rgb_u1.png,CC0 by repository default; item-specific notes take precedence; CC BY 4.0
+jpg,JPG,Image,jpg;jpeg;jpe;jfif,sample collected,image/jpeg/lorem-ipsum.jpg;image/jpeg/rgb_u1.jpg,CC0 by repository default; item-specific notes take precedence; CC BY 4.0
+webp,WEBP,Image,webp,sample collected,image/webp/rgb_frames_u1.webp;image/webp/rgb_u1.webp,CC BY 4.0
+tiff,TIFF,Image,tiff;tif,sample collected,image/tiff/rgb_u1.tif,CC BY 4.0
+bmp,BMP,Image,bmp;dib,sample collected,image/bmp/rgb_u1.bmp,CC BY 4.0
+gif,GIF,Image,gif,sample collected,image/gif/gray_frames_u1.gif;image/gif/gray_u1.gif;image/gif/anim_2frame.gif,CC0; CC BY 4.0
+ico,ICO,Image,ico,sample collected,image/ico/smile.ico,MIT
+avif,AVIF,Image,avif,sample collected,image/avif/rgb_u1.avif,CC BY 4.0
+heic,HEIC,Image,heic;heif;hif,sample collected,image/heif/rgb_u1.heif,CC BY 4.0
+jxl,JPEG XL,Image,jxl,sample collected,image/jxl/rgb_u1.jxl,CC BY 4.0
+jp2,JPEG 2000,Image,jp2;j2k;jpf;jpx,sample collected,image/jp2/balloon.jp2;image/jp2/balloon.jpf;image/jp2/rgb_u1.j2k;image/jp2/rgb_u1.jp2,CC0 by repository default; item-specific notes take precedence; CC BY 4.0
+psd,PSD,Image,psd,sample collected,_license-review/tika/image/psd/testPSD2.psd;_license-review/samplefiles.org/image/psd/psd.psd;image/psd/sample.psd,Project-generated synthetic fixture; CC0
+psb,PSB,Image,psb,sample collected,image/psb/sample.psb,Project-generated synthetic fixture; CC0
+tga,TGA,Image,tga;icb;vda;vst,sample collected,image/tga/rgb_u1.tga,CC BY 4.0
+ppm,PPM,Image,ppm;pgm;pbm;pnm,sample collected,image/pnm/checkerboard_8x8_binary.pbm;image/pnm/gradient_8x8_255_binary.pgm;image/pnm/colorbars_4x4_binary.ppm;image/pnm/gradient_8x8_binary.pnm,CC0
+icns,ICNS,Image,icns,sample collected,_license-review/tika/image/icns/testICNS.icns;image/icns/sample.icns,Project-generated synthetic fixture; CC0
+apng,APNG,Image,apng,sample collected,image/apng/rgb_frames_u1.apng,CC BY 4.0
+mng,MNG,Image,mng,sample collected,_license-review/samplefiles.org/image/mng/mng.mng;image/mng/sample.mng,Project-generated synthetic fixture; CC0
+qoi,QOI,Image,qoi,sample collected,image/qoi/rgb_u1.qoi,CC BY 4.0
+dds,DDS,Image,dds,sample collected,_license-review/samplefiles.org/image/dds/dds.dds;image/dds/sample.dds,Project-generated synthetic fixture; CC0
+pcx,PCX,Image,pcx,sample collected,image/pcx/rgb_u1.pcx,CC BY 4.0
+cur,CUR,Image,cur,sample collected,_license-review/tika/image/cur/testCUR.cur;_license-review/samplefiles.org/image/cur/cur.cur;image/cur/sample.cur,Project-generated synthetic fixture; CC0
+xpm,XPM,Image,xpm,sample collected,_license-review/samplefiles.org/image/xpm/xpm.xpm;image/xpm/sample.xpm,Project-generated synthetic fixture; CC0
+xbm,XBM,Image,xbm,sample collected,_license-review/samplefiles.org/image/xbm/xbm.xbm;image/xbm/sample.xbm,Project-generated synthetic fixture; CC0
+wbmp,WBMP,Image,wbmp,sample collected,_license-review/samplefiles.org/image/wbmp/wbmp.wbmp;image/wbmp/sample.wbmp,Project-generated synthetic fixture; CC0
+pam,PAM,Image,pam,sample collected,image/pam/rgb_alpha_4x4.pam,CC0
+pfm,PFM,Image,pfm,sample collected,_license-review/samplefiles.org/image/pfm/pfm.pfm;image/pfm/sample.pfm,Project-generated synthetic fixture; CC0
+sgi,SGI,Image,sgi;rgb;rgba;bw,sample collected,image/sgi/sample.sgi,Project-generated synthetic fixture; CC0
+ras,Sun Raster,Image,ras;sun,sample collected,_license-review/samplefiles.org/image/ras/ras.ras;image/ras/sample.ras,Project-generated synthetic fixture; CC0
+miff,MIFF,Image,miff,sample collected,image/miff/sample.miff,Project-generated synthetic fixture; CC0
+dcm,DICOM,Image,dcm;dicom,sample collected,image/dcm/sample.dcm,Project-generated synthetic fixture; CC0
+pcd,Photo CD,Image,pcd,sample collected,_license-review/samplefiles.org/image/pcd/pcd.pcd;image/pcd/sample.pcd,Project-generated synthetic fixture; CC0
+exr,OpenEXR,Image,exr,sample collected,image/exr/rgb_f4.exr,CC BY 4.0
+hdr,Radiance HDR,Image,hdr,sample collected,_license-review/tika/image/hdr/ang20150420t182050_corr_v1e_img.hdr;_license-review/samplefiles.org/image/hdr/hdr.hdr;image/hdr/sample.hdr,Project-generated synthetic fixture; CC0
+xcf,XCF,Image,xcf,candidate collected; license review required,_license-review/samplefiles.org/image/xcf/xcf.xcf,testing download is free; redistribution license not stated; local-only; license review required
+raw,RAW,Image,dng;cr2;cr3;crw;nef;nrw;arw;srf;sr2;orf;rw2;raf;pef;dcr;kdc;erf;mos;mrw;x3f;3fr;fff;iiq;mef;rwl;srw;raw,sample collected,image/raw/sample.raw,Project-generated synthetic fixture; CC0
+svg,SVG,Vector,svg,sample collected,_license-review/tika/vector/svg/testSVG.svg;_license-review/samplefiles.org/vector/svg/svg.svg;vector/svg/sample.svg,Project-generated synthetic fixture; CC0
+svgz,SVGZ,Vector,svgz,sample collected,_license-review/tika/vector/svgz/testSVG.svgz;vector/svgz/sample.svgz,Project-generated synthetic fixture; CC0
+eps,EPS,Vector,eps;epsf;epsi,sample collected,vector/eps/sample.eps,Project-generated synthetic fixture; CC0
+ps,PS,Vector,ps,sample collected,_license-review/samplefiles.org/vector/ps/ps.ps;vector/ps/sample.ps,Project-generated synthetic fixture; CC0
+ai,AI,Vector,ai,candidate collected; license review required,_license-review/tika/vector/ai/testAI_PS.ai,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+emf,EMF,Vector,emf,candidate collected; license review required,_license-review/tika/vector/emf/testEMF_iconOnlyLongFilename.emf,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+wmf,WMF,Vector,wmf,candidate collected; license review required,_license-review/tika/vector/wmf/testWMF_charset.wmf,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+cdr,CDR,Vector,cdr,license review candidate,_license-review/sembiance/cdr/example.cdr,Local-only; source/license details in SAMPLE_PROVENANCE.csv
+cgm,CGM,Vector,cgm,candidate collected; license review required,_license-review/tika/vector/cgm/plotutils-bin-cgm-v3.cgm,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+vsd,VSD,Vector,vsd;vsdx,candidate collected; license review required,_license-review/tika-svn/vector/vsd/testVISIO.vsd,Apache Tika test fixture; no individual fixture license stated; local-only; review required
+odg,ODG,Vector,odg,sample collected,vector/odg/sample.odg,CC0 by repository default; item-specific notes take precedence
+fodg,FODG,Vector,fodg,candidate collected; license review required,_license-review/xberg/vector/fodg/libreoffice_connectors.fodg,Unverified per-file; local review only
+pdf,PDF,Pdf,pdf,sample collected,pdf/basic/lorem-ipsum.pdf;pdf/pdfa/lorem-ipsum-pdfa.pdf,CC0 by repository default; item-specific notes take precedence
+docx,DOCX,Document,docx,sample collected,document/docx/fully-featured-layout.docx,CC0 by repository default; item-specific notes take precedence
+docm,DOCM,Document,docm,candidate collected; license review required,_license-review/openoffice/docm/ms_word_xml_macroenabled.docm,not stated for individual file; local-only; license review required
+dotx,DOTX,Document,dotx,candidate collected; license review required,_license-review/openoffice/dotx/ms_word_xml_template.dotx,not stated for individual file; local-only; license review required
+dotm,DOTM,Document,dotm,candidate collected; license review required,_license-review/openoffice/dotm/ms_word_xml_template_macroenabled.dotm,not stated for individual file; local-only; license review required
+doc,DOC,Document,doc,sample collected,document/doc/lorem-ipsum.doc,CC0 by repository default; item-specific notes take precedence
+dot,DOT,Document,dot,candidate collected; license review required,_license-review/xberg/diagrams/graphviz_cjk.dot;_license-review/xberg/diagrams/graphviz_flow.dot,Unverified per-file; local review only
+odt,ODT,Document,odt,sample collected,document/odt/sample.odt,CC0 by repository default; item-specific notes take precedence
+fodt,FODT,Document,fodt,sample collected,_license-review/tika/document/fodt/testODTMacro.fodt;document/fodt/sample.fodt,Project-generated synthetic fixture; CC0
+ott,OTT,Document,ott,sample collected,_license-review/samplefiles.org/document/ott/ott.ott;document/ott/sample.ott,Project-generated synthetic fixture; CC0
+rtf,RTF,Document,rtf,sample collected,document/rtf/lorem-ipsum.rtf,CC0 by repository default; item-specific notes take precedence
+wps,WPS,Document,wps,candidate collected; license review required,_license-review/tika/document/wps/testWORKSWordProcessor3.0.wps,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+wpd,WPD,Document,wpd,sample collected,document/wpd/testWordPerfect_6_61.wpd,CC0 by repository default; item-specific notes take precedence
+lwp,LWP,Document,lwp,license review candidate,_license-review/sembiance/lwp/fbspk.lwp,Local-only; source/license details in SAMPLE_PROVENANCE.csv
+abw,ABW,Document,abw;zabw,sample collected,document/abw/sample.abw,Project-generated synthetic fixture; CC0
+pages,Pages,Document,pages,sample collected,document/pages/lorem-ipsum.pages,CC0 by repository default; item-specific notes take precedence
+sdw,SDW,Document,sdw,candidate collected; license review required,_license-review/tika/document/sdw/testStarOffice-5.2-writer.sdw,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+cwk,ClarisWorks,Document,cwk,license review candidate,_license-review/sembiance/cwk/example.cwk,Local-only; source/license details in SAMPLE_PROVENANCE.csv
+mcw,MacWrite,Document,mcw,license review candidate,_license-review/lysator/mcw/Binn-Erker.MacWriteII.mcw,Source file license not stated; local-only pending review
+602,T602,Document,602,no sample collected,,
+psw,Pocket Word,Document,psw,license review candidate,_license-review/sembiance/psw/sample.psw,Local-only; source/license details in SAMPLE_PROVENANCE.csv
+pub,PUB,Document,pub,candidate collected; license review required,_license-review/tika/document/pub/testPUBLISHER.pub,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+eml,EML,Document,eml,candidate collected; license review required,_license-review/xberg/email/eml/sample_email.eml,Unverified per-file; local review only
+msg,MSG,Document,msg,candidate collected; license review required,_license-review/tika/document/msg/testMSG.msg,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+hwpx,HWPX,Hwp,hwpx,sample collected,hwp/hwpx/blank.hwpx,MIT (Filee reference repository)
+hwp,HWP,Hwp,hwp,candidate collected; license review required,_license-review/tika/hwp/hwp/testHWP_3.0.hwp,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+xlsx,XLSX,Spreadsheet,xlsx,candidate collected; license review required,_license-review/openoffice/xlsx/ms_excel_xml.xlsx,not stated for individual file; local-only; license review required
+xlsm,XLSM,Spreadsheet,xlsm,candidate collected; license review required,_license-review/openoffice/xlsm/ms_excel_xml_macroenabled.xlsm,not stated for individual file; local-only; license review required
+xltx,XLTX,Spreadsheet,xltx,candidate collected; license review required,_license-review/openoffice/xltx/ms_excel_xml_template.xltx,not stated for individual file; local-only; license review required
+xls,XLS,Spreadsheet,xls,sample collected,spreadsheet/xls/MonteCarlo.xls;spreadsheet/xls/valid.xls,CC0 by repository default; item-specific notes take precedence
+xlt,XLT,Spreadsheet,xlt,candidate collected; license review required,_license-review/tika/spreadsheet/xlt/testEXCEL_template.xlt,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+ods,ODS,Spreadsheet,ods,sample collected,spreadsheet/ods/sample.ods,CC0 by repository default; item-specific notes take precedence
+ots,OTS,Spreadsheet,ots,sample collected,spreadsheet/ots/sample.ots,Project-generated synthetic fixture; CC0
+fods,FODS,Spreadsheet,fods,sample collected,_license-review/tika/spreadsheet/fods/testFODS_embeddedChart.fods;spreadsheet/fods/sample.fods,Project-generated synthetic fixture; CC0
+csv,CSV,Spreadsheet,csv,sample collected,spreadsheet/csv/sample.csv;_license-review/xberg/csv/data_table.csv,CC0 by repository default; item-specific notes take precedence; Unverified per-file; local review only
+tsv,TSV,Spreadsheet,tsv;tab,candidate collected; license review required,_license-review/xberg/data/tsv/employees.tsv,Unverified per-file; local review only
+et,ET,Spreadsheet,et,no sample collected,,
+numbers,Numbers,Spreadsheet,numbers,candidate collected; license review required,_license-review/tika/spreadsheet/numbers/tableNames.numbers,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+sdc,SDC,Spreadsheet,sdc,candidate collected; license review required,_license-review/tika/spreadsheet/sdc/testStarOffice-5.2-calc.sdc,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+pptx,PPTX,Presentation,pptx,candidate collected; license review required,_license-review/openoffice/pptx/ms_powerpoint_xml.pptx,not stated for individual file; local-only; license review required
+pptm,PPTM,Presentation,pptm,candidate collected; license review required,_license-review/openoffice/pptm/ms_powerpoint_xml_macroenabled.pptm,not stated for individual file; local-only; license review required
+potx,POTX,Presentation,potx,candidate collected; license review required,_license-review/openoffice/potx/ms_powerpoint_xml_template.potx,not stated for individual file; local-only; license review required
+ppsx,PPSX,Presentation,ppsx,candidate collected; license review required,_license-review/tika/presentation/ppsx/testPPT.ppsx,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+ppt,PPT,Presentation,ppt;pps;pot,sample collected,presentation/ppt/ecdl-paris.ppt,CC0 by repository default; item-specific notes take precedence
+odp,ODP,Presentation,odp,sample collected,presentation/odp/sample.odp,CC0 by repository default; item-specific notes take precedence
+otp,OTP,Presentation,otp,sample collected,presentation/otp/sample.otp,Project-generated synthetic fixture; CC0
+fodp,FODP,Presentation,fodp,sample collected,_license-review/tika/presentation/fodp/testODPMacro.fodp;presentation/fodp/sample.fodp,Project-generated synthetic fixture; CC0
+key,Keynote,Presentation,key,candidate collected; license review required,_license-review/tika-svn/presentation/key/testKeynote.key,Apache Tika test fixture; no individual fixture license stated; local-only; review required
+dps,DPS,Presentation,dps,no sample collected,,
+sda,SDA,Presentation,sda;sdd,candidate collected; license review required,_license-review/tika-svn/presentation/sda/testStarOffice-5.2-draw.sda,Apache Tika test fixture; no individual fixture license stated; local-only; review required
+txt,TXT,Text,txt,sample collected,text/txt/lorem-ipsum.txt,CC0 by repository default; item-specific notes take precedence
+md,Markdown,Text,md;markdown,candidate collected; license review required,_license-review/xberg/markdown/sample.md,Unverified per-file; local review only
+html,HTML,Text,html;htm;xhtml,sample collected,text/html/lorem-ipsum.htm;_license-review/xberg/text/html/payments_api_guide.html,CC0 by repository default; item-specific notes take precedence; Unverified per-file; local review only
+rst,reStructuredText,Text,rst,candidate collected; license review required,_license-review/xberg/text/rst/cli_quickstart_tutorial.rst;_license-review/xberg/text/rst/restructured_text.rst,Unverified per-file; local review only
+tex,LaTeX,Text,tex;latex,candidate collected; license review required,_license-review/xberg/text/latex/minimal.tex,Unverified per-file; local review only
+org,Org,Text,org,candidate collected; license review required,_license-review/xberg/text/org/readme.org;_license-review/xberg/text/org/wire_protocol_spec.org,Unverified per-file; local review only
+adoc,AsciiDoc,Text,adoc;asciidoc,sample collected,text/adoc/sample.adoc,Project-generated synthetic fixture; CC0
+typ,Typst,Text,typ,candidate collected; license review required,_license-review/xberg/text/typst/rate_limiter_design.typ,Unverified per-file; local review only
+mediawiki,MediaWiki,Text,mediawiki;wiki,sample collected,text/mediawiki/sample.mediawiki,Project-generated synthetic fixture; CC0
+dbk,DocBook,Text,dbk;docbook,candidate collected; license review required,_license-review/xberg/text/docbook/deployment_faq.docbook,Unverified per-file; local review only
+ipynb,Jupyter,Text,ipynb,candidate collected; license review required,_license-review/xberg/text/jupyter/simple.ipynb,Unverified per-file; local review only
+textile,Textile,Text,textile,sample collected,text/textile/sample.textile,Project-generated synthetic fixture; CC0
+man,Man page,Text,man,sample collected,text/man/sample.man,Project-generated synthetic fixture; CC0
+opml,OPML,Text,opml,sample collected,text/opml/curation-outline.opml,CC0 by repository default; item-specific notes take precedence
+json,JSON,Data,json,candidate collected; license review required,_license-review/xberg/data/json/simple.json,Unverified per-file; local review only
+jsonl,JSON Lines,Data,jsonl;ndjson,sample collected,data/jsonl/sample.jsonl,Project-generated synthetic fixture; CC0
+yaml,YAML,Data,yaml;yml,candidate collected; license review required,_license-review/xberg/data/yaml/config.yaml,Unverified per-file; local review only
+toml,TOML,Data,toml,candidate collected; license review required,_license-review/xberg/data/toml/application.toml,Unverified per-file; local review only
+xml,XML,Data,xml,candidate collected; license review required,_license-review/xberg/data/xml/test.xml,Unverified per-file; local review only
+vcf,vCard,Data,vcf;vcard,sample collected,data/vcf/sample.vcf,Project-generated synthetic fixture; CC0
+epub,EPUB,Ebook,epub,sample collected,ebook/epub/lorem-ipsum.epub,CC0 by repository default; item-specific notes take precedence
+kepub,KEPUB,Ebook,kepub.epub;kepub,sample collected,ebook/kepub/sample.kepub.epub,CC0 by repository default
+mobi,MOBI,Ebook,mobi,sample collected,ebook/mobi/lorem-ipsum.mobi,CC0 by repository default; item-specific notes take precedence
+azw3,AZW3,Ebook,azw3,sample collected,ebook/azw3/lorem-ipsum.azw3,CC0 by repository default; item-specific notes take precedence
+azw,AZW,Ebook,azw,sample collected,ebook/azw/sample.azw,CC0 by repository default
+azw4,AZW4,Ebook,azw4,no sample collected,,
+prc,PRC,Ebook,prc,sample collected,ebook/prc/sample.prc,CC0 by repository default
+fb2,FB2,Ebook,fb2,sample collected,ebook/fb2/lorem-ipsum.fb2,CC0 by repository default; item-specific notes take precedence
+cbz,CBZ,Ebook,cbz,sample collected,ebook/cbz/sample.cbz,Project-generated synthetic fixture; CC0
+cbr,CBR,Ebook,cbr,sample collected,ebook/cbr/cc0-sample.cbr,CC0-1.0
+cb7,CB7,Ebook,cb7,sample collected,ebook/cb7/sample.cb7,CC0; synthetic 7-Zip comic archive
+cbt,CBT,Ebook,cbt,sample collected,ebook/cbt/sample.cbt,Project-generated synthetic fixture; CC0
+cbc,CBC,Ebook,cbc,sample collected,ebook/cbc/sample.cbc,Project-generated synthetic fixture; CC0
+htmlz,HTMLZ,Ebook,htmlz,sample collected,ebook/htmlz/lorem-ipsum.htmlz,CC0 by repository default; item-specific notes take precedence
+txtz,TXTZ,Ebook,txtz,sample collected,ebook/txtz/lorem-ipsum.txtz,CC0 by repository default; item-specific notes take precedence
+chm,CHM,Ebook,chm,candidate collected; license review required,_license-review/tika/ebook/chm/testChm.chm,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+lit,LIT,Ebook,lit,sample collected,ebook/lit/lorem-ipsum.lit,CC0 by repository default; item-specific notes take precedence
+lrf,LRF,Ebook,lrf,sample collected,ebook/lrf/lorem-ipsum.lrf,CC0 by repository default; item-specific notes take precedence
+pdb,PDB,Ebook,pdb,sample collected,ebook/pdb/lorem-ipsum.pdb,CC0 by repository default; item-specific notes take precedence
+pml,PML,Ebook,pml,sample collected,ebook/pml/sample.pml,CC0 by repository default
+rb,RB,Ebook,rb,sample collected,ebook/rb/lorem-ipsum.rb,CC0 by repository default; item-specific notes take precedence
+snb,SNB,Ebook,snb,sample collected,ebook/snb/lorem-ipsum.snb,CC0 by repository default; item-specific notes take precedence
+tcr,TCR,Ebook,tcr,license review candidate,_license-review/sembiance/tcr/example.tcr,Local-only; source/license details in SAMPLE_PROVENANCE.csv
+oeb,OEB,Ebook,oeb;opf,sample collected,ebook/oeb/lorem-ipsum.opf,CC0 by repository default; item-specific notes take precedence
+mp4,MP4,Video,mp4,sample collected,video/mp4/bear.mp4;video/mp4/Big_Buck_Bunny_360_10s_1MB.mp4,BSD-3-Clause; CC-BY-3.0
+m4v,M4V,Video,m4v,candidate collected; license review required,_license-review/open-media/video/m4v/filesamples_sample_640x360_h264-High_640x360_29.97fps_no_audio.m4v,not stated by source; local-only; license review required
+mov,MOV,Video,mov;qt,sample collected,video/mov/animation.mov,CC0 by repository default; item-specific notes take precedence
+mkv,MKV,Video,mkv,sample collected,video/mkv/vorbis_audio_wmv_video.mkv,BSD-3-Clause
+webm,WEBM,Video,webm,sample collected,video/webm/bear.webm,BSD-3-Clause
+avi,AVI,Video,avi;divx,sample collected,video/avi/bear.avi,BSD-3-Clause
+wmv,WMV,Video,wmv;asf,candidate collected; license review required,_license-review/open-media/video/wmv/filesamples_sample_640x360_msmpeg4v3_640x360_29.97fps_no_audio.asf,not stated by source; local-only; license review required
+flv,FLV,Video,flv;f4v,sample collected,video/flv/bear.flv,BSD-3-Clause
+mpg,MPEG,Video,mpg;mpeg;mpe;m1v;m2v,sample collected,video/mpg/bear.mpeg,BSD-3-Clause
+ts,TS,Video,ts,sample collected,video/ts/bear-1280x720-hls.ts,BSD-3-Clause
+m2ts,M2TS,Video,m2ts;mts;m2t,sample collected,video/m2ts/bear.m2ts,BSD-3-Clause
+3gp,3GP,Video,3gp;3gpp,sample collected,video/3gp/bear_h264_aac.3gp,BSD-3-Clause
+3g2,3G2,Video,3g2,sample collected,video/3g2/sample.3g2,Project-generated synthetic fixture; CC0
+ogv,OGV,Video,ogv,sample collected,video/ogv/bear.ogv,BSD-3-Clause
+vob,VOB,Video,vob,candidate collected; license review required,_license-review/open-media/video/vob/filesamples_sample_640x360_mpeg2video-Main_640x360_29.97fps_no_audio.vob,not stated by source; local-only; license review required
+mod,MOD,Video,mod;tod,sample collected,video/mod/sample.mod,Project-generated synthetic fixture; CC0
+dv,DV,Video,dv;dif,sample collected,video/dv/sample.dv,Project-generated synthetic fixture; CC0
+mxf,MXF,Video,mxf,candidate collected; license review required,_license-review/open-media/video/mxf/filesamples_sample_640x360_mpeg2video-Main_640x360_29.97fps_no_audio.mxf,not stated by source; local-only; license review required
+rm,RM,Video,rm;rmvb,candidate collected; license review required,_license-review/open-media/video/rm/filesamples_sample_1280x720_surfing_with_audio_rv10_1280x720_23fps_audio_ac3.rm,not stated by source; local-only; license review required
+swf,SWF,Video,swf,candidate collected; license review required,_license-review/open-media/video/swf/filesamples_sample_640x360_flv1_640x360_29.97fps_no_audio.swf,not stated by source; local-only; license review required
+wtv,WTV,Video,wtv;dvr-ms;dvr,candidate collected; license review required,_license-review/open-media/video/wtv/filesamples_sample_640x360_mpeg2video-Main_640x360_29.97fps_no_audio.wtv,not stated by source; local-only; license review required
+cavs,CAVS,Video,cavs,license review candidate,_license-review/ffmpeg/cavs/sample.cavs,Local-only; source/license details in SAMPLE_PROVENANCE.csv
+mp3,MP3,Audio,mp3,sample collected,audio/mp3/bear-audio-10s-VBR-has-TOC.mp3,BSD-3-Clause
+m4a,M4A,Audio,m4a,sample collected,audio/m4a/sfx.m4a,BSD-3-Clause
+m4b,M4B,Audio,m4b,sample collected,audio/m4b/sample.m4b,Project-generated synthetic fixture; CC0
+aac,AAC,Audio,aac,sample collected,audio/aac/bear-audio-implicit-he-aac-v1.aac,BSD-3-Clause
+wav,WAV,Audio,wav;wave,sample collected,audio/wav/Sine440Hz_S16.wav,CC0
+flac,FLAC,Audio,flac,sample collected,audio/flac/mono.flac,CC0
+ogg,OGG,Audio,ogg;oga,sample collected,audio/ogg/sfx-opus.ogg,BSD-3-Clause
+opus,OPUS,Audio,opus,sample collected,audio/opus/opus-test.opus,BSD-3-Clause
+wma,WMA,Audio,wma,candidate collected; license review required,_license-review/open-media/audio/wma/filesamples_sample3_wmav2_44.1kHz_2ch_128kbps.wma,not stated by source; local-only; license review required
+aiff,AIFF,Audio,aiff;aif;aifc,sample collected,audio/aiff/Sine440Hz_S16.aif,CC0
+ac3,AC3,Audio,ac3,sample collected,audio/ac3/bear.ac3,BSD-3-Clause
+amr,AMR,Audio,amr,sample collected,_license-review/tika/audio/amr/testAMR-WB.amr;audio/amr/sample.amr,Project-generated synthetic fixture; CC0
+au,AU,Audio,au;snd,candidate collected; license review required,_license-review/open-media/audio/au/filesamples_sample3_pcm_s16be_44.1kHz_16bit_2ch_1411kbps.au,not stated by source; local-only; license review required
+caf,CAF,Audio,caf,candidate collected; license review required,_license-review/open-media/audio/caf/filesamples_sample3_pcm_s16be_44.1kHz_16bit_2ch_1411kbps.caf,not stated by source; local-only; license review required
+weba,WEBA,Audio,weba,sample collected,audio/weba/sample.weba,Project-generated synthetic fixture; CC0
+mka,MKA,Audio,mka,sample collected,audio/mka/sample.mka,Project-generated synthetic fixture; CC0
+mp2,MP2,Audio,mp2;mpa,candidate collected; license review required,_license-review/open-media/audio/mp2/filesamples_sample3_mp2_44.1kHz_2ch_384kbps.mp2,not stated by source; local-only; license review required
+dss,DSS,Audio,dss,license review candidate,_license-review/sembiance/dss/DS230002.DSS,Local-only; source/license details in SAMPLE_PROVENANCE.csv
+voc,VOC,Audio,voc,candidate collected; license review required,_license-review/open-media/audio/voc/filesamples_sample3_pcm_s16le_44.1kHz_16bit_2ch_1411kbps.voc,not stated by source; local-only; license review required
+wv,WavPack,Audio,wv,candidate collected; license review required,_license-review/open-media/audio/wv/filesamples_sample3_wavpack_44.1kHz_16bit_2ch.wv,not stated by source; local-only; license review required
+tta,TTA,Audio,tta,candidate collected; license review required,_license-review/open-media/audio/tta/filesamples_sample1_tta_44.1kHz_16bit_2ch.tta,not stated by source; local-only; license review required
+w64,W64,Audio,w64,candidate collected; license review required,_license-review/open-media/audio/w64/filesamples_sample3_pcm_s16le_44.1kHz_16bit_2ch_1411kbps.w64,not stated by source; local-only; license review required
+eac3,E-AC3,Audio,eac3;ec3,sample collected,audio/eac3/bear.eac3,BSD-3-Clause
+ape,APE,Audio,ape,license review candidate,_license-review/sembiance/ape/example.ape,Local-only; source/license details in SAMPLE_PROVENANCE.csv
+mpc,Musepack,Audio,mpc;mpp;mp+,license review candidate,_license-review/sembiance/mpc/sm_win.mpc,Local-only; source/license details in SAMPLE_PROVENANCE.csv
+tak,TAK,Audio,tak,license review candidate,_license-review/ffmpeg/tak/lostchord-tak_1_0.tak,Local-only; source/license details in SAMPLE_PROVENANCE.csv
+dsf,DSF,Audio,dsf,license review candidate,_license-review/libmagic/dsf/dsd64-dsf.dsf,Local-only; source/license details in SAMPLE_PROVENANCE.csv
+dff,DFF,Audio,dff,license review candidate,_license-review/libmagic/dff/dsd64-dff.dff,Local-only; source/license details in SAMPLE_PROVENANCE.csv
+dts,DTS,Audio,dts,candidate collected; license review required,_license-review/open-media/audio/dts/filesamples_sample3_dts_44.1kHz_2ch_1411kbps.dts,not stated by source; local-only; license review required
+spx,Speex,Audio,spx,candidate collected; license review required,_license-review/open-media/audio/spx/filesamples_sample3_speex_32kHz_2ch_29kbps.spx,not stated by source; local-only; license review required
+zip,ZIP,Archive,zip,sample collected,archive/zip/ebook-sample.zip,CC0 by repository default; item-specific notes take precedence
+7z,7Z,Archive,7z,candidate collected; license review required,_license-review/tika/archive/7z/test-documents.7z;_license-review/samplefiles.org/archive/7z/7z.7z,testing download is free; redistribution license not stated; local-only; license review required
+rar,RAR,Archive,rar,sample collected,_license-review/tika/archive/rar/test-documents.rar;_license-review/samplefiles.org/archive/rar/rar.rar;archive/rar/cc0-sample.rar,CC0-1.0
+tar,TAR,Archive,tar,sample collected,_license-review/tika/archive/tar/test-nested-tarball.tar;_license-review/samplefiles.org/archive/tar/tar.tar;archive/tar/sample.tar,Project-generated synthetic fixture; CC0
+tgz,TAR.GZ,Archive,tar.gz;tgz;taz,sample collected,_license-review/samplefiles.org/archive/tgz/tgz.tgz;archive/tgz/sample.tgz,Project-generated synthetic fixture; CC0
+tbz2,TAR.BZ2,Archive,tar.bz2;tbz2;tar.bz;tbz,sample collected,archive/tbz2/sample.tbz2;_license-review/tika-svn/archive/tbz2/test-documents.tbz2,Apache Tika test fixture; no individual fixture license stated; local-only; review required
+txz,TAR.XZ,Archive,tar.xz;txz,sample collected,archive/txz/sample.txz,Project-generated synthetic fixture; CC0
+tar7z,TAR.7Z,Archive,tar.7z,sample collected,archive/tar7z/sample.tar.7z,CC0; synthetic TAR wrapped in 7z
+tlz,TAR.LZ,Archive,tar.lz;tlz,sample collected,archive/tlz/sample.tlz,Project-generated synthetic fixture; CC0
+tz,TAR.Z,Archive,tar.z;tz,license review candidate,_license-review/sembiance/tz/example.tz,Local-only; source/license details in SAMPLE_PROVENANCE.csv
+gz,GZ,Archive,gz,sample collected,_license-review/tika/archive/gz/embedded_to_parent_metadata.xml.gz;archive/gz/sample.gz,Project-generated synthetic fixture; CC0
+bz2,BZ2,Archive,bz2;bz,sample collected,archive/bz2/sample.bz2,Project-generated synthetic fixture; CC0
+xz,XZ,Archive,xz,sample collected,archive/xz/sample.xz,Project-generated synthetic fixture; CC0
+lz,LZ,Archive,lz,sample collected,archive/lz/sample.lz,Project-generated synthetic fixture; CC0
+lzma,LZMA,Archive,lzma,sample collected,archive/lzma/sample.lzma,Project-generated synthetic fixture; CC0
+z,Z,Archive,z,candidate collected; license review required,_license-review/tika/archive/z/test-documents.tar.Z,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+jar,JAR,Archive,jar,sample collected,_license-review/tika/archive/jar/testJAR.jar;archive/jar/sample.jar,Project-generated synthetic fixture; CC0
+cab,CAB,Archive,cab,candidate collected; license review required,_license-review/tika/archive/cab/test-documents.cab,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+cpio,CPIO,Archive,cpio,sample collected,_license-review/tika/archive/cpio/test-documents.cpio;archive/cpio/sample.cpio,Project-generated synthetic fixture; CC0
+deb,DEB,Archive,deb,sample collected,archive/deb/sample.deb,Project-generated synthetic fixture; CC0
+rpm,RPM,Archive,rpm,license review candidate,_license-review/sembiance/rpm/img-1.2.3-1.i386.rpm,Local-only; source/license details in SAMPLE_PROVENANCE.csv
+dmg,DMG,Archive,dmg,candidate collected; license review required,_license-review/tika/archive/dmg/test-documents.dmg,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+iso,ISO,Archive,iso,license review candidate,_license-review/sembiance/iso/test.iso,Local-only; source/license details in SAMPLE_PROVENANCE.csv
+img,IMG,Archive,img,sample collected,archive/img/blank-untitled-volume.img;archive/img/hello-world-untitled-volume.img,CC0 by repository default; item-specific notes take precedence
+lha,LHA,Archive,lha;lzh,license review candidate,_license-review/sembiance/lha/example.lha,Local-only; source/license details in SAMPLE_PROVENANCE.csv
+arj,ARJ,Archive,arj,sample collected,archive/arj/MAPS.ARJ,CC0 by repository default; item-specific notes take precedence
+alz,ALZ,Archive,alz,license review candidate,_license-review/patool/alz/t.alz,Individual test archive license not stated; local-only pending review
+egg,EGG,Archive,egg,sample collected,archive/egg/minimal-store.egg,CC0; synthetic ALZip EGG v1 store-mode fixture
+dwg,DWG,Cad,dwg,candidate collected; license review required,_license-review/tika/cad/dwg/testDWG-AC1027.dwg,Apache-2.0 applies to repository code; individual fixture license not stated; local-only; license review required
+dxf,DXF,Cad,dxf,sample collected,cad/dxf/robot.dxf,CC0 by repository default; item-specific notes take precedence
+ttf,TTF,Font,ttf,sample collected,font/ttf/FileeTest-TrueType.ttf,OFL notice included for font fixtures
+otf,OTF,Font,otf,sample collected,font/otf/FileeTest-CID.otf;font/otf/FileeTest-NameKeyed.otf,OFL notice included for font fixtures
+woff,WOFF,Font,woff,sample collected,_license-review/samplefiles.org/font/woff/woff.woff;font/woff/sample.woff,OFL-1.1; source font fixture notice included; local-only candidate retained separately
+woff2,WOFF2,Font,woff2,sample collected,font/woff2/FileeTest-TrueType.woff2,OFL notice included for font fixtures
+eot,EOT,Font,eot,sample collected,font/eot/sample.eot,OFL-1.1; source font fixture notice included; local-only candidate retained separately
+srt,SRT,Subtitle,srt,sample collected,subtitle/srt/example.srt,Apache-2.0
+ass,ASS,Subtitle,ass,sample collected,subtitle/ass/example.ass,Apache-2.0
+ssa,SSA,Subtitle,ssa,sample collected,subtitle/ssa/sample.ssa,Project-generated synthetic fixture; CC0
+vtt,WebVTT,Subtitle,vtt,sample collected,subtitle/vtt/example.vtt,Apache-2.0
+smi,SAMI,Subtitle,smi;sami,sample collected,subtitle/smi/example.smi,Apache-2.0
+lrc,LRC,Subtitle,lrc,sample collected,subtitle/lrc/sample.lrc,Project-generated synthetic fixture; CC0
+ttml,TTML,Subtitle,ttml;dfxp,sample collected,subtitle/ttml/sample.ttml,Project-generated synthetic fixture; CC0
+sub,MicroDVD,Subtitle,sub,sample collected,subtitle/sub/sample.sub,Project-generated synthetic fixture; CC0
+scc,SCC,Subtitle,scc,sample collected,subtitle/scc/sample.scc,Project-generated synthetic fixture; CC0
+glb,GLB,Model3D,glb,sample collected,3d/glb/Duck.glb,CC0
+gltf,glTF,Model3D,gltf,sample collected,3d/gltf/Duck.gltf,CC0
+stl,STL,Model3D,stl,sample collected,3d/stl/multiple_solids.stl,CC0
+obj,OBJ,Model3D,obj,sample collected,3d/obj/vertex_indexed.obj,CC0
+3mf,3MF,Model3D,3mf,sample collected,3d/3mf/box.3mf,CC0
+ply,PLY,Model3D,ply,sample collected,3d/ply/bun_zipper_res4.ply,CC0

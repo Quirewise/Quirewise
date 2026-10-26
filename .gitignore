@@ -1,0 +1,5 @@
+# local builds and analysis
+.tmp/
+.codegraph/
+.to_delete/
+testfile/_license-review/

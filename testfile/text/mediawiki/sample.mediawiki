@@ -1,0 +1,6 @@
+== Quirewise Sample ==
+
+This is a small MediaWiki markup fixture.
+
+* First item
+* Second item

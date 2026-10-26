@@ -1,0 +1,490 @@
+# Subtitler
+
+> A Rust library for parsing, manipulating, and generating subtitles in multiple formats.
+
+[![Crates.io](https://img.shields.io/crates/v/subtitler?style=flat-square)](https://crates.io/crates/subtitler)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square)](LICENSE)
+[![Live demo](https://img.shields.io/badge/try%20it%20online-Subtitle%20Workbench-8A2BE2?style=flat-square)](https://subtitle-rs.github.io/subtitle-format-conversion/)
+
+- **17 subtitle formats**: SRT, WebVTT, ASS/SSA, MicroDVD, SubViewer, TTML/IMSC, SBV, LRC, SAMI, MPL2, SCC, EBU STL, Spruce STL, DFXP, iTT, Whisper JSON
+- Rich text extraction (bold, italic, underline, color, voice tags)
+- Encoding detection and auto-decoding (UTF-8, UTF-16, BOM, chardetng fallback)
+- Format detection, conversion, and validation
+- Frame-based timecode support
+- Streaming parsers for large files
+- Utility operations: sort, merge, split, validate, framerate transform
+- Async I/O powered by `tokio`
+- Serialize/Deserialize via `serde`
+
+## Try it online
+
+[**Subtitle Workbench**](https://subtitle-rs.github.io/subtitle-format-conversion/) — a fully client-side subtitle tool built on this crate compiled to WebAssembly: format conversion with auto-detection, quality checks, text normalization, and file info. Everything runs in your browser — no backend, no uploads, files never leave your device.
+
+## Installation
+
+```sh
+cargo add subtitler
+```
+
+Or as a CLI tool:
+
+```sh
+cargo install subtitler
+```
+
+## Quick Start
+
+### Parse (any format, auto-detect)
+
+```rust
+// High-level entry points auto-detect the format.
+let data = std::fs::read("subtitle.srt")?;
+let file = subtitler::parse_bytes(&data)?;
+println!("{} subtitles, format: {:?}", file.subtitles().len(), file.format());
+
+// Or from a file / URL (async, real I/O):
+// let file = subtitler::parse_file("subtitle.srt").await?;
+// let file = subtitler::parse_url("https://example.com/sub.vtt").await?;
+```
+
+The high-level entry points require the `SubtitleFormat` trait to be in scope
+for methods like `subtitles()` / `validate()`:
+
+```rust
+use subtitler::SubtitleFormat; // brings trait methods into scope
+```
+
+### Parse a specific format (low-level)
+
+```rust
+use subtitler::srt;
+
+// Parsing cores are sync (they never did real async I/O).
+let content = "1\n00:00:01,000 --> 00:00:03,500\nHello, world!\n\n";
+let subtitles = srt::parse_content(content)?;
+println!("{:?}", subtitles);
+```
+
+```rust
+use subtitler::vtt;
+let content = "WEBVTT\n\n1\n00:00:01.000 --> 00:00:03.500\nHello, world!\n\n";
+let subtitles = vtt::parse_content(content)?;
+```
+
+```rust
+use subtitler::ass;
+let content = "[Script Info]\nScriptType: v4.00+\n\n[V4+ Styles]\nFormat: Name, Fontname, ...\nStyle: Default,Arial,20,...\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\nDialogue: 0,0:00:01.00,0:00:03.50,Default,,0,0,0,,Hello!\n";
+let file = ass::parse_content(content)?;
+println!("{}", file.to_string());
+```
+
+### Convert between formats
+
+```rust
+use subtitler::SubtitleFormat;
+use subtitler::model::Format;
+
+let file = subtitler::parse_file("input.srt").await?;
+let vtt_str = file.to_string_with_format(&Format::Vtt);
+std::fs::write("output.vtt", vtt_str)?;
+```
+
+### Generate subtitle files
+
+```rust
+use subtitler::model::Subtitle;
+use subtitler::srt;
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let subtitles = vec![
+        Subtitle::new(1000, 3500, "Hello!"),
+        Subtitle::new(4000, 6500, "World!"),
+    ];
+    srt::generate(&subtitles, "output.srt").await?;
+    Ok(())
+}
+```
+
+### Detect format
+
+```rust
+use subtitler::detect_format;
+use subtitler::model::Format;
+
+let data = std::fs::read("unknown.sub")?;
+match detect_format(&data) {
+    Some(Format::Srt) => println!("SRT detected"),
+    Some(Format::Vtt) => println!("WebVTT detected"),
+    Some(Format::Ass) => println!("ASS detected"),
+    Some(Format::Ssa) => println!("SSA detected"),
+    Some(Format::MicroDvd) => println!("MicroDVD detected"),
+    Some(Format::SubViewer) => println!("SubViewer detected"),
+    Some(Format::Ttml) => println!("TTML detected"),
+    Some(Format::Sbv) => println!("SBV detected"),
+    Some(Format::Lrc) => println!("LRC detected"),
+    Some(Format::Sami) => println!("SAMI detected"),
+    Some(Format::Mpl2) => println!("MPL2 detected"),
+    None => println!("Unknown format"),
+}
+```
+
+## Feature flags
+
+All formats are enabled by default. To trim compile size, disable the formats
+you don't need:
+
+```toml
+[dependencies]
+subtitler = { version = "2.0", default-features = false, features = ["srt", "vtt"] }
+```
+
+| Flag         | Format           | Notes |
+|--------------|------------------|-------|
+| `srt`        | SubRip (`.srt`)  | Most common format |
+| `vtt`        | WebVTT (`.vtt`)  | HTML5 standard |
+| `ass`        | Advanced SubStation Alpha (`.ass`) | Advanced styling |
+| `ssa`        | SubStation Alpha (`.ssa`) | Legacy ASS format |
+| `microdvd`   | MicroDVD (`.sub`)| Frame-based |
+| `subviewer`  | SubViewer        | DVD format |
+| `ttml`       | TTML/IMSC (`.ttml`, `.xml`) | Broadcast standard |
+| `sbv`        | YouTube SBV (`.sbv`) | YouTube format |
+| `lrc`        | Lyrics LRC (`.lrc`) | Song lyrics |
+| `sami`       | SAMI (`.smi`)    | Microsoft format, popular in Asia |
+| `mpl2`       | MPL2 (`.mpl`)    | Frame-based, popular in Eastern Europe |
+| `scc`        | SCC (`.scc`)     | CEA-608 closed captions, US broadcast |
+| `ebu_stl`    | EBU STL (`.stl`) | European broadcast binary format |
+| `http`       | `parse_url()` via `reqwest` | Network support |
+
+See `MIGRATION.md` for upgrading from 0.1.x.
+
+## API Reference
+
+### Data Model
+
+```rust
+pub struct Subtitle {
+    pub index: Option<usize>,     // subtitle number
+    pub start: u64,               // start time in milliseconds
+    pub end: u64,                 // end time in milliseconds
+    pub text: String,             // subtitle text (stripped of tags)
+    pub settings: Option<String>, // VTT cue settings
+    pub text_parts: SmallVec<[TextPart; 4]>, // structured rich text (stack-allocated for ≤4 parts)
+
+    // ASS/SSA fields
+    pub style: Option<String>,    // style name reference
+    pub actor: Option<String>,    // speaker/actor name
+    pub is_comment: bool,         // comment flag
+    pub style_props: Option<StyleProps>, // resolved cue styling (font family/size, color, bold/italic/underline)
+}
+
+pub struct TextPart {
+    pub text: String,
+    pub format: TextFormat, // bitflags: BOLD | ITALIC | UNDERLINE
+    pub color: Option<String>,
+    pub voice: Option<String>,
+}
+
+pub struct AssStyle {
+    pub name: String,
+    pub fontname: String,
+    pub fontsize: u32,
+    pub primary_color: String,
+    pub secondary_color: String,
+    // ... 23 fields total
+}
+
+pub struct AssFont {
+    pub name: String,
+    pub data: Vec<u8>, // decoded TTF/OTF bytes from the [Fonts] section
+}
+
+pub enum SubtitleFile {
+    Srt(Vec<Subtitle>),
+    Vtt { header: Option<String>, subtitles: Vec<Subtitle> },
+    Ass(AssData),
+    Ssa(AssData),
+    MicroDvd { fps: f64, subtitles: Vec<Subtitle> },
+    SubViewer { header: Option<String>, subtitles: Vec<Subtitle> },
+    Ttml { header: Option<String>, subtitles: Vec<Subtitle> },
+    Sbv(Vec<Subtitle>),
+    Lrc(Vec<Subtitle>),
+    Sami(SamiData),
+    Mpl2(Vec<Subtitle>),
+    Scc(SccData),
+    EbuStl(Box<EbuStlData>),
+}
+```
+
+### SRT Module (`subtitler::srt`)
+
+| Function | Description |
+|----------|-------------|
+| `parse_file(path)` | Parse SRT from file |
+| `parse_bytes(data)` | Parse SRT from bytes |
+| `parse_content(content)` | Parse SRT from string |
+| `parse_url(url)` | Parse SRT from HTTP URL (requires `http` feature) |
+| `generate(subtitles, path)` | Write SRT to file |
+| `to_string(subtitles)` | Format subtitles as SRT string |
+| `detect_format(data)` | Detect if data is SRT |
+
+### WebVTT Module (`subtitler::vtt`)
+
+| Function | Description |
+|----------|-------------|
+| `parse_file(path)` | Parse VTT from file |
+| `parse_bytes(data)` | Parse VTT from bytes |
+| `parse_content(content)` | Parse VTT from string |
+| `parse_content_full(content)` | Parse VTT returning header + subtitles |
+| `parse_url(url)` | Parse VTT from HTTP URL (requires `http` feature) |
+| `generate(subtitles, path)` | Write VTT to file |
+| `to_string(subtitles, header)` | Format subtitles as VTT string |
+| `detect_format(data)` | Detect if data is VTT |
+
+### ASS Module (`subtitler::ass`)
+
+| Function | Description |
+|----------|-------------|
+| `parse_content(content)` | Parse ASS/SSA from string, returns `SubtitleFile` |
+| `parse_file(path)` | Parse ASS/SSA from file (async) |
+| `parse_bytes(data)` | Parse ASS/SSA from byte slice |
+| `parse_url(url)` | Parse ASS/SSA from HTTP URL (requires `http` feature) |
+| `to_string(info, styles, subtitles, fonts)` | Format as ASS string (`fonts`: embedded `[Fonts]` entries, pass `&[]` for none) |
+| `detect_format(data)` | Detect if data is ASS/SSA |
+
+### MicroDVD Module (`subtitler::microdvd`)
+
+| Function | Description |
+|----------|-------------|
+| `parse_content(content, fps)` | Parse MicroDVD frame-based content |
+| `to_string(subtitles, fps)` | Format as MicroDVD string |
+| `to_string_with_fps_header(subtitles, fps)` | Format with FPS declaration header |
+| `detect_format(data)` | Detect if data is MicroDVD |
+
+### SubViewer Module (`subtitler::subviewer`)
+
+| Function | Description |
+|----------|-------------|
+| `parse_content(content)` | Parse SubViewer 1.0/2.0 content |
+| `to_string(subtitles)` | Format as SubViewer 2.0 with headers |
+| `detect_format(data)` | Detect if data is SubViewer |
+
+### Encoding Utilities (`subtitler::encoding`)
+
+| Function | Description |
+|----------|-------------|
+| `detect_encoding(data)` | Auto-detect character encoding (UTF-8/16/BOM/chardetng) |
+| `decode_to_string(data)` | Decode bytes to string using detected encoding |
+
+### Timestamp Utilities (`subtitler::utils`)
+
+| Function | Description |
+|----------|-------------|
+| `parse_timestamp(ts)` | Parse `"00:00:01,500"` → `1500` ms |
+| `parse_timestamps(ts)` | Parse `"00:00:01,000 --> 00:00:03,500"` → `Timestamp` |
+| `format_timestamp(ms, fmt)` | Format ms to `"00:00:01,000"` (SRT) or `"00:00:01.000"` (VTT) |
+| `pad_left(value, length)` | Zero-pad integer to fixed width |
+
+### Frame Utilities (`subtitler::model`)
+
+| Function | Description |
+|----------|-------------|
+| `ms_to_frames(ms, fps)` | Convert milliseconds to frame count |
+| `frames_to_ms(frames, fps)` | Convert frame count to milliseconds |
+
+### SubtitleFile Methods (`subtitler::model::SubtitleFile`)
+
+| Method | Description |
+|--------|-------------|
+| `subtitles()` | Get reference to subtitle list |
+| `subtitles_mut()` | Get mutable reference |
+| `format()` | Get detected format enum |
+| `shift_all(offset_ms)` | Shift all timestamps |
+| `sort()` | Sort by start time |
+| `validate()` | Check for timing issues |
+| `validate_extended(max_chars, max_gap, max_cps)` | Extended validation |
+| `merge_adjacent(max_gap_ms)` | Merge subtitles within gap threshold |
+| `remove_overlaps()` | Fix overlapping subtitles by adjusting start times |
+| `split_long(max_chars)` | Split long subtitles at word boundaries |
+| `transform_framerate(in_fps, out_fps)` | Rescale timestamps for framerate change |
+| `map(fn)` | Transform each subtitle (consuming) |
+| `filter(fn)` | Filter subtitles (consuming) |
+| `to_string()` | Format to appropriate format string |
+
+### Subtitle Methods (`subtitler::model::Subtitle`)
+
+| Method | Description |
+|--------|-------------|
+| `new(start, end, text)` | Create new subtitle |
+| `shift(offset_ms)` | Shift this subtitle's timing |
+| `duration_ms()` | Get duration in milliseconds |
+| `chars_per_second()` | Calculate characters-per-second rate |
+| `reading_speed_wpm()` | Calculate reading speed in words per minute |
+| `strip_tags()` | Remove HTML/ASS formatting tags from subtitle text |
+
+### Validation Issues (`subtitler::model::ValidationIssue`)
+
+| Variant | Description |
+|---------|-------------|
+| `Overlap` | Two subtitles have overlapping time ranges |
+| `NegativeDuration` | End time is before start time |
+| `ZeroDuration` | Start and end times are equal |
+| `DecreasingStartTime` | Start times are not monotonically increasing |
+| `TooLongGap` | Gap between subtitles exceeds threshold |
+| `TextTooLong` | Subtitle text exceeds character limit |
+| `CpsTooHigh` | Characters-per-second exceeds threshold |
+
+### Format Detection (`subtitler::detect_format`)
+
+```rust
+pub fn detect_format(data: &[u8]) -> Option<SubtitleFormat>
+```
+
+Auto-detects SRT (by index+timestamp pattern), WebVTT (by `WEBVTT` header), or ASS/SSA (by `[Script Info]` section).
+
+## CLI Usage
+
+### Parse subtitles
+
+```sh
+# Parse SRT file and display contents
+subtitler parse movie.srt
+
+# Parse with JSON output
+subtitler parse movie.vtt --json
+
+# Parse from URL
+subtitler parse https://example.com/subtitles.srt
+
+# Parse from stdin
+cat movie.srt | subtitler parse -
+
+# Force format
+subtitler parse data.txt --format srt
+```
+
+### Convert between formats
+
+```sh
+# Auto-detect source, infer target from extension
+subtitler convert input.srt output.vtt
+
+# Explicit source and target
+subtitler convert input.srt output.ass --from srt --to ass
+
+# Convert with time shift
+subtitler convert input.srt output.vtt --shift -500
+
+# Pipe to stdout
+subtitler convert input.srt -
+```
+
+### Validate subtitles
+
+```sh
+# Basic timing validation
+subtitler validate movie.srt
+
+# Extended validation with custom thresholds
+subtitler validate movie.srt --max-chars 42 --max-gap 5000 --max-cps 25
+
+# Basic checks only (no text limits)
+subtitler validate movie.srt --basic
+
+# JSON output
+subtitler validate movie.srt --json
+```
+
+### Edit & transform
+
+```sh
+# Sort by time
+subtitler edit input.srt --output output.srt --sort
+
+# Shift all timestamps (+500ms delay, -200ms advance)
+subtitler edit input.srt --output output.srt --shift 500
+subtitler edit input.srt --output output.srt --shift=-200
+
+# Merge adjacent subtitles (gap <= 300ms)
+subtitler edit input.srt --output output.srt --merge 300
+
+# Split long subtitles (max 42 chars per line)
+subtitler edit input.srt --output output.srt --split 42
+
+# Multiple operations
+subtitler edit input.srt --output output.vtt --sort --shift -300 --merge 100
+
+# Framerate conversion
+subtitler edit input.srt --output output.srt --transform-fps 23.976 25.0
+```
+
+### File info & statistics
+
+```sh
+subtitler info movie.srt
+# Output:
+#   File:         movie.srt
+#   Format:       srt
+#   Subtitles:    150
+#   Time range:   0ms -> 5400000ms
+#   Duration:     5400000ms (5400.0s)
+#   Avg duration: 2500ms
+#   Min duration: 500ms
+#   Max duration: 8000ms
+#   Total chars:  4500
+#   Max CPS:      22.5
+#   Timing issues: 0
+```
+
+### Detect format
+
+```sh
+subtitler detect unknown.sub   # prints: srt, vtt, ass, or ssa
+```
+
+## Features
+
+| Feature | Default | Description |
+|---------|---------|-------------|
+| `http` | Yes | Enable `parse_url()` via `reqwest` |
+
+## Examples
+
+See the [examples](https://github.com/subtitle-rs/subtitler/tree/main/examples) directory for 23 usage examples:
+
+**SRT/WebVTT**:
+- `parse-srt-file` — Parse SRT from file
+- `parse-srt-content` — Parse SRT from inline content
+- `parse-srt-http` — Parse SRT from URL
+- `create-srt-file` — Generate SRT file
+- `parse-vtt-file` — Parse VTT from file
+- `parse-vtt-content` — Parse VTT from inline content
+- `parse-vtt-http` — Parse VTT from URL
+- `create-vtt-file` — Generate VTT file
+
+**ASS/SSA**:
+- `parse-ass-content` — Parse ASS from inline content
+
+**Format Conversion**:
+- `format-convert` — Convert between SRT/VTT/ASS formats
+- `convert-all-formats` — Convert between all 11 formats
+
+**Advanced Features**:
+- `stream-parse` — Streaming parser for large files
+- `quality-report` — Generate quality report
+- `normalize-text` — Text normalization and cleanup
+- `edit-operations` — Sort, validate, merge, and split operations
+- `frame-conversion` — Frame-based timecode conversion
+- `validate-subtitle` — Detect and validate subtitles
+- `ttml-lyrics-tutorial` — TTML and LRC parsing tutorial
+- `translate-subtitle` — Batch translation workflow
+
+**SAMI/MPL2 (v1.3.0)**:
+- `parse-sami-content` — Parse SAMI format
+- `parse-mpl2-content` — Parse MPL2 with frame conversion
+- `create-sami-file` — Create multi-language SAMI
+- `create-mpl2-file` — Create MPL2 with custom fps
+
+## License
+
+Apache 2.0
