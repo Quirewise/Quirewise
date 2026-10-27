@@ -2,4 +2,6 @@
 .tmp/
 .codegraph/
 .to_delete/
+__pycache__/
+*.pyc
 testfile/_license-review/

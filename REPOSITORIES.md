@@ -6,6 +6,7 @@
 | quirewise-image | raster images, folders, scan processing | image, image-folder-parser, image-processing | built and consumer-linked |
 | quirewise-archive | ZIP, TAR, RAR, 7z | archive, rar, seven-zip | built and consumer-linked |
 | quirewise-page | PDF, UVZ, DjVu, CAJ, CEB | page-related packages | built and consumer-linked |
+| quirewise-pdg | PDG/PDZ decoding and rendering | pdg, pdz | built and consumer-linked |
 | quirewise-document | Office, presentation, XPS, email | document packages | built locally; consumer packaging cleanup pending |
 | quirewise-ebook | EPUB, MOBI, FB2, PML, HTMLZ | ebook packages | built and consumer-linked; format-isolated |
 | quirewise-text | text and markup formats | text packages | built |

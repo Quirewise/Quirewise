@@ -3,10 +3,14 @@ project(Quirewise VERSION 0.1.0 LANGUAGES C)
 
 include(GNUInstallDirs)
 
+option(QUIREWISE_VALIDATE_DEPENDENCIES
+    "Add a target that validates the workspace dependency graph" OFF)
+
 option(QUIREWISE_LINK_RUNTIME "Link the independent Quirewise runtime library" OFF)
 option(QUIREWISE_LINK_IMAGE "Link quirewise-image" OFF)
 option(QUIREWISE_LINK_ARCHIVE "Link quirewise-archive" OFF)
 option(QUIREWISE_LINK_PAGE "Link quirewise-page" OFF)
+option(QUIREWISE_LINK_PDG "Link quirewise-pdg" OFF)
 option(QUIREWISE_LINK_DOCUMENT "Link quirewise-document" OFF)
 option(QUIREWISE_LINK_EBOOK "Link quirewise-ebook" OFF)
 option(QUIREWISE_LINK_TEXT "Link quirewise-text" OFF)
@@ -33,6 +37,7 @@ quirewise_find_library(QUIREWISE_LINK_RUNTIME QuirewiseRuntime Quirewise::Runtim
 quirewise_find_library(QUIREWISE_LINK_IMAGE QuirewiseImage Quirewise::Image QUIREWISE_LINK_IMAGE)
 quirewise_find_library(QUIREWISE_LINK_ARCHIVE QuirewiseArchive Quirewise::Archive QUIREWISE_LINK_ARCHIVE)
 quirewise_find_library(QUIREWISE_LINK_PAGE QuirewisePage Quirewise::Page QUIREWISE_LINK_PAGE)
+quirewise_find_library(QUIREWISE_LINK_PDG QuirewisePDG Quirewise::PDG QUIREWISE_LINK_PDG)
 quirewise_find_library(QUIREWISE_LINK_DOCUMENT QuirewiseDocument Quirewise::Document QUIREWISE_LINK_DOCUMENT)
 quirewise_find_library(QUIREWISE_LINK_EBOOK QuirewiseEbook Quirewise::Ebook QUIREWISE_LINK_EBOOK)
 quirewise_find_library(QUIREWISE_LINK_TEXT QuirewiseText Quirewise::Text QUIREWISE_LINK_TEXT)
@@ -44,4 +49,15 @@ quirewise_find_library(QUIREWISE_LINK_VECTOR QuirewiseVector Quirewise::Vector Q
 quirewise_find_library(QUIREWISE_LINK_COMIC QuirewiseComic Quirewise::Comic QUIREWISE_LINK_COMIC)
 
 target_link_libraries(quirewise PRIVATE ${QW_LINK_TARGETS})
+
+if(QUIREWISE_VALIDATE_DEPENDENCIES)
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    add_custom_target(quirewise_validate_dependencies
+        COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/tools/validate_dependency_graph.py"
+                --workspace "${CMAKE_CURRENT_SOURCE_DIR}/.."
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        VERBATIM)
+endif()
+
 install(TARGETS quirewise RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")

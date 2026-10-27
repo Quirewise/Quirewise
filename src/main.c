@@ -32,8 +32,8 @@ int main(int argc, char **argv)
 #ifdef QUIREWISE_LINK_PAGE
         puts("  page");
 #endif
-#ifdef QUIREWISE_LINK_PAGE
-        puts("  page");
+#ifdef QUIREWISE_LINK_PDG
+        puts("  pdg");
 #endif
 #ifdef QUIREWISE_LINK_DOCUMENT
         puts("  document");
