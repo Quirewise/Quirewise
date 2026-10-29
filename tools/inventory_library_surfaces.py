@@ -32,6 +32,11 @@ TEST_FILE_RULE = re.compile(r"(?i)(?:^test_|_test\.|_tests?\.|^tests?\.)")
 FORMAT_FUNCTION_RULE = re.compile(r"\b(qw_[A-Za-z0-9_]+)\s*\([^;{}]*?\)\s*\{", re.S)
 FORMAT_TOKEN_RULE = re.compile(r"\b(?:QW_)?FORMAT_[A-Z0-9_]+\b")
 PACKAGE_CONFIG_RULE = re.compile(r"\b(?:Quirewise[A-Za-z0-9_]*Config(?:Version)?\.cmake)\b", re.I)
+C_TYPE_KEYWORDS = {
+    "auto", "bool", "char", "const", "double", "enum", "extern", "float",
+    "int", "long", "register", "restrict", "short", "signed", "static",
+    "struct", "typedef", "union", "unsigned", "void", "volatile", "_Bool",
+}
 
 
 def read_utf8(path: Path) -> str:
@@ -81,7 +86,7 @@ def public_api_names(header: Path) -> list[str]:
         tokens = re.findall(r"\b[A-Za-z_][A-Za-z0-9_]*\b", prefix)
         if tokens:
             candidate = tokens[-1]
-            if candidate not in {"if", "while", "switch", "for", "return"}:
+            if candidate not in C_TYPE_KEYWORDS | {"if", "while", "switch", "for", "return"}:
                 names.add(candidate)
     return sorted(names)
 
