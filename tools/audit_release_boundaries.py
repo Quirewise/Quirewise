@@ -114,7 +114,7 @@ CMAKE_COMMAND_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 CMAKE_LINK_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("cmake_external_link:zlib", re.compile(r"\bZLIB::ZLIB\b|(?<![A-Za-z0-9_])zlib(?![A-Za-z0-9_])|(?<!\S)-lz(?:lib)?(?=\s|$)", re.I)),
     ("cmake_external_link:lzma", re.compile(r"\bLibLZMA::LibLZMA\b|(?<![A-Za-z0-9_])(?:lib)?lzma(?![A-Za-z0-9_])|(?<!\S)-llzma(?=\s|$)", re.I)),
-    ("cmake_external_link:openssl", re.compile(r"\bOpenSSL::(?:SSL|Crypto)\b|(?<![A-Za-z0-9_])(?:lib)?(?:ssl|crypto)(?![A-Za-z0-9_])|(?<!\S)-l(?:ssl|crypto)(?=\s|$)", re.I)),
+    ("cmake_external_link:openssl", re.compile(r"\bOpenSSL::(?:SSL|Crypto)\b|(?<![A-Za-z0-9_:])(?:lib)?(?:ssl|crypto)(?![A-Za-z0-9_])|(?<!\S)-l(?:ssl|crypto)(?=\s|$)", re.I)),
     ("cmake_external_link:webp", re.compile(r"\bWebP::[A-Za-z0-9_]+\b|(?<![A-Za-z0-9_])(?:lib)?webp(?:demux)?(?![A-Za-z0-9_])|(?<!\S)-lwebp(?:demux)?(?=\s|$)", re.I)),
     ("cmake_external_link:openjpeg", re.compile(r"\bOpenJPEG::[A-Za-z0-9_]+\b|(?<![A-Za-z0-9_])(?:lib)?openjp2(?![A-Za-z0-9_])|(?<!\S)-lopenjp2(?=\s|$)", re.I)),
     ("cmake_external_link:djvulibre", re.compile(r"(?<![A-Za-z0-9_])(?:lib)?(?:djvu|ddjvuapi)(?![A-Za-z0-9_])|(?<!\S)-l(?:djvu|djvulibre|ddjvuapi)(?=\s|$)", re.I)),
@@ -378,6 +378,10 @@ def run_self_tests() -> int:
     assert DYNAMIC_LIBRARY_RULES[4][1].search("C:/app/libwebp-7.dll")
     assert not any(pattern.search("libm.so.6") for _, pattern in DYNAMIC_LIBRARY_RULES)
     checks += 1
+    assert not CMAKE_LINK_RULES[2][1].search("Quirewise::Crypto")
+    assert CMAKE_LINK_RULES[2][1].search("OpenSSL::Crypto")
+    assert CMAKE_LINK_RULES[2][1].search("-lcrypto")
+    checks += 3
     with tempfile.TemporaryDirectory(prefix="quirewise-audit-") as temporary:
         fixture = Path(temporary)
         source = fixture / "libraries" / "quirewise-fixture" / "src" / "fixture.c"
