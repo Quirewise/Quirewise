@@ -13,7 +13,7 @@ REQUIRED = {
     "audio": ["MAX_FRAME", "MAX_REPEAT_DEPTH"],
     "vector": ["MAX_PIXEL", "MAX_INPUT_BYTES"],
     "subtitle": ["MAX_INPUT_BYTES"],
-    "spreadsheet": ["MAX_INPUT_BYTES"],
+    "spreadsheet": ["MAX_CONTENT_BYTES"],
     "comic": ["QW_COMIC_ERR_RESOURCE_LIMIT"],
     "compression": ["OUTPUT_FULL"],
     "pdg": ["MAX_PARALLEL_JOBS"],
