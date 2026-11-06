@@ -66,7 +66,9 @@ def archive_symbols(archive: Path, nm: str) -> set[str]:
     symbols: set[str] = set()
     for line in completed.stdout.splitlines():
         parts = line.split()
-        if len(parts) >= 3 and parts[-2] in {"T", "t"}:
+        # Only external text symbols are exported API; lowercase "t" is a
+        # translation-unit-local function and must not inflate the surface.
+        if len(parts) >= 3 and parts[-2] == "T":
             symbols.add(parts[-1])
     return symbols
 
