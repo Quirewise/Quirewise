@@ -75,7 +75,15 @@ SYMBOL_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("third_party_symbol:openssl_bn", re.compile(r"\bBN_[A-Za-z0-9_]*\b")),
     ("third_party_symbol:openssl_des", re.compile(r"\bDES_[A-Za-z0-9_]*\b")),
     ("third_party_symbol:openssl", re.compile(r"\bOPENSSL_[A-Za-z0-9_]*\b")),
-    ("third_party_symbol:webp", re.compile(r"\bWebP[A-Za-z0-9_]*\b")),
+    (
+        "third_party_symbol:webp",
+        # Real libwebp public identifiers are PascalCase after the ``WebP``
+        # prefix (``WebPDecode*``, ``WebPAnimDecoder``...). Quirewise's own
+        # WebP lossless types use two consecutive capitals (``WebPLBitReader``,
+        # ``WebPLTransform``), so requiring a lower-case second letter keeps
+        # the symbol-boundary rule from flagging internal identifiers.
+        re.compile(r"\bWebP[A-Z][a-z][A-Za-z0-9_]*\b"),
+    ),
     ("third_party_symbol:openjpeg", re.compile(r"\bopj_[A-Za-z0-9_]*\b")),
     ("third_party_symbol:djvulibre", re.compile(r"\bddjvu_[A-Za-z0-9_]*\b")),
     ("third_party_symbol:mupdf", re.compile(r"\bfz_[A-Za-z0-9_]*\b")),
@@ -351,6 +359,13 @@ def run_self_tests() -> int:
     assert SYMBOL_RULES[4][1].search(_mask_c_strings(lexical))
     assert not DYNAMIC_LOAD_RULE.search(_mask_c_strings(lexical))
     checks += 1
+    assert SYMBOL_RULES[4][1].search("WebPDecodeRGBA(decoder)")
+    assert not SYMBOL_RULES[4][1].search("WebPLBitReader reader")
+    assert not SYMBOL_RULES[4][1].search("WebPLTransform transform")
+    checks += 1
+    assert _is_path_segment("src/internal/lzma_sdk/LzmaDec.c", 13)
+    assert not _is_path_segment("lzma_stream_decoder", 0)
+    checks += 1
     commands = list(
         _cmake_commands(
             'target_link_libraries(t PRIVATE "$<$<NOT:$<PLATFORM_ID:Windows>>:m>" '
@@ -433,6 +448,16 @@ def _relative(path: Path, workspace: Path) -> str:
 
 def _line_number(text: str, offset: int) -> int:
     return text.count("\n", 0, offset) + 1
+
+
+def _is_path_segment(text: str, offset: int) -> bool:
+    """Return True when a symbol-shaped match is really a path component.
+
+    Bundled sources live under directories such as ``src/internal/lzma_sdk``;
+    without this check the ``lzma_*`` symbol rule reports every path mention.
+    """
+
+    return offset > 0 and text[offset - 1] in "/\\"
 
 
 def _finding(
@@ -519,6 +544,8 @@ def audit_workspace(
         } else text
         for rule, pattern in SYMBOL_RULES:
             for match in pattern.finditer(code_tokens):
+                if _is_path_segment(code_tokens, match.start()):
+                    continue
                 _finding(findings, rule, path, workspace, text, match)
         for match in DYNAMIC_LOAD_RULE.finditer(code_tokens):
             _finding(findings, "dynamic_loader_api", path, workspace, text, match)
