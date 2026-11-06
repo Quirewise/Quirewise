@@ -90,6 +90,8 @@ def parse_args() -> argparse.Namespace:
                         default=Path("external-consumer-template/src"))
     parser.add_argument("--nm", default="nm")
     parser.add_argument("--json", type=Path, required=True)
+    parser.add_argument("--mapping-out", type=Path,
+                        help="write per-package function-to-consumer mapping")
     return parser.parse_args()
 
 
@@ -115,6 +117,12 @@ def main() -> int:
         public_api = sorted(declared & exported)
         covered = sorted(set(public_api) & all_calls)
         uncovered = sorted(set(public_api) - all_calls)
+        mapping = {
+            function: sorted(
+                source for source, names in calls.items() if function in names
+            )
+            for function in covered
+        }
         total_declared += len(public_api)
         total_covered += len(covered)
         packages.append(
@@ -127,6 +135,7 @@ def main() -> int:
                 "covered": len(covered),
                 "coverage": round(len(covered) / len(public_api), 4) if public_api else 0.0,
                 "uncovered": uncovered,
+                "mapped": mapping,
             }
         )
 
@@ -138,6 +147,23 @@ def main() -> int:
         "coverage": round(total_covered / total_declared, 4) if total_declared else 0.0,
         "packages": packages,
     }
+    if args.mapping_out:
+        mapping_document = {
+            "prefix": str(prefix),
+            "consumer_sources": str(args.consumer_sources),
+            "packages": {
+                item["package"]: {
+                    "target": item["target"],
+                    "functions": item["mapped"],
+                }
+                for item in packages
+            },
+        }
+        args.mapping_out.parent.mkdir(parents=True, exist_ok=True)
+        args.mapping_out.write_text(
+            json.dumps(mapping_document, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8", newline="\n",
+        )
     args.json.parent.mkdir(parents=True, exist_ok=True)
     args.json.write_text(
         json.dumps(report, indent=2, ensure_ascii=False) + "\n",
