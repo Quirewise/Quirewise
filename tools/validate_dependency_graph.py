@@ -10,9 +10,12 @@ both the build-time ``find_package`` calls and the installed package config's
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
+import subprocess
 import sys
+from collections import Counter
 from pathlib import Path
 
 from audit_release_boundaries import (
@@ -248,6 +251,115 @@ def find_cycle(graph: dict[str, set[str]]) -> list[str] | None:
     return None
 
 
+def collect_archive_symbols(prefix: Path, nm: str, declared_libraries: list[str]) -> tuple[
+    dict[str, set[str]], dict[str, set[str]], Counter[str]
+]:
+    """Return defined/undefined symbols per library and duplicate definitions."""
+
+    defined: dict[str, set[str]] = {}
+    undefined: dict[str, set[str]] = {}
+    owners: Counter[str] = Counter()
+
+    def archive_owner(stem: str, libraries: set[str]) -> str:
+        """Longest library name that prefixes the archive stem on '-' boundaries."""
+        normalized = stem.replace("lib", "", 1).replace("_", "-")
+        candidates = [
+            library for library in libraries
+            if normalized == library or normalized.startswith(library + "-")
+        ]
+        if candidates:
+            return max(candidates, key=len)
+        return normalized
+
+    for archive in sorted((prefix / "lib").glob("libquirewise_*.a")):
+        library = archive_owner(archive.stem, set(declared_libraries))
+        run_defined = subprocess.run(
+            [nm, "-g", "--defined-only", str(archive)],
+            capture_output=True, text=True, timeout=300,
+        )
+        run_undefined = subprocess.run(
+            [nm, "-u", str(archive)], capture_output=True, text=True, timeout=300,
+        )
+        defined_symbols: set[str] = set()
+        for line in run_defined.stdout.splitlines():
+            parts = line.split()
+            if len(parts) >= 3 and parts[-2] in {"T", "D", "B", "R", "S", "G"}:
+                symbol = parts[-1]
+                if symbol.startswith(".") or symbol.startswith("__"):
+                    continue
+                defined_symbols.add(symbol)
+                owners[symbol] += 1
+        undefined_symbols: set[str] = set()
+        for line in run_undefined.stdout.splitlines():
+            parts = line.split()
+            if parts and parts[0] == "U" and len(parts) >= 2:
+                undefined_symbols.add(parts[-1])
+        defined.setdefault(library, set()).update(defined_symbols)
+        undefined.setdefault(library, set()).update(undefined_symbols)
+    return defined, undefined, owners
+
+
+def closure(graph: dict[str, set[str]], start: str) -> set[str]:
+    seen: set[str] = set()
+    stack = list(graph.get(start, set()))
+    while stack:
+        node = stack.pop()
+        if node in seen or node == start:
+            continue
+        seen.add(node)
+        stack.extend(graph.get(node, set()))
+    return seen
+
+
+def validate_actual_closure(
+    declared: dict[str, set[str]], prefix: Path, nm: str
+) -> tuple[list[str], dict[str, list[str]]]:
+    errors: list[str] = []
+    defined, undefined, owners = collect_archive_symbols(
+        prefix, nm, sorted(declared)
+    )
+    duplicates = sorted(name for name, count in owners.items() if count > 1)
+    if duplicates:
+        errors.append(
+            "duplicate global symbols across archives: " + ", ".join(duplicates[:10])
+        )
+
+    symbol_owner: dict[str, str] = {}
+    for library, symbols in defined.items():
+        for symbol in symbols:
+            symbol_owner.setdefault(symbol, library)
+
+    actual_direct: dict[str, set[str]] = {library: set() for library in declared}
+    for library, symbols in undefined.items():
+        if library not in actual_direct:
+            continue
+        for symbol in symbols:
+            owner = symbol_owner.get(symbol)
+            if owner and owner != library:
+                actual_direct[library].add(owner)
+
+    report: dict[str, list[str]] = {}
+    for library in sorted(declared):
+        if library not in defined:
+            errors.append(f"{library}: no installed archive found in {prefix}")
+            continue
+        actual = closure(actual_direct, library)
+        expected = closure(declared, library)
+        missing = sorted(actual - expected)
+        extra = sorted(expected - actual)
+        report[library] = sorted(actual)
+        if missing:
+            errors.append(
+                f"{library}: actual link closure has undeclared dependencies: "
+                + ", ".join(missing)
+            )
+        if extra:
+            report.setdefault("declared_only", []).append(
+                f"{library}: declared but no symbol evidence: " + ", ".join(extra)
+            )
+    return errors, report
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -255,6 +367,21 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path(__file__).resolve().parents[2],
         help="Quirewise workspace containing libraries/ (default: inferred)",
+    )
+    parser.add_argument(
+        "--actual-prefix",
+        type=Path,
+        help="installed prefix used to verify the actual link closure",
+    )
+    parser.add_argument(
+        "--nm",
+        default="nm",
+        help="nm executable (default: nm from PATH)",
+    )
+    parser.add_argument(
+        "--json-out",
+        type=Path,
+        help="write the declared and actual dependency graphs as JSON",
     )
     return parser.parse_args()
 
@@ -293,6 +420,18 @@ def main() -> int:
     if cycle:
         errors.append("dependency cycle: " + " -> ".join(cycle))
 
+    actual_report: dict[str, list[str]] = {}
+    declared_only: list[str] = []
+    if args.actual_prefix:
+        if not (args.actual_prefix / "lib").is_dir():
+            errors.append(f"actual prefix has no lib directory: {args.actual_prefix}")
+        else:
+            actual_errors, actual_report = validate_actual_closure(
+                graph, args.actual_prefix.resolve(), args.nm
+            )
+            errors.extend(actual_errors)
+            declared_only = actual_report.pop("declared_only", [])
+
     print("Quirewise library dependency graph")
     print(
         f"Package install audit: {installed_package_count}/{len(graph)} libraries "
@@ -306,6 +445,26 @@ def main() -> int:
     for library in sorted(graph):
         dependencies = ", ".join(sorted(graph[library])) or "(none)"
         print(f"  {library} -> {dependencies}")
+    if actual_report:
+        print("\nActual link closure (verified from installed archives):")
+        for library in sorted(actual_report):
+            dependencies = ", ".join(actual_report[library]) or "(none)"
+            print(f"  {library} => {dependencies}")
+        for note in declared_only:
+            print(f"  note: {note}")
+
+    if args.json_out:
+        payload = {
+            "declared": {key: sorted(value) for key, value in sorted(graph.items())},
+            "actual": actual_report,
+            "declared_only": declared_only,
+            "errors": errors,
+        }
+        args.json_out.parent.mkdir(parents=True, exist_ok=True)
+        args.json_out.write_text(
+            json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8", newline="\n",
+        )
 
     if errors:
         print("\nDependency validation failed:", file=sys.stderr)
