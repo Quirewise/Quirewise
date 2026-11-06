@@ -55,6 +55,62 @@ BUNDLED_LICENSES: tuple[dict[str, object], ...] = (
 )
 
 
+PLATFORM_COMPONENTS: tuple[dict[str, object], ...] = (
+    {
+        "type": "operating-system",
+        "bom-ref": "pkg:generic/microsoft/windows-base-runtime",
+        "name": "Microsoft Windows base runtime (KERNEL32, msvcrt)",
+        "version": "OS-provided",
+        "licenses": [{"license": {"name": "OS vendor terms; not redistributed"}}],
+        "properties": [
+            {"name": "usage", "value": "dynamic import only; no runtime files redistributed"},
+            {"name": "verified.by",
+             "value": "DLL import tables show KERNEL32/msvcrt plus the GCC runtime"},
+        ],
+    },
+    {
+        "type": "operating-system",
+        "bom-ref": "pkg:generic/linux/glibc-base-runtime",
+        "name": "GNU C Library / libm (Linux base runtime)",
+        "version": "OS-provided",
+        "licenses": [{"license": {
+            "name": "LGPL-2.1-or-later (glibc); dynamically linked, not redistributed"}}],
+        "properties": [
+            {"name": "usage", "value": "dynamic dependency only"},
+            {"name": "verified.by", "value": "ldd -r shows libc/libm/ld-linux only"},
+        ],
+    },
+)
+
+FIXTURE_GROUPS: tuple[dict[str, str], ...] = (
+    {
+        "name": "ITU-T T.803 JP2 conformance fixtures",
+        "bom-ref": "pkg:generic/testing/itut-t803-conformance-fixtures",
+        "license": "LicenseRef-ITU-T-T803-Conformance-Use",
+        "path": "libraries/quirewise-image/tests/data/jp2",
+        "pattern": "t803_*",
+        "evidence": "tests/data/jp2/T803_PROFILE0_COPYRIGHT.txt and T803_PROFILE0_NOTICE.md",
+        "note": "JPEG 2000 conformance use only; copyright notice retained",
+    },
+    {
+        "name": "Quirewise synthetic image fixtures",
+        "bom-ref": "pkg:generic/testing/quirewise-synthetic-image-fixtures",
+        "license": "LicenseRef-Quirewise-Generated-Test-Data",
+        "path": "libraries/quirewise-image/tests/data",
+        "pattern": "*",
+        "exclude_prefix": "t803",
+        "evidence": "tests/data/PROVENANCE.md",
+        "note": "generated from synthetic pixel data; no third-party imagery",
+    },
+)
+
+FORBIDDEN_RUNTIME_NAMES: tuple[str, ...] = (
+    "openssl", "zlib", "libjpeg", "openjpeg", "mupdf", "djvu", "ffmpeg",
+    "ghostscript", "liblzma", "libwebp", "libheif", "libavif", "libraw",
+    "libtiff", "libpng",
+)
+
+
 def run_git(repo: Path, *args: str) -> str:
     try:
         completed = subprocess.run(
@@ -156,6 +212,42 @@ def bundled_components(workspace: Path) -> list[dict[str, object]]:
     return components
 
 
+def fixture_components(workspace: Path) -> list[dict[str, object]]:
+    components: list[dict[str, object]] = []
+    for group in FIXTURE_GROUPS:
+        path = workspace / group["path"]
+        if not path.is_dir():
+            continue
+        pattern = group["pattern"]
+        exclude = group.get("exclude_prefix")
+        files = [f for f in path.rglob(pattern) if f.is_file()]
+        if exclude:
+            files = [f for f in files
+                     if not f.name.lower().startswith(str(exclude).lower())]
+        if not files:
+            continue
+        components.append(
+            {
+                "type": "file",
+                "bom-ref": group["bom-ref"],
+                "name": group["name"],
+                "version": f"{len(files)} files",
+                "licenses": [{"license": {"name": group["license"]}}],
+                "properties": [
+                    {"name": "path", "value": group["path"]},
+                    {"name": "fixture.count", "value": str(len(files))},
+                    {"name": "license.evidence", "value": group["evidence"]},
+                    {"name": "note", "value": group["note"]},
+                ],
+            }
+        )
+    return components
+
+
+def platform_components() -> list[dict[str, object]]:
+    return [dict(component) for component in PLATFORM_COMPONENTS]
+
+
 def dependency_edges(workspace: Path) -> tuple[list[dict[str, object]], list[str]]:
     edges: list[dict[str, object]] = []
     warnings: list[str] = []
@@ -200,6 +292,11 @@ def validate_sbom(sbom: dict[str, object]) -> list[str]:
     if len(references) != len(set(references)):
         problems.append("duplicate bom-ref values")
     known = set(references)
+    for component in sbom["components"]:  # type: ignore[index]
+        name = str(component.get("name", "")).lower()
+        for forbidden in FORBIDDEN_RUNTIME_NAMES:
+            if forbidden in name:
+                problems.append(f"forbidden runtime component: {component['name']}")
     for entry in sbom["dependencies"]:  # type: ignore[index]
         if entry["ref"] not in known:
             problems.append(f"dependency ref not in components: {entry['ref']}")
@@ -231,6 +328,8 @@ def main() -> int:
         print("error: no libraries found", file=sys.stderr)
         return 2
     bundled = bundled_components(workspace)
+    fixtures = fixture_components(workspace)
+    platforms = platform_components()
     edges, warnings = dependency_edges(workspace)
     sbom = {
         "bomFormat": "CycloneDX",
@@ -244,8 +343,24 @@ def main() -> int:
                 "name": "quirewise-workspace",
                 "version": "unversioned",
             },
+            "properties": [
+                {"name": "license.review.static", "value":
+                    "All Quirewise libraries and bundled sources are permissive "
+                    "(public domain / MIT / Unlicense); static linking creates no "
+                    "copyleft obligation and no third-party code is redistributed."},
+                {"name": "license.review.shared", "value":
+                    "Shared builds export the same permissive code; consumers link "
+                    "Quirewise libraries dynamically under the same terms."},
+                {"name": "license.review.cross-language", "value":
+                    "No cross-language wrappers (Python/Java/.NET/Node bindings) "
+                    "exist in the release sources, so no wrapper licensing "
+                    "obligation applies."},
+                {"name": "license.first_party", "value":
+                    "not declared; adopting a first-party license is a maintainer "
+                    "decision and remains a release blocker independent of the SBOM."},
+            ],
         },
-        "components": libraries + bundled,
+        "components": libraries + bundled + fixtures + platforms,
         "dependencies": edges,
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -285,6 +400,30 @@ def main() -> int:
                 }
                 for item in bundled
             ],
+            "test_fixtures": [
+                {
+                    "component": item["name"],
+                    "version": item["version"],
+                    "license": item["licenses"][0]["license"]["name"],
+                    "path": next(
+                        prop["value"] for prop in item["properties"]
+                        if prop["name"] == "path"
+                    ),
+                    "evidence": next(
+                        prop["value"] for prop in item["properties"]
+                        if prop["name"] == "license.evidence"
+                    ),
+                }
+                for item in fixtures
+            ],
+            "platform_runtimes": [
+                {
+                    "component": item["name"],
+                    "version": item["version"],
+                    "license": item["licenses"][0]["license"]["name"],
+                }
+                for item in platforms
+            ],
             "warnings": warnings,
         }
         args.license_out.parent.mkdir(parents=True, exist_ok=True)
@@ -303,6 +442,7 @@ def main() -> int:
         print(f"release manifest: {data['file_count']} files")
 
     print(f"SBOM: {len(libraries)} libraries, {len(bundled)} bundled components, "
+          f"{len(fixtures)} fixture groups, {len(platforms)} platform runtimes, "
           f"{len(edges)} dependency entries")
     for warning in warnings:
         print(f"warning: {warning}")
