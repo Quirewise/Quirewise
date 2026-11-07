@@ -160,26 +160,33 @@ class Runner:
         return all_ok
 
     def install_licenses(self) -> bool:
-        """Copy every first-party LICENSE into the installed release tree."""
+        """Copy every first-party LICENSE into the installed release tree.
+
+        The workspace-root LICENSE is a workspace asset, not a repository file.
+        CI only checks out ``app/`` into the workspace root, so fall back to the
+        application LICENSE and still produce the same 20-file installation.
+        """
         docroot = self.install_root / "share" / "doc" / "quirewise"
         docroot.mkdir(parents=True, exist_ok=True)
+        root_license = self.workspace / "LICENSE"
+        if not root_license.is_file():
+            root_license = self.workspace / "app" / "LICENSE"
+        entries = [
+            (root_license, docroot / "LICENSE"),
+            (self.workspace / "app" / "LICENSE", docroot / "application" / "LICENSE"),
+            (self.workspace / "external-consumer-template" / "LICENSE",
+             docroot / "external-consumer-template" / "LICENSE"),
+        ]
+        entries += [
+            (self.workspace / "libraries" / name / "LICENSE",
+             docroot / name / "LICENSE")
+            for name, _ in LIBRARIES
+        ]
         copied = 0
-        sources = [self.workspace / "LICENSE", self.workspace / "app" / "LICENSE",
-                   self.workspace / "external-consumer-template" / "LICENSE"]
-        sources += [self.workspace / "libraries" / name / "LICENSE"
-                    for name, _ in LIBRARIES]
-        for source in sources:
+        for source, destination in entries:
             if not source.is_file():
                 print(f"[FAIL] license missing: {source}")
                 return False
-            if source == self.workspace / "LICENSE":
-                destination = docroot / "LICENSE"
-            elif source.parent.name == "app":
-                destination = docroot / "application" / "LICENSE"
-            elif source.parent.name == "external-consumer-template":
-                destination = docroot / "external-consumer-template" / "LICENSE"
-            else:
-                destination = docroot / source.parent.name / "LICENSE"
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, destination)
             copied += 1
