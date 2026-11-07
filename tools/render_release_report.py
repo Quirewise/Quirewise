@@ -148,7 +148,7 @@ python3 app/tools/run_acceptance.py --workspace . --shared --jobs 4
 
 | 闸门 | 结果 |
 |---|---|
-| `validate_dependency_graph.py`（声明图 + 安装归档实际链接闭包，运行器传入 `--actual-prefix`/`--nm`） | 17 个库、无环、无 app/源码泄漏；实际闭包与声明图一致（`comic/page` 对 `image` 为声明但无符号证据，属于冗余声明，不影响无环） |
+| `validate_dependency_graph.py`（声明图；静态模式另由运行器传入 `--actual-prefix`/`--nm` 从归档反推实际闭包） | 17 个库、无环、无 app/源码泄漏；静态实际闭包与声明图一致（`comic/page` 对 `image` 为声明但无符号证据，属于冗余声明，不影响无环）；共享模式只做声明图 |
 | `audit_release_boundaries.py` | **0 findings、0 read errors**，仅 1 条开发期观察（app 的 Python3 查找） |
 | `audit_mupdf_removal.py` | **0 命中**；`qw_mupdf_*`、`mupdf_backend.h`、`QUIREWISE_WITH_MUPDF`、`<mupdf/...>` 与 MuPDF CMake 引用全部清零 |
 | `verify_public_headers.py`（静态与共享安装树） | 58/58 公共头独立编译通过，0 失败，0 第三方头泄漏（JSON 证据见下表） |

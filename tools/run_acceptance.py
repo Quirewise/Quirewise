@@ -232,7 +232,9 @@ class Runner:
         dependency = [python, "app/tools/validate_dependency_graph.py",
                       "--workspace", "."]
         nm = shutil.which("nm")
-        if nm:
+        if nm and not self.shared:
+            # The actual link closure is reconstructed from static archives;
+            # shared installs expose import libraries/SONAMEs instead.
             dependency += ["--actual-prefix", str(self.install_root), "--nm", nm]
         gates = [
             ("gate.dependency-graph", dependency),
