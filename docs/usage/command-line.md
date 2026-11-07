@@ -1,5 +1,9 @@
 # 命令行使用
 
+> **迁移状态（2026-11-07）**：本页描述的是目标/旧版统一 CLI。当前 `app/` 仓库
+> 的可执行文件只实现 `--version`、`--libraries` 和 `--help`；转换入口尚未移植，
+> 库级能力与验收方式见 `app/README.md` 和 `app/tools/run_acceptance.py`。
+
 ## 统一转换入口
 
 基本形式：

@@ -1,0 +1,119 @@
+name: acceptance
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUTF8: "1"
+  PYTHONIOENCODING: utf-8
+
+jobs:
+  ubuntu:
+    name: ubuntu-24.04 / ${{ matrix.mode }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [static, shared]
+    env:
+      MODE: ${{ matrix.mode == 'shared' && '--shared' || '' }}
+    steps:
+      - name: Check out the application repository
+        uses: actions/checkout@v4
+        with:
+          path: workspace/app
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ninja
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+
+      - name: Check out the pinned library repositories
+        working-directory: workspace/app
+        env:
+          QUIREWISE_REPOS_TOKEN: ${{ secrets.QUIREWISE_REPOS_TOKEN }}
+        run: python tools/fetch_workspace.py --workspace ..
+
+      - name: Build, test and audit
+        working-directory: workspace
+        run: |
+          python app/tools/run_acceptance.py --workspace . $MODE \
+            --jobs 4 --summary .tmp/acceptance/summary-${{ matrix.mode }}.json
+
+      - name: Upload acceptance logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-ubuntu-${{ matrix.mode }}
+          path: |
+            workspace/.tmp/acceptance/**/logs
+            workspace/.tmp/acceptance/summary-*.json
+          if-no-files-found: warn
+
+  windows:
+    name: windows-2022 / mingw / ${{ matrix.mode }}
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [static, shared]
+    env:
+      MODE: ${{ matrix.mode == 'shared' && '--shared' || '' }}
+    steps:
+      - name: Check out the application repository
+        uses: actions/checkout@v4
+        with:
+          path: workspace/app
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install MinGW64 GCC, CMake and Ninja
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+
+      - name: Check out the pinned library repositories
+        working-directory: workspace/app
+        shell: pwsh
+        env:
+          QUIREWISE_REPOS_TOKEN: ${{ secrets.QUIREWISE_REPOS_TOKEN }}
+        run: |
+          $env:Path = "C:\msys64\mingw64\bin;$env:Path"
+          python tools/fetch_workspace.py --workspace ..
+
+      - name: Build, test and audit
+        working-directory: workspace
+        shell: pwsh
+        run: |
+          $env:Path = "C:\msys64\mingw64\bin;$env:Path"
+          python app/tools/run_acceptance.py --workspace . $env:MODE `
+            --jobs 4 --summary .tmp/acceptance/summary-${{ matrix.mode }}.json
+
+      - name: Upload acceptance logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-windows-${{ matrix.mode }}
+          path: |
+            workspace/.tmp/acceptance/**/logs
+            workspace/.tmp/acceptance/summary-*.json
+          if-no-files-found: warn

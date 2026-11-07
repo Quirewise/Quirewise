@@ -1,8 +1,12 @@
 # Quirewise application
 
-The root repository is now the application and composition repository. Format implementations live in independent, sibling Git repositories:
+The root repository is the application and composition repository. Format
+implementations live in independent, sibling Git repositories:
 
 - `quirewise-runtime`
+- `quirewise-charset`
+- `quirewise-compression`
+- `quirewise-crypto`
 - `quirewise-image`
 - `quirewise-archive`
 - `quirewise-page`
@@ -17,7 +21,9 @@ The root repository is now the application and composition repository. Format im
 - `quirewise-vector`
 - `quirewise-comic`
 
-The application never compiles a nested copy of those repositories. Install the libraries, add their install prefixes to `CMAKE_PREFIX_PATH`, and select the libraries to compose with `QUIREWISE_LINK_*` options.
+The application never compiles a nested copy of those repositories. Install the
+libraries, add their install prefixes to `CMAKE_PREFIX_PATH`, and select the
+libraries to compose with `QUIREWISE_LINK_*` options.
 
 ```powershell
 cmake -S . -B .tmp/build-app -DQUIREWISE_LINK_IMAGE=ON -DQUIREWISE_LINK_ARCHIVE=ON
@@ -25,7 +31,26 @@ cmake --build .tmp/build-app
 .\.tmp\build-app\quirewise.exe --libraries
 ```
 
-Validate the independent-library dependency graph from the workspace root:
+The current application executable is a composition shell: it reports the
+version and the libraries selected at configure time. Conversion dispatch is
+implemented in the library packages and exercised by the external consumer
+template; the former unified `quirewise INPUT --to FORMAT` command line is not
+ported to this repository yet.
+
+## Validate the workspace
+
+Build and test every library, the external consumer and the application shell,
+then run the static boundary gates:
+
+```powershell
+python tools/run_acceptance.py --workspace ..
+```
+
+The same runner accepts `--shared` for shared-library builds and
+`--skip-consumer`/`--skip-app` for narrower loops. It is used by the GitHub
+Actions workflow.
+
+Validate the independent-library dependency graph alone:
 
 ```powershell
 $env:PYTHONUTF8 = '1'
@@ -44,9 +69,15 @@ The check rejects dependency cycles, package-config dependencies missing from
 the build graph, and library source that reaches into another library or the
 application.
 
-An installed-package consumer smoke project is kept at
-`tools/consumer_smoke/`. Configure it with a semicolon-separated
-`CMAKE_PREFIX_PATH` containing the library install prefixes to verify that all
-exported targets can be consumed together.
+## Release checks
 
-The old nested repositories and old root implementation are preserved under `.to_delete/` during migration. They are not part of the new build graph.
+- `tools/audit_release_boundaries.py` — third-party header/symbol/CMake denylist
+- `tools/audit_mupdf_removal.py` — legacy MuPDF boundary removal gate
+- `tools/verify_public_headers.py` / `tools/verify_header_isolation.py` — public
+  header independence
+- `tools/check_consumer_coverage.py` — exported API to consumer call mapping
+- `tools/generate_sbom.py` — CycloneDX SBOM, license inventory and installed
+  prefix manifest
+
+The workspace is licensed under the MIT License; see [LICENSE](LICENSE). Every
+library and the external consumer template carry the same MIT grant.

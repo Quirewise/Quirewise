@@ -30,6 +30,9 @@ PROJECT_VERSION_RE = re.compile(
 )
 DEPENDENCY_RE = re.compile(r"find_package\(\s*(Quirewise[A-Za-z0-9_]+)\s+CONFIG")
 
+FIRST_PARTY_LICENSE = "MIT"
+FIRST_PARTY_LICENSE_FILE = "LICENSE"
+
 BUNDLED_LICENSES: tuple[dict[str, object], ...] = (
     {
         "match": "stb",
@@ -51,6 +54,13 @@ BUNDLED_LICENSES: tuple[dict[str, object], ...] = (
         "version": "unversioned",
         "license": "Public Domain",
         "note": "upstream LZMA SDK is public domain; no license file is bundled",
+    },
+    {
+        "match": "vendor",
+        "name": "djvudec",
+        "version": "f0412eea9fe2f8d633104aab99b0e009b586b181",
+        "license": "MIT",
+        "note": "PROVENANCE.md and LICENSE.djvudec.md in src/formats/djvu/vendor",
     },
 )
 
@@ -141,6 +151,13 @@ def declared_dependencies(library: Path) -> list[str]:
     return sorted({match.group(1) for match in DEPENDENCY_RE.finditer(text)})
 
 
+def license_evidence(repository: Path) -> str:
+    license_path = repository / FIRST_PARTY_LICENSE_FILE
+    if license_path.is_file():
+        return f"{FIRST_PARTY_LICENSE}: {license_path.name}"
+    return "not declared"
+
+
 def library_components(workspace: Path) -> list[dict[str, object]]:
     components: list[dict[str, object]] = []
     for library in sorted((workspace / "libraries").glob("quirewise-*")):
@@ -158,15 +175,38 @@ def library_components(workspace: Path) -> list[dict[str, object]]:
                 "group": "quirewise",
                 "version": version,
                 "purl": f"pkg:generic/quirewise/{library.name}@{version}",
+                "licenses": [{"license": {"name": FIRST_PARTY_LICENSE}}],
                 "properties": [
                     {"name": "cmake.project", "value": name},
                     {"name": "git.commit", "value": commit or "unknown"},
                     {"name": "git.dirty", "value": "true" if dirty else "false"},
                     {"name": "path", "value": library.relative_to(workspace).as_posix()},
+                    {"name": "license.evidence", "value": license_evidence(library)},
                 ],
             }
         )
     return components
+
+
+def application_component(workspace: Path) -> list[dict[str, object]]:
+    app = workspace / "app"
+    if not (app / "CMakeLists.txt").is_file():
+        return []
+    version = package_version(app)
+    return [{
+        "type": "application",
+        "bom-ref": f"pkg:generic/quirewise/application@{version}",
+        "name": "quirewise-application",
+        "group": "quirewise",
+        "version": version,
+        "purl": f"pkg:generic/quirewise/application@{version}",
+        "licenses": [{"license": {"name": FIRST_PARTY_LICENSE}}],
+        "properties": [
+            {"name": "git.commit", "value": run_git(app, "rev-parse", "HEAD") or "unknown"},
+            {"name": "path", "value": "app"},
+            {"name": "license.evidence", "value": license_evidence(app)},
+        ],
+    }]
 
 
 def bundled_components(workspace: Path) -> list[dict[str, object]]:
@@ -182,6 +222,9 @@ def bundled_components(workspace: Path) -> list[dict[str, object]]:
         sdk = library / "src" / "internal" / "lzma_sdk"
         if sdk.is_dir():
             candidates.append((sdk, library.name))
+        djvu_vendor = library / "src" / "formats" / "djvu" / "vendor"
+        if djvu_vendor.is_dir():
+            candidates.append((djvu_vendor, library.name))
     for entry, owner in candidates:
         key = (entry.name, owner)
         if key in seen:
@@ -293,6 +336,10 @@ def validate_sbom(sbom: dict[str, object]) -> list[str]:
         problems.append("duplicate bom-ref values")
     known = set(references)
     for component in sbom["components"]:  # type: ignore[index]
+        if "?bundled=" in str(component.get("bom-ref", "")):
+            # Bundled source is compiled into Quirewise and is not a runtime
+            # dependency; its license is reviewed by license-out instead.
+            continue
         name = str(component.get("name", "")).lower()
         for forbidden in FORBIDDEN_RUNTIME_NAMES:
             if forbidden in name:
@@ -327,6 +374,7 @@ def main() -> int:
     if not libraries:
         print("error: no libraries found", file=sys.stderr)
         return 2
+    applications = application_component(workspace)
     bundled = bundled_components(workspace)
     fixtures = fixture_components(workspace)
     platforms = platform_components()
@@ -342,6 +390,7 @@ def main() -> int:
                 "type": "application",
                 "name": "quirewise-workspace",
                 "version": "unversioned",
+                "licenses": [{"license": {"name": FIRST_PARTY_LICENSE}}],
             },
             "properties": [
                 {"name": "license.review.static", "value":
@@ -356,11 +405,11 @@ def main() -> int:
                     "exist in the release sources, so no wrapper licensing "
                     "obligation applies."},
                 {"name": "license.first_party", "value":
-                    "not declared; adopting a first-party license is a maintainer "
-                    "decision and remains a release blocker independent of the SBOM."},
+                    f"{FIRST_PARTY_LICENSE}; the LICENSE file in each repository is "
+                    "the authoritative first-party grant."},
             ],
         },
-        "components": libraries + bundled + fixtures + platforms,
+        "components": libraries + applications + bundled + fixtures + platforms,
         "dependencies": edges,
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -376,13 +425,17 @@ def main() -> int:
                 {
                     "component": item["name"],
                     "version": item["version"],
-                    "license": "not declared",
+                    "license": item["licenses"][0]["license"]["name"],
                     "path": next(
                         prop["value"] for prop in item["properties"]
                         if prop["name"] == "path"
                     ),
+                    "evidence": next(
+                        prop["value"] for prop in item["properties"]
+                        if prop["name"] == "license.evidence"
+                    ),
                 }
-                for item in libraries
+                for item in libraries + applications
             ],
             "bundled": [
                 {
