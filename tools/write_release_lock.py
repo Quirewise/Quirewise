@@ -28,11 +28,22 @@ def normalise_url(url: str) -> str:
     return url + ".git"
 
 
+def repository_url(repo: Path, url_base: str) -> str:
+    completed = subprocess.run(["git", "-C", str(repo), "remote", "get-url", "origin"],
+                               capture_output=True, text=True, check=False)
+    if completed.returncode == 0 and completed.stdout.strip():
+        return normalise_url(completed.stdout.strip())
+    # The three new libraries were created locally before their remotes existed.
+    return normalise_url(f"{url_base.rstrip('/')}/{repo.name}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workspace", type=Path,
                         default=Path(__file__).resolve().parents[2])
     parser.add_argument("--out", type=Path)
+    parser.add_argument("--url-base", default="https://github.com/Quirewise",
+                        help="fallback URL base for repositories without an origin remote")
     parser.add_argument("--allow-dirty", action="store_true")
     args = parser.parse_args()
     workspace = args.workspace.resolve()
@@ -47,7 +58,7 @@ def main() -> int:
             raise SystemExit(f"dirty repository, commit first: {repo}")
         entries.append({
             "path": repo.relative_to(workspace).as_posix(),
-            "url": normalise_url(git(repo, "remote", "get-url", "origin")),
+            "url": repository_url(repo, args.url_base),
             "commit": git(repo, "rev-parse", "HEAD"),
         })
     lock = {
