@@ -55,6 +55,14 @@ def acceptance() -> dict:
     }
 
 
+def _summary_ok(path: Path) -> bool:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    return len(data.get("steps", [])) == 79 and not data.get("failed")
+
+
 def work_items() -> dict:
     phases = ["M0", "M1", "M2", "M3", "M4", "M5", "M6"]
     counts = {phase: 0 for phase in phases}
@@ -63,14 +71,51 @@ def work_items() -> dict:
             match = re.match(r"^(M\d)-\d+", entry.name)
             if match and entry.is_dir():
                 counts[match.group(1)] += 1
+
+    release = ROOT / ".tmp" / "release"
+    summaries = [
+        release / "static-summary.json",
+        release / "shared-summary.json",
+        ROOT / ".tmp/acceptance/linux-static/summary.json",
+        ROOT / ".tmp/acceptance/linux-shared/summary.json",
+    ]
+    m5_artifacts = [
+        release / "static-summary.json",
+        release / "shared-summary.json",
+        release / "install-manifest-static.json",
+        release / "install-manifest-shared.json",
+        release / "sbom-static.cdx.json",
+        release / "sbom-shared.cdx.json",
+        release / "license-inventory-static.json",
+        release / "license-inventory-shared.json",
+    ]
+    self_audit = release / "self-audit.json"
+    self_audit_ok = False
+    if self_audit.is_file():
+        try:
+            self_audit_ok = json.loads(
+                self_audit.read_text(encoding="utf-8")).get("overall") == "PASS"
+        except ValueError:
+            self_audit_ok = False
+    signoff = (release / "reviewer-signoff.md").is_file()
+    summaries_ok = all(_summary_ok(path) for path in summaries)
+    m5 = summaries_ok and all(path.is_file() for path in m5_artifacts)
+    m6 = m5 and signoff and self_audit_ok
+
     status = {"M0": "PASS", "M1": "PASS", "M2": "PASS", "M3": "PASS",
-              "M4": "PASS", "M5": "PASS", "M6": "PASS"}
+              "M4": "PASS",
+              "M5": "PASS" if m5 else "IN_PROGRESS",
+              "M6": "PASS" if m6 else "IN_PROGRESS"}
     extra = {
-        "M5": {"evidence_items": 8,
-               "evidence": "RELEASE_ACCEPTANCE_REPORT.md; .tmp/release/install-manifest-*.json"},
-        "M6": {"evidence_items": 4,
+        "M5": {"evidence_items": sum(1 for path in m5_artifacts if path.is_file()),
                "evidence": ".tmp/release/{static,shared}-summary.json; "
-                           ".tmp/acceptance/linux-{static,shared}/summary.json"},
+                           ".tmp/release/install-manifest-*.json; "
+                           ".tmp/release/sbom-*.json"},
+        "M6": {"evidence_items": sum(1 for path in summaries if _summary_ok(path))
+                           + (1 if signoff else 0) + (1 if self_audit_ok else 0),
+               "evidence": ".tmp/acceptance/linux-{static,shared}/summary.json; "
+                           ".tmp/release/reviewer-signoff.md; "
+                           ".tmp/release/self-audit.json"},
     }
     result = {}
     for phase in phases:
@@ -89,20 +134,22 @@ def main() -> int:
         if not backup.exists():
             backup.write_bytes(STATE.read_bytes())
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    items = work_items()
+    release_ready = items["M6"]["status"] == "PASS"
     data = {
         "goal_id": "QW-AUTONOMY-001",
-        "status": "RELEASE_CANDIDATE",
+        "status": "RELEASE_CANDIDATE" if release_ready else "IN_PROGRESS",
         "current_phase": "M6",
         "last_updated_utc": now,
         "repositories": repositories(),
-        "work_items": work_items(),
+        "work_items": items,
         "acceptance": acceptance(),
         "evidence_root": ".tmp/quirewise-agent-evidence",
         "blockers": [],
         "next_actions": [
             "Publish the 18 sibling repositories and the M6 commits, then enable the CI workflow.",
             "Implement PDG PDF output on the internal PDF/Layout path (M3-04 follow-up).",
-            "Decide whether macOS/MSVC are added to the supported platform matrix.",
+            "Tag the release and archive both root acceptance documents with their SHA-256 values.",
         ],
         "generated_at_utc": now,
         "generator": "app/tools/generate_goal_state.py",

@@ -229,10 +229,13 @@ class Runner:
 
     def run_gates(self) -> bool:
         python = sys.executable
+        dependency = [python, "app/tools/validate_dependency_graph.py",
+                      "--workspace", "."]
+        nm = shutil.which("nm")
+        if nm:
+            dependency += ["--actual-prefix", str(self.install_root), "--nm", nm]
         gates = [
-            ("gate.dependency-graph",
-             [python, "app/tools/validate_dependency_graph.py",
-              "--workspace", "."]),
+            ("gate.dependency-graph", dependency),
             ("gate.release-boundaries",
              [python, "app/tools/audit_release_boundaries.py",
               "--workspace", "."]),

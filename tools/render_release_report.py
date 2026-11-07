@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -43,7 +44,11 @@ def main() -> int:
     edges = sum(len(item["dependsOn"]) for item in sbom["dependencies"])
     inventory = json.loads((release / "license-inventory-static.json").read_text(encoding="utf-8"))
 
-    hashes = {}
+    docs_dir = release / "release-docs"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    acceptance_copy = docs_dir / "DEPENDENCY_BOUNDARIES_AND_ACCEPTANCE.md"
+    shutil.copyfile(root / "DEPENDENCY_BOUNDARIES_AND_ACCEPTANCE.md", acceptance_copy)
+    hashes = {"dependency-boundaries.md": sha256(acceptance_copy)}
     for name in [
         "sbom-static.cdx.json", "sbom-shared.cdx.json",
         "license-inventory-static.json", "license-inventory-shared.json",
@@ -143,7 +148,7 @@ python3 app/tools/run_acceptance.py --workspace . --shared --jobs 4
 
 | 闸门 | 结果 |
 |---|---|
-| `validate_dependency_graph.py`（声明图 + 安装归档实际链接闭包） | 17 个库、无环、无 app/源码泄漏；实际闭包与声明图一致（`comic/page` 对 `image` 为声明但无符号证据，属于冗余声明，不影响无环） |
+| `validate_dependency_graph.py`（声明图 + 安装归档实际链接闭包，运行器传入 `--actual-prefix`/`--nm`） | 17 个库、无环、无 app/源码泄漏；实际闭包与声明图一致（`comic/page` 对 `image` 为声明但无符号证据，属于冗余声明，不影响无环） |
 | `audit_release_boundaries.py` | **0 findings、0 read errors**，仅 1 条开发期观察（app 的 Python3 查找） |
 | `audit_mupdf_removal.py` | **0 命中**；`qw_mupdf_*`、`mupdf_backend.h`、`QUIREWISE_WITH_MUPDF`、`<mupdf/...>` 与 MuPDF CMake 引用全部清零 |
 | `verify_public_headers.py`（静态与共享安装树） | 58/58 公共头独立编译通过，0 失败，0 第三方头泄漏（JSON 证据见下表） |
@@ -180,9 +185,10 @@ Runtime 现在也有 `quirewise_runtime_abi` CTest，17 个库均有测试入口
 ## 7. 已知限制与外部前置
 
 1. **CI 需要先发布仓库**：`.github/workflows/ci.yml` 与 `app/release-lock.json`
-   已就绪，但本会话未执行 push。18 个兄弟仓库的 M6 提交与
-   `charset`/`compression`/`crypto` 三个新仓库的远端尚不存在；发布这些提交后
-   CI 才能拉取 lock 中的提交。lock 中 `comic`/`page`/`runtime` 指向
+   已就绪，但本会话未执行 push。运行器在缺少工作区根 `LICENSE` 时回退到
+   `app/LICENSE`，因此只检出 `app/` 也能完成 20 份许可证复制；但仍需先发布
+   18 个兄弟仓库的 M6 提交与 `charset`/`compression`/`crypto` 三个新仓库的远端，
+   CI 才能拉取 lock 中的提交并实际运行。lock 中 `comic`/`page`/`runtime` 指向
    `github.com/Hellohistory/…`，其余指向 `github.com/Quirewise/…`；CI 的
    token/可见性需要同时覆盖这两个组织。
 2. **平台**：macOS/MSVC 未验证，属于明确排除范围（决策记录在本节与验收文档第 11 节），
@@ -195,17 +201,28 @@ Runtime 现在也有 `quirewise_runtime_abi` CTest，17 个库均有测试入口
    模块返回 `PDG_ERR_EXTERNAL_DECODER_REQUIRED`（证据 `.tmp/release/pdg-pdf-status.txt`）；
    M3-04 的“PDG PDF 输出迁移到内部 PDF/Layout”仍是一项后续能力工作。
 7. **依赖声明清理**：`comic` 与 `page` 声明了 `image` 依赖但没有符号证据，属于可后续删除的冗余声明。
-8. **清理记录**：本轮删除了根目录遗留安装前缀 `$prefix`、`.tmp/openjpeg-debug-src`、
-   `.tmp/openjpeg-debug-build`、前导空格的 ` .tmp`、空 `.to_delete`、
-   `.tmp/quirewise-agent-install`，以及 `app/.tmp`（113.6 GB / 633k 文件的旧构建与
-   Ghostscript 依赖缓存）；`.tmp/quirewise-agent-build` 等历史证据构建目录
-   （约 324 MB）与 `.tmp/quirewise-agent-evidence` 有意保留，以便复核 M1/M2 证据，
-   不属于发布物。报告与自检脚本已移入 `app/tools/` 并纳入版本控制，
-   `.tmp/verify-build` 中的临时脚本与构建目录不再作为发布依据。
+8. **清理记录**：本轮删除了工作区根目录中名为 `$prefix` 的遗留安装目录、
+   `.tmp/openjpeg-debug-src`、`.tmp/openjpeg-debug-build`、前导空格的 ` .tmp`、
+   空 `.to_delete`、`.tmp/quirewise-agent-install`、`.tmp/verify-build`，以及
+   `app/.tmp`（113.6 GB / 633,437 文件的旧构建与 Ghostscript 依赖缓存）。
+   保留：`.tmp/quirewise-agent-build`（324 MB）、`.tmp/quirewise-agent-evidence`
+   （3,375 MB）、`.tmp/acceptance`（411 MB，当前四组矩阵构建）与
+   `.tmp/release`（0.2 MB 发布工件）；这些不属于发布物。报告与自检脚本已移入
+   `app/tools/` 并纳入版本控制。两份根文档的副本与 SHA-256 记录在
+   `.tmp/release/release-docs/`（`release-docs.sha256`），满足 DEP §8 对版本化
+   验收资料的要求。
 
 {signoff_section}"""
     out = root / "RELEASE_ACCEPTANCE_REPORT.md"
     out.write_text(report, encoding="utf-8")
+    report_copy = docs_dir / "RELEASE_ACCEPTANCE_REPORT.md"
+    shutil.copyfile(out, report_copy)
+    (docs_dir / "release-docs.sha256").write_text(
+        f"{hashlib.sha256(acceptance_copy.read_bytes()).hexdigest()}  "
+        "DEPENDENCY_BOUNDARIES_AND_ACCEPTANCE.md\n"
+        f"{hashlib.sha256(report_copy.read_bytes()).hexdigest()}  "
+        "RELEASE_ACCEPTANCE_REPORT.md\n",
+        encoding="utf-8")
     print(f"wrote {out}")
     return 0
 
