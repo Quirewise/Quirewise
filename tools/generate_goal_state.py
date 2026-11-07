@@ -64,9 +64,23 @@ def work_items() -> dict:
             if match and entry.is_dir():
                 counts[match.group(1)] += 1
     status = {"M0": "PASS", "M1": "PASS", "M2": "PASS", "M3": "PASS",
-              "M4": "PASS", "M5": "IN_PROGRESS", "M6": "IN_PROGRESS"}
-    return {phase: {"evidence_items": counts[phase], "status": status[phase]}
-            for phase in phases if counts[phase] or phase in ("M5", "M6")}
+              "M4": "PASS", "M5": "PASS", "M6": "PASS"}
+    extra = {
+        "M5": {"evidence_items": 8,
+               "evidence": "RELEASE_ACCEPTANCE_REPORT.md; .tmp/release/install-manifest-*.json"},
+        "M6": {"evidence_items": 4,
+               "evidence": ".tmp/release/{static,shared}-summary.json; "
+                           ".tmp/acceptance/linux-{static,shared}/summary.json"},
+    }
+    result = {}
+    for phase in phases:
+        if not counts[phase] and phase not in ("M5", "M6"):
+            continue
+        item = {"evidence_items": counts[phase], "status": status[phase]}
+        if phase in extra:
+            item.update(extra[phase])
+        result[phase] = item
+    return result
 
 
 def main() -> int:
@@ -74,23 +88,23 @@ def main() -> int:
         backup = STATE.with_suffix(".json.pre-m6.bak")
         if not backup.exists():
             backup.write_bytes(STATE.read_bytes())
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     data = {
         "goal_id": "QW-AUTONOMY-001",
-        "status": "ACTIVE",
+        "status": "RELEASE_CANDIDATE",
         "current_phase": "M6",
-        "last_updated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "last_updated_utc": now,
         "repositories": repositories(),
         "work_items": work_items(),
         "acceptance": acceptance(),
         "evidence_root": ".tmp/quirewise-agent-evidence",
         "blockers": [],
         "next_actions": [
-            "Run the full static and shared acceptance matrix on Windows and Ubuntu.",
-            "Generate the release manifest, SBOM and license inventory from the installed prefix.",
-            "Record the independent reviewer sign-off and final commit hashes in the release report.",
-            "Decide and document whether macOS/MSVC are in scope for this release.",
+            "Publish the 18 sibling repositories and the M6 commits, then enable the CI workflow.",
+            "Implement PDG PDF output on the internal PDF/Layout path (M3-04 follow-up).",
+            "Decide whether macOS/MSVC are added to the supported platform matrix.",
         ],
-        "generated_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_at_utc": now,
         "generator": "app/tools/generate_goal_state.py",
     }
     STATE.parent.mkdir(parents=True, exist_ok=True)

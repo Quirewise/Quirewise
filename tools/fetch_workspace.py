@@ -41,10 +41,10 @@ def checkout(repo: Path, url: str, commit: str, token: str | None) -> bool:
         print(f"error: {repo} has uncommitted changes", file=sys.stderr)
         return False
     print(f"checkout {commit[:12]} in {repo}")
-    if run(["git", "-C", str(repo), "fetch", "--quiet", "origin", commit]) != 0:
+    if run(git_command(token, "-C", str(repo), "fetch", "--quiet", "origin", commit)) != 0:
         # Servers that disallow fetching an arbitrary commit fall back to a
         # normal fetch before retrying the exact object.
-        if run(["git", "-C", str(repo), "fetch", "--quiet", "--tags", "origin"]) != 0:
+        if run(git_command(token, "-C", str(repo), "fetch", "--quiet", "--tags", "origin")) != 0:
             return False
         if run(["git", "-C", str(repo), "cat-file", "-e", f"{commit}^{{commit}}"]) != 0:
             return False
