@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_utc": "2026-11-07T04:04:31Z",
+  "generated_utc": "2026-11-07T05:35:20Z",
   "note": "Pin of the sibling repositories consumed by the Quirewise release.",
   "repositories": [
     {
@@ -66,7 +66,7 @@
     {
       "path": "libraries/quirewise-runtime",
       "url": "https://github.com/Hellohistory/quirewise-runtime.git",
-      "commit": "80753e013c5b75c93dc52cdd0bfd2a6c233a165e"
+      "commit": "2aefd1c2294e2914b7b67664d83696373630f37c"
     },
     {
       "path": "libraries/quirewise-spreadsheet",
