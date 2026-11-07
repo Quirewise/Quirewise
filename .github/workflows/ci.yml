@@ -24,7 +24,7 @@ jobs:
       matrix:
         mode: [static, shared]
     env:
-      MODE: ${{ matrix.mode == 'shared' && '--shared' || '' }}
+      MODE: ${{ matrix.mode }}
     steps:
       - name: Check out the application repository
         uses: actions/checkout@v4
@@ -48,8 +48,10 @@ jobs:
       - name: Build, test and audit
         working-directory: workspace
         run: |
-          python app/tools/run_acceptance.py --workspace . $MODE \
-            --jobs 4 --summary .tmp/acceptance/summary-${{ matrix.mode }}.json
+          EXTRA=""
+          if [ "$MODE" = "shared" ]; then EXTRA="--shared"; fi
+          python app/tools/run_acceptance.py --workspace . $EXTRA \
+            --jobs 4 --summary .tmp/acceptance/summary-$MODE.json
 
       - name: Upload acceptance logs
         if: always()
@@ -69,7 +71,7 @@ jobs:
       matrix:
         mode: [static, shared]
     env:
-      MODE: ${{ matrix.mode == 'shared' && '--shared' || '' }}
+      MODE: ${{ matrix.mode }}
     steps:
       - name: Check out the application repository
         uses: actions/checkout@v4
@@ -105,8 +107,10 @@ jobs:
         shell: pwsh
         run: |
           $env:Path = "C:\msys64\mingw64\bin;$env:Path"
-          python app/tools/run_acceptance.py --workspace . $env:MODE `
-            --jobs 4 --summary .tmp/acceptance/summary-${{ matrix.mode }}.json
+          $extra = @()
+          if ($env:MODE -eq "shared") { $extra += "--shared" }
+          python app/tools/run_acceptance.py --workspace . @extra `
+            --jobs 4 --summary ".tmp/acceptance/summary-$env:MODE.json"
 
       - name: Upload acceptance logs
         if: always()

@@ -82,6 +82,8 @@ def main() -> int:
             failures.append(entry["path"])
     if failures:
         print("failed repositories:", ", ".join(failures), file=sys.stderr)
+        print("check that every repository in app/release-lock.json is published "
+              "and the pinned commit has been pushed", file=sys.stderr)
         return 1
     print(f"workspace at lock {lock['generated_utc']} ({len(lock['repositories'])} repos)")
     return 0
