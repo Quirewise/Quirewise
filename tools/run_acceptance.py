@@ -194,8 +194,9 @@ class Runner:
     def build_consumer(self) -> bool:
         source = self.workspace / "external-consumer-template"
         build = self.build_root / "external-consumer"
+        generator = ["-G", self.generator] if self.generator else []
         if not self.run("consumer.configure", [
-            "cmake", "-S", str(source), "-B", str(build), "-G", "Ninja",
+            "cmake", "-S", str(source), "-B", str(build), *generator,
             "-DCMAKE_BUILD_TYPE=Release",
             f"-DCMAKE_PREFIX_PATH={self.install_root}",
             "-DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF",
