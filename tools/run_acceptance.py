@@ -286,6 +286,10 @@ def main() -> int:
     build_root = (args.build_dir or workspace / ".tmp" / "acceptance" / suffix).resolve()
     install_root = (args.install_dir or build_root / "install").resolve()
     build_root.mkdir(parents=True, exist_ok=True)
+    # A reused install prefix keeps headers that a package stopped installing.
+    # Clean the default prefix so the record only contains current outputs.
+    if not args.keep and args.install_dir is None and install_root.exists():
+        shutil.rmtree(install_root)
     install_root.mkdir(parents=True, exist_ok=True)
 
     runner = Runner(workspace, build_root, install_root, args.shared,

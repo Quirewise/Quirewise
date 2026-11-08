@@ -8,11 +8,18 @@ import json
 import subprocess
 from pathlib import Path
 
+EXPECTED_STEPS = 80
+
 
 def git(repo: Path, *args: str) -> str:
     result = subprocess.run(["git", "-C", str(repo), *args],
                             capture_output=True, text=True, check=False)
     return result.stdout.strip()
+
+
+def run_tool(root: Path, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["python", *args], cwd=root,
+                          capture_output=True, text=True)
 
 
 def main() -> int:
@@ -51,11 +58,14 @@ def main() -> int:
     }
     checks["summaries"] = {}
     for name, path in summaries.items():
+        if not path.is_file():
+            checks["summaries"][name] = {"steps": 0, "failed": ["missing"], "ok": False}
+            continue
         data = json.loads(path.read_text(encoding="utf-8"))
         checks["summaries"][name] = {
             "steps": len(data["steps"]),
             "failed": data["failed"],
-            "ok": not data["failed"] and len(data["steps"]) == 79,
+            "ok": not data["failed"] and len(data["steps"]) == EXPECTED_STEPS,
         }
 
     sbom = json.loads((release / "sbom-static.cdx.json").read_text(encoding="utf-8"))
@@ -83,19 +93,31 @@ def main() -> int:
         == manifests["install-manifest-shared.json"]
     )
 
-    gate = subprocess.run(
-        ["python", "app/tools/audit_mupdf_removal.py", "--workspace", "."],
-        cwd=root, capture_output=True, text=True)
+    public_headers = {}
+    for mode in ("static", "shared"):
+        path = release / f"public-headers-{mode}.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        public_headers[mode] = {
+            "headers": data["header_count"],
+            "failures": data["failure_count"],
+            "leaks": data["third_party_leak_count"],
+            "ok": data["failure_count"] == 0 and data["third_party_leak_count"] == 0,
+        }
+    checks["public_headers"] = public_headers
+
+    ownership = run_tool(root, "app/tools/verify_header_ownership.py",
+                         "--workspace", ".", "--strict")
+    checks["header_ownership_gate_exit"] = ownership.returncode
+    checks["header_ownership_gate_output"] = ownership.stdout.strip()
+
+    gate = run_tool(root, "app/tools/audit_mupdf_removal.py", "--workspace", ".")
     checks["mupdf_gate_exit"] = gate.returncode
     checks["mupdf_gate_output"] = gate.stdout.strip()
-    boundary = subprocess.run(
-        ["python", "app/tools/audit_release_boundaries.py", "--workspace", "."],
-        cwd=root, capture_output=True, text=True)
+    boundary = run_tool(root, "app/tools/audit_release_boundaries.py", "--workspace", ".")
     checks["boundary_gate_exit"] = boundary.returncode
     checks["boundary_gate_output"] = boundary.stdout.strip()
-    lock_verify = subprocess.run(
-        ["python", "app/tools/fetch_workspace.py", "--workspace", ".", "--verify-only"],
-        cwd=root, capture_output=True, text=True)
+    lock_verify = run_tool(root, "app/tools/fetch_workspace.py",
+                           "--workspace", ".", "--verify-only")
     checks["lock_verify_exit"] = lock_verify.returncode
 
     signoff = release / "reviewer-signoff.md"
@@ -130,6 +152,8 @@ def main() -> int:
         and checks["first_party_all_mit"]
         and checks["bundled_djvudec"]
         and checks["manifest_recount_ok"]
+        and all(item["ok"] for item in public_headers.values())
+        and checks["header_ownership_gate_exit"] == 0
         and checks["mupdf_gate_exit"] == 0
         and checks["boundary_gate_exit"] == 0
         and checks["lock_verify_exit"] == 0
@@ -144,6 +168,7 @@ def main() -> int:
         and checks["evidence_build_retained"]
         and checks["runtime_ctest_present"]
     )
+    checks["expected_steps"] = EXPECTED_STEPS
     checks["overall"] = "PASS" if ok else "FAIL"
     (release / "self-audit.json").write_text(
         json.dumps(checks, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

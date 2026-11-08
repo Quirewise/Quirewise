@@ -23,20 +23,48 @@ PACKAGES = {
 }
 
 
-def header_text(package):
-    root = Path("libraries") / f"quirewise-{package.lower()}" / "include"
-    return "\n".join(p.read_text(encoding="utf-8", errors="replace")
-                     for p in sorted(root.rglob("*.h")))
+def package_index():
+    """Map CMake package names (QuirewiseArchive) to their source directories."""
+    index = {}
+    for cmake in sorted(Path("libraries").glob("quirewise-*/CMakeLists.txt")):
+        text = cmake.read_text(encoding="utf-8", errors="replace")
+        match = re.search(r"project\(Quirewise(\w+)", text)
+        if match:
+            index[match.group(1)] = (cmake.parent, text)
+    return index
+
+
+def header_text(package, index, seen=None):
+    """Headers of the package plus its declared Quirewise dependency closure."""
+    seen = set() if seen is None else seen
+    if package in seen:
+        return ""
+    seen.add(package)
+    root, cmake_text = index[package]
+    include = root / "include"
+    chunks = []
+    if include.is_dir():
+        chunks.extend(path.read_text(encoding="utf-8", errors="replace")
+                      for path in sorted(include.rglob("*.h")))
+    for dependency in re.findall(r"find_package\(Quirewise(\w+) CONFIG", cmake_text):
+        if dependency in index:
+            chunks.append(header_text(dependency, index, seen))
+    return "\n".join(chunks)
 
 
 def main():
+    index = package_index()
     findings = 0
     for package, names in PACKAGES.items():
         if names is None:
             print(f"{package}: no parse status enum (boundary package)")
             continue
-        text = header_text(package)
-        missing = [n for n in names if n not in text]
+        if package not in index:
+            print(f"{package}: ERROR package not found")
+            findings += 1
+            continue
+        text = header_text(package, index)
+        missing = [name for name in names if name not in text]
         values = {}
         for name in names:
             match = re.search(re.escape(name) + r"\s*=\s*(-?\d+)", text)
