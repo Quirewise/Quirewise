@@ -219,6 +219,7 @@ class Runner:
         source = self.workspace / "app"
         build = self.build_root / "app"
         extra = [f"-D{option}=ON" for option in APP_LINK_OPTIONS]
+        extra.append("-DQUIREWISE_BUILD_PDF_VERIFIER=ON")
         ok = self.cmake("app", source, build, str(self.install_root), extra)
         if not ok:
             return False

@@ -6,6 +6,9 @@ include(GNUInstallDirs)
 option(QUIREWISE_VALIDATE_DEPENDENCIES
     "Add a target that validates the workspace dependency graph" OFF)
 
+option(QUIREWISE_BUILD_PDF_VERIFIER
+    "Build the render-based PDF verification tool" OFF)
+
 option(QUIREWISE_LINK_RUNTIME "Link the independent Quirewise runtime library" OFF)
 option(QUIREWISE_LINK_IMAGE "Link quirewise-image" OFF)
 option(QUIREWISE_LINK_ARCHIVE "Link quirewise-archive" OFF)
@@ -58,6 +61,18 @@ if(QUIREWISE_VALIDATE_DEPENDENCIES)
                 --workspace "${CMAKE_CURRENT_SOURCE_DIR}/.."
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         VERBATIM)
+endif()
+
+if(QUIREWISE_BUILD_PDF_VERIFIER)
+    if(NOT QUIREWISE_LINK_DOCUMENT)
+        message(FATAL_ERROR
+            "QUIREWISE_BUILD_PDF_VERIFIER requires QUIREWISE_LINK_DOCUMENT=ON")
+    endif()
+    add_executable(quirewise_verify_pdf_pages tools/verify_pdf_pages.c)
+    target_compile_features(quirewise_verify_pdf_pages PRIVATE c_std_11)
+    target_link_libraries(quirewise_verify_pdf_pages PRIVATE ${QW_LINK_TARGETS})
+    install(TARGETS quirewise_verify_pdf_pages
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 endif()
 
 install(TARGETS quirewise RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
