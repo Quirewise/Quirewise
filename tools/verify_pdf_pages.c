@@ -28,6 +28,7 @@
 
 #if defined(_WIN32)
 #include <windows.h>
+#include <shellapi.h>
 #include <wchar.h>
 static FILE *fopen_utf8(const char *path, const char *mode)
 {
@@ -36,6 +37,33 @@ static FILE *fopen_utf8(const char *path, const char *mode)
     if (!MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, 2048)) return NULL;
     if (!MultiByteToWideChar(CP_UTF8, 0, mode, -1, wmode, 16)) return NULL;
     return _wfopen(wpath, wmode);
+}
+
+/* The C runtime hands argv over in the ANSI code page, so a path such as
+ * "G.回族典藏全书" arrives mangled and no file opens. Read the command line as
+ * UTF-16 and expose it as UTF-8 instead. */
+static char **utf8_argv(int *out_count)
+{
+    int wcount = 0;
+    LPWSTR *wargs = CommandLineToArgvW(GetCommandLineW(), &wcount);
+    char **args;
+    int index;
+    if (!wargs) return NULL;
+    args = (char **)calloc((size_t)(wcount > 0 ? wcount : 1), sizeof(char *));
+    if (!args) {
+        LocalFree(wargs);
+        return NULL;
+    }
+    for (index = 0; index < wcount; ++index) {
+        int needed = WideCharToMultiByte(CP_UTF8, 0, wargs[index], -1, NULL, 0, NULL, NULL);
+        if (needed <= 0) continue;
+        args[index] = (char *)malloc((size_t)needed);
+        if (!args[index]) continue;
+        WideCharToMultiByte(CP_UTF8, 0, wargs[index], -1, args[index], needed, NULL, NULL);
+    }
+    LocalFree(wargs);
+    *out_count = wcount;
+    return args;
 }
 #else
 #define fopen_utf8 fopen
@@ -195,6 +223,16 @@ int main(int argc, char **argv)
     memset(&options, 0, sizeof(options));
     options.min_luma = 15.0;
     options.dpi = 24u;
+#if defined(_WIN32)
+    {
+        int wide_count = 0;
+        char **wide_args = utf8_argv(&wide_count);
+        if (wide_args) {
+            argc = wide_count;
+            argv = wide_args;
+        }
+    }
+#endif
 
     for (index = 1; index < argc; ++index) {
         if (strcmp(argv[index], "--min-luma") == 0 && index + 1 < argc) {
