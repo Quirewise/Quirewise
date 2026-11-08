@@ -60,7 +60,7 @@ def _summary_ok(path: Path) -> bool:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return False
-    return len(data.get("steps", [])) == 79 and not data.get("failed")
+    return len(data.get("steps", [])) == 80 and not data.get("failed")
 
 
 def work_items() -> dict:
@@ -147,7 +147,7 @@ def main() -> int:
         "evidence_root": ".tmp/quirewise-agent-evidence",
         "blockers": [],
         "next_actions": [
-            "Publish the 18 sibling repositories and the M6 commits, then enable the CI workflow.",
+            "Enable the CI workflow with a token that can read Quirewise/quirewise-pdg.",
             "Implement PDG PDF output on the internal PDF/Layout path (M3-04 follow-up).",
             "Tag the release and archive both root acceptance documents with their SHA-256 values.",
         ],
