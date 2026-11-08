@@ -121,3 +121,59 @@ jobs:
             workspace/.tmp/acceptance/**/logs
             workspace/.tmp/acceptance/summary-*.json
           if-no-files-found: warn
+
+  sanitizers:
+    name: ubuntu-24.04 / asan+ubsan
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out the application repository
+        uses: actions/checkout@v4
+        with:
+          path: workspace/app
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build
+
+      - name: Check out the pinned library repositories
+        working-directory: workspace/app
+        env:
+          QUIREWISE_REPOS_TOKEN: ${{ secrets.QUIREWISE_REPOS_TOKEN }}
+        run: python tools/fetch_workspace.py --workspace ..
+
+      # The PDF engine lives in quirewise-document; rebuilding the dependency
+      # chain without tests keeps this job short while still installing every
+      # package the instrumented build consumes.
+      - name: Build and install dependencies
+        working-directory: workspace
+        run: |
+          python app/tools/run_acceptance.py --workspace . \
+            --skip-tests --skip-consumer --skip-app --skip-gates
+
+      - name: Build and test quirewise-document under ASan/UBSan
+        working-directory: workspace
+        run: |
+          cmake -S libraries/quirewise-document -B .tmp/asan -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_PREFIX_PATH="$PWD/.tmp/acceptance/static/install" \
+            -DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF \
+            -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+          cmake --build .tmp/asan --parallel 4
+          ASAN_OPTIONS=detect_leaks=0:abort_on_error=1 \
+          UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1 \
+            ctest --test-dir .tmp/asan --output-on-failure
+
+      - name: Upload sanitizer logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-asan
+          path: workspace/.tmp/asan/Testing/**
+          if-no-files-found: warn

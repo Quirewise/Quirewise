@@ -14,7 +14,7 @@ is consumed by the external consumer template on Windows/MinGW and Ubuntu.
 | quirewise-archive | ZIP, TAR, RAR, 7z | archive, rar, seven-zip | independent package, CTest/consumer pass |
 | quirewise-data | JSON, YAML, TOML, XML, vCard, OPML, DocBook | data packages | independent package, CTest/consumer pass |
 | quirewise-text | text and markup formats | text packages | independent package, CTest/consumer pass |
-| quirewise-page | PDF, UVZ, DjVu, CAJ, CEB | page-related packages | independent package, CTest/consumer pass |
+| quirewise-page | UVZ, DjVu, CAJ, CEB | page-related packages | independent package, CTest/consumer pass |
 | quirewise-pdg | PDG/PDZ decoding and rendering | pdg, pdz | independent package, CTest/consumer pass |
 | quirewise-document | Office, presentation, XPS, email, PDF/layout | document packages | independent package, CTest/consumer pass |
 | quirewise-ebook | EPUB, MOBI, FB2, PML, HTMLZ | ebook packages | independent package, CTest/consumer pass |
