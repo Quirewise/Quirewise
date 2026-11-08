@@ -13,10 +13,9 @@
  * exit 1: at least one file was rejected or sampled as blank/solid
  * exit 2: bad arguments
  *
- * Known limitation: the Document renderer decodes raw samples and JPEG image
- * XObjects, but not CCITTFaxDecode (nor JPX/JBIG2), so a bitonal page reports
- * white no matter what it contains. Treat 255.0 as "not rendered" until the
- * reader grows a CCITT path.
+ * Known limitation: the Document renderer decodes raw samples, JPEG and
+ * CCITTFaxDecode image XObjects, but not JPX/JBIG2, so such a page reports
+ * white no matter what it contains. Treat 255.0 as "not rendered" for those.
  */
 #include <quirewise/document.h>
 #include <quirewise/pdf.h>
