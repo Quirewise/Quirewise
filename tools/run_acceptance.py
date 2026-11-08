@@ -238,6 +238,9 @@ class Runner:
             dependency += ["--actual-prefix", str(self.install_root), "--nm", nm]
         gates = [
             ("gate.dependency-graph", dependency),
+            ("gate.header-ownership",
+             [python, "app/tools/verify_header_ownership.py",
+              "--workspace", ".", "--strict"]),
             ("gate.release-boundaries",
              [python, "app/tools/audit_release_boundaries.py",
               "--workspace", "."]),

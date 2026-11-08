@@ -75,6 +75,8 @@ application.
 - `tools/audit_mupdf_removal.py` — legacy MuPDF boundary removal gate
 - `tools/verify_public_headers.py` / `tools/verify_header_isolation.py` — public
   header independence
+- `tools/verify_header_ownership.py` — no two packages install different bytes
+  at the same public-header path (shared vendored headers must stay identical)
 - `tools/check_consumer_coverage.py` — exported API to consumer call mapping
 - `tools/generate_sbom.py` — CycloneDX SBOM, license inventory and installed
   prefix manifest

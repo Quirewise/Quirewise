@@ -35,3 +35,11 @@
 ## 仓库结构
 
 独立库与根应用的迁移状态见根目录的 [REPOSITORIES.md](../REPOSITORIES.md)。
+
+架构与包边界说明：
+
+- [PDF 引擎架构](architecture/pdf-engine.md)
+- [公共头契约与包独立性](architecture/public-header-contract.md)
+- [共享公共契约的单一所有者（设计评审）](architecture/shared-contract-ownership.md)
+
+
