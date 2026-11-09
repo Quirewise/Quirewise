@@ -80,6 +80,8 @@ application.
 - `tools/check_consumer_coverage.py` — exported API to consumer call mapping
 - `tools/generate_sbom.py` — CycloneDX SBOM, license inventory and installed
   prefix manifest
+- `tools/verify_pdf_pages.c` — render-based PDF check (blank or solid pages,
+  unknown image filters); built with `QUIREWISE_BUILD_PDF_VERIFIER=ON`
 
 The workspace is licensed under the MIT License; see [LICENSE](LICENSE). Every
 library and the external consumer template carry the same MIT grant.
