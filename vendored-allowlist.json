@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "note": "Vendored implementation sources that still need a first-party replacement. Entries may only be removed; adding or editing an entry requires a reviewed replacement plan. Hashes use LF-normalised content so the list is portable across checkouts.",
-  "generated_utc": "2026-11-10T15:51:22Z",
-  "file_count": 53,
-  "line_count": 38602,
+  "generated_utc": "2026-11-10T16:12:49Z",
+  "file_count": 35,
+  "line_count": 29372,
   "files": [
     {
       "path": "libraries/quirewise-compression/src/internal/lzma_sdk/7zCrc.c",
@@ -208,114 +208,6 @@
       "sha256": "594c2fe35d49488b4382dbfaec8f98366defca819d916ac95becf3e75f4200b3",
       "bytes": 283010,
       "lines": 7988
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/annot.c",
-      "sha256": "342cdf565fe05dc728ac9ec4b552589a7e3c7c1f93586a117fa9bdae11b15d3a",
-      "bytes": 10908,
-      "lines": 354
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/bitmap.c",
-      "sha256": "34102f8e76abcecb2f1811d34be2012b17b57a84617e11cd310afc6a3151c819",
-      "bytes": 17730,
-      "lines": 626
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/bufread.c",
-      "sha256": "b69484876dbbb977a8ce32d480f03ab825d7f5ebbdb3f3f9587ad63d19a9e6ec",
-      "bytes": 486,
-      "lines": 15
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/bzz.c",
-      "sha256": "2caeca5c0be8bac49a42d525c28f437b4319d6ea5581dee53ffb2b9b857f467f",
-      "bytes": 7730,
-      "lines": 233
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/compose.c",
-      "sha256": "6353a34ea175dcc1de468586a8eb7a4290a116055ecea14d14983f9d153d49f7",
-      "bytes": 35591,
-      "lines": 994
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/debug.c",
-      "sha256": "14ba1ad6f6a1d21ed45c42162d9b972c9847f6f7346c68b7a9b9e25927b45fdc",
-      "bytes": 7075,
-      "lines": 204
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/djvu.h",
-      "sha256": "dac1df178a90f85b9aea31a143dd9c6952daaba8edd7ac72630baeeeb38ceaf8",
-      "bytes": 14083,
-      "lines": 312
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/djvu_internal.h",
-      "sha256": "3df02c88e9f8c1fb309e9eb260662112fb610a926a169b57320fea7225dd07a2",
-      "bytes": 32125,
-      "lines": 837
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/document.c",
-      "sha256": "2146b043acced2e60780a64b917638a22557c4cc3487c760ae48f20d4db016f2",
-      "bytes": 40198,
-      "lines": 1247
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/iw44.c",
-      "sha256": "a92f22ff5318737066b0af4fd22904713f2622851f20612769abb3eded4bce77",
-      "bytes": 49403,
-      "lines": 1377
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/iw44_zigzag.c",
-      "sha256": "3fcbd9adcc5efacb73988a9b470d608733e5009d1ac08ba6fbfe33b9696e4f4f",
-      "bytes": 5305,
-      "lines": 68
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/jb2.c",
-      "sha256": "2e60ad26cd159ba75629197a8cc4ebe33825077ace012633193e117201fa0427",
-      "bytes": 36567,
-      "lines": 1032
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/outline.c",
-      "sha256": "0221a300f3e7ba943ecccc620b3fe963c3322b24902ea185b21f80fd7be21ee1",
-      "bytes": 4661,
-      "lines": 144
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/render.c",
-      "sha256": "09f27da77e59015a20736eeea18606e5c0506ebcc95472a3d76253fd692f60d8",
-      "bytes": 18243,
-      "lines": 486
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/scaler.c",
-      "sha256": "5f188eea45ceefef8340f735c0912f16e3dfdf23e125ca95a652a342f2d22cc0",
-      "bytes": 29128,
-      "lines": 751
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/text.c",
-      "sha256": "2c7a7b8d3c4b800eee9e274030b366ebdf89c48c8ba8b9a51c0e5c374ebbc852",
-      "bytes": 8047,
-      "lines": 245
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/zpcodec.c",
-      "sha256": "35c895e716af2b0de5cc044aba8034aac1ddeea60ec2d1eb8e64d4006bab0193",
-      "bytes": 1174,
-      "lines": 45
-    },
-    {
-      "path": "libraries/quirewise-page/src/formats/djvu/vendor/zptable.c",
-      "sha256": "3a8335fcb6e8880eb2b123c880d8ebb25ef62b49feadecebb6be1006f2ce3ec1",
-      "bytes": 7962,
-      "lines": 260
     },
     {
       "path": "libraries/quirewise-pdg/third_party/stb/stb_image.h",

@@ -112,6 +112,7 @@ W5 在四条流各自通过后执行。
 | 2026-11-10 | W0 门禁工具与白名单 | 完成 | `app/tools/audit_vendored_sources.py`、`app/vendored-allowlist.json`（53 文件 / 38,602 行，PASS） |
 | 2026-11-10 | W1 D1 容器+ZP+BZZ | 完成 | page `f9f268b`：`djvu_iff/djvu_zp/djvu_bzz` + 2 项新 CTest；`text.djvu` TXTz 解压与替换前基线逐字节一致（66 字节） |
 | 2026-11-10 | W1 D2 JB2 | 完成 | page `685ff35`：`djvu_jb2` 记录层、直接/交叉位图编码、符号库与 blit；`bitonal.djvu` 渲染与 `bitonal.ref.pgm` 逐字节一致，page 测试 7/7 |
-| 2026-11-10 | W1 D3 IW44 | 完成（灰阶） | page（本轮）：`djvu_iw44` 小波/桶解码/渐进层；`photo.djvu` 与 `photo.ref.ppm` 逐字节一致，page 测试 8/8；彩色路径待语料 |
+| 2026-11-10 | W1 D3 IW44 | 完成（灰阶） | page `7a45cc3`：`djvu_iw44` 小波/桶解码/渐进层；`photo.djvu` 与 `photo.ref.ppm` 逐字节一致，page 测试 8/8；彩色路径待语料 |
+| 2026-11-10 | W1 D4/D5 集成与移除 vendor | 完成 | page（本轮）：`djvu_doc` 页面层 + `djvu_api.c` 切换第一方实现；`vendor/` 18 文件删除；门禁白名单 53→35 条（29,372 行） |
 | 待办 | W0 门禁接入验收矩阵（81 步）+ 基线哈希固化 | 下一步 | — |
-| 待办 | W1 D4 合成与集成（DJVM 多页、TXTz、FGbz、缩放/旋转） | 下一步 | — |
+| 待办 | W2 JPEG / W3 LZMA/XZ / W4 AES | 下一步 | — |
