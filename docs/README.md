@@ -39,6 +39,11 @@
 架构与包边界说明：
 
 - [PDF 引擎架构](architecture/pdf-engine.md)
+- [全自写改造总计划（Zero-Vendored）](architecture/zero-vendored-plan.md)
+- [DjVu 自写替换设计](architecture/djvu-replacement.md)
+- [JPEG 自写解码器设计](architecture/jpeg-replacement.md)
+- [LZMA/XZ 自写解码器设计](architecture/lzma-replacement.md)
+- [AES 自写设计](architecture/aes-replacement.md)
 - [公共头契约与包独立性](architecture/public-header-contract.md)
 - [共享公共契约的单一所有者（设计评审）](architecture/shared-contract-ownership.md)
 

@@ -82,6 +82,9 @@ application.
   prefix manifest
 - `tools/verify_pdf_pages.c` — render-based PDF check (blank or solid pages,
   unknown image filters); built with `QUIREWISE_BUILD_PDF_VERIFIER=ON`
+- `tools/audit_vendored_sources.py` — vendored-source gate: every remaining
+  third-party implementation file is pinned in `vendored-allowlist.json`, and
+  the list may only shrink (see `docs/architecture/zero-vendored-plan.md`)
 
 The workspace is licensed under the MIT License; see [LICENSE](LICENSE). Every
 library and the external consumer template carry the same MIT grant.
