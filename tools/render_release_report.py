@@ -243,9 +243,9 @@ Runtime 现有 `quirewise_runtime_abi` CTest，17 个库均有测试入口。
 - 第一方许可：**MIT**。SBOM 的第一方组件为 **17 个库 + 应用 = 18 个**；此外
   `external-consumer-template` 与工作区根目录也各有一份 MIT `LICENSE`，因此
   源仓库与安装树共有 **20 份**许可证文件（18 个发布组件 + 2 个非发布模板/工作区声明）。
-- 内置源码：LZMA SDK（Public Domain）、tiny-AES-c（Unlicense）、stb_image
-  （MIT OR Unlicense，Image/PDG 各一份）、djvudec（MIT，commit `f0412ee…`）。
-- SBOM：CycloneDX 1.5，27 个组件（17 库 + 应用 + 5 内置源码 + 2 组测试素材 +
+- 内置第三方源码：**无**。DjVu、tiny-AES、stb_image ×2、LZMA SDK 均已由第一方实现
+  替换，`audit_vendored_sources.py` 记录 **0 文件 / 0 行**。
+- SBOM：CycloneDX 1.5，{len(sbom['components'])} 个组件（17 库 + 应用 + 2 组测试素材 +
   2 平台运行时）、**{nodes} 个依赖节点、{edges} 条 `dependsOn` 边**。
 - 许可证清单：{len(inventory['first_party'])} 个第一方条目均为 MIT；被禁止运行库 0 项。
 
