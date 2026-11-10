@@ -147,9 +147,9 @@ def main() -> int:
         "evidence_root": ".tmp/quirewise-agent-evidence",
         "blockers": [],
         "next_actions": [
-            "Enable the CI workflow with a token that can read Quirewise/quirewise-pdg.",
-            "Implement PDG PDF output on the internal PDF/Layout path (M3-04 follow-up).",
-            "Tag the release and archive both root acceptance documents with their SHA-256 values.",
+            "Enable the CI workflow with a token that can read Quirewise/quirewise-pdg; the workflow has not run on Actions yet.",
+            "Decide whether PDG_OUTPUT_PDF payload decoding needs an internal PDF rasteriser, or record it as a documented limitation.",
+            "Port the unified quirewise INPUT --to FORMAT CLI into the app composition shell.",
         ],
         "generated_at_utc": now,
         "generator": "app/tools/generate_goal_state.py",

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_utc": "2026-11-08T07:50:45Z",
+  "generated_utc": "2026-11-10T14:00:32Z",
   "note": "Pin of the sibling repositories consumed by the Quirewise release.",
   "repositories": [
     {
@@ -41,7 +41,7 @@
     {
       "path": "libraries/quirewise-document",
       "url": "https://github.com/Quirewise/quirewise-document.git",
-      "commit": "2b08f4c30fe86d3da4dcdb9d438384a9e29b30b7"
+      "commit": "7bbffea843d0bc2dd2382c66e525ddcb6da18094"
     },
     {
       "path": "libraries/quirewise-ebook",
@@ -56,12 +56,12 @@
     {
       "path": "libraries/quirewise-page",
       "url": "https://github.com/Hellohistory/quirewise-page.git",
-      "commit": "2d1687f10343f23f67041212658315b25d12432c"
+      "commit": "88b48b7c1617f5ae2037a185e0af3b035cf8b418"
     },
     {
       "path": "libraries/quirewise-pdg",
       "url": "https://github.com/Quirewise/quirewise-pdg.git",
-      "commit": "bc01ee8e12d49c5c710464b6ed3a44eee7613412"
+      "commit": "bdbcc06f1a2ceeda43c629027b2a0b9a8a70f8ae"
     },
     {
       "path": "libraries/quirewise-runtime",
@@ -91,7 +91,7 @@
     {
       "path": "external-consumer-template",
       "url": "https://github.com/Quirewise/external-consumer-template.git",
-      "commit": "2b88a460e518f6461db712fe0f391984a253cf2e"
+      "commit": "2129b48d4531504cdd664084e4dce8d1addd2367"
     }
   ]
 }

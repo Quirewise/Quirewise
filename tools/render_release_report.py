@@ -160,7 +160,7 @@ def main() -> int:
 
 - 报告时间：{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}
 - Goal：`QW-AUTONOMY-001`
-- 状态：**发布候选（RELEASE CANDIDATE）** — 代码、许可证、构建矩阵与验收证据齐备；仓库与 lock 已发布，CI 可复现
+- 状态：**发布候选（RELEASE CANDIDATE）** — 代码、许可证、构建矩阵与验收证据齐备；仓库与 lock 已发布，四套矩阵在本机复现（GitHub Actions 尚未执行）
 - 依据：[QUIREWISE_AGENT_LONG_TERM_GOAL.md](QUIREWISE_AGENT_LONG_TERM_GOAL.md)、[DEPENDENCY_BOUNDARIES_AND_ACCEPTANCE.md](DEPENDENCY_BOUNDARIES_AND_ACCEPTANCE.md)
 
 ## 1. 范围
@@ -264,19 +264,21 @@ Runtime 现有 `quirewise_runtime_abi` CTest，17 个库均有测试入口。
 ## 7. 已知限制与外部前置
 
 1. **CI 激活**：19 个仓库均已发布，`app/release-lock.json` 校验通过。CI 工作流
-   仍需要能覆盖 `Quirewise/quirewise-pdg`（私有）的 token/可见性，才能拉取 lock
-   中的全部提交；新发布的仓库包括 `Hellohistory/Quirewise`（app）、
-   `Hellohistory/quirewise-comic`、`Quirewise/quirewise-charset`、
-   `Quirewise/quirewise-compression`、`Quirewise/external-consumer-template`。
+   （`app/.github/workflows/ci.yml`）尚未在 GitHub Actions 上实际执行，本报告的
+   四套矩阵均为本机复现；执行它仍需要能覆盖 `Quirewise/quirewise-pdg`（私有）的
+   token/可见性，才能拉取 lock 中的全部提交。
 2. **平台**：macOS/MSVC 未验证，属于明确排除范围（决策记录在本节与验收文档第 11 节），
    不作为本发布物的验收项。
 3. **应用入口**：`app` 仍是组合 shell，旧统一 CLI 未移植；转换能力通过库包与外部消费者验证。
 4. **共享库部署**：Windows 共享消费者运行时需要把安装前缀的 `bin/` 加入 `PATH`
    （验收运行器已按此设置）；Linux 使用 `LD_LIBRARY_PATH` 或安装 RPATH。
 5. **能力子集**：Audio/Image 等库存在大量显式 `UNSUPPORTED` 路径；支持矩阵需按库文档解读。
-6. **PDG PDF 输出**：`pdg_output_requires_external_decoder(PDG_OUTPUT_PDF)` 仍为 1，
-   模块返回 `PDG_ERR_EXTERNAL_DECODER_REQUIRED`（证据 `.tmp/release/pdg-pdf-status.txt`）；
-   M3-04 的“PDG PDF 输出迁移到内部 PDF/Layout”仍是一项后续能力工作。
+6. **PDG PDF**：PDG→PDF 的产出路径已迁移到内部实现（`pdz_pdf_from_images` 与流式
+   `pdz_pdf_writer_*`，含自有 T.6/G4 CCITT 编码，`verify_pdf_pages` 按页回读校验）；
+   但“PDG 页载荷本身以 PDF 存储”的解码/渲染仍返回
+   `PDG_ERR_EXTERNAL_DECODER_REQUIRED`（`pdg_output_requires_external_decoder(PDG_OUTPUT_PDF)`
+   为 1，证据 `.tmp/release/pdg-pdf-status.txt`），因为该路径需要 PDF 光栅化器，
+   不属于 PDG 包边界。M3-04 的“输出”部分已完成，载荷解码部分仍为后续能力项。
 7. **依赖声明清理**：`comic` 与 `page` 声明了 `image` 依赖但没有符号证据，属于可后续删除的冗余声明。
 8. **清理记录**：`.tmp/quirewise-agent-build`、`.tmp/quirewise-agent-evidence`、
    `.tmp/acceptance` 与 `.tmp/release` 保留为复核证据，不属于发布物；报告与自检
