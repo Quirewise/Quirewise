@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_utc": "2026-11-10T14:00:32Z",
+  "generated_utc": "2026-11-10T17:49:08Z",
   "note": "Pin of the sibling repositories consumed by the Quirewise release.",
   "repositories": [
     {
@@ -26,12 +26,12 @@
     {
       "path": "libraries/quirewise-compression",
       "url": "https://github.com/Quirewise/quirewise-compression.git",
-      "commit": "b66b30211faa8af3cd268029acfd1f11d763bd83"
+      "commit": "9f7460b83f1057baab4e3b20be76b968a7f0a534"
     },
     {
       "path": "libraries/quirewise-crypto",
       "url": "https://github.com/Hellohistory/quirewise-crypto.git",
-      "commit": "c825c01dcd16528ab788a6e314b837a9b0f93d0a"
+      "commit": "345649c6ecfe67ab6dcfef8b49d35672ca036ed5"
     },
     {
       "path": "libraries/quirewise-data",
@@ -51,17 +51,17 @@
     {
       "path": "libraries/quirewise-image",
       "url": "https://github.com/Quirewise/quirewise-image.git",
-      "commit": "72366c1f120916e78795254c95afdd3ba9f171ef"
+      "commit": "b66e243293aebb45cf81d7d79b706581f0f65f3e"
     },
     {
       "path": "libraries/quirewise-page",
       "url": "https://github.com/Hellohistory/quirewise-page.git",
-      "commit": "88b48b7c1617f5ae2037a185e0af3b035cf8b418"
+      "commit": "b1f960584c69ae7bc16ec3a2013555223ac892f0"
     },
     {
       "path": "libraries/quirewise-pdg",
       "url": "https://github.com/Quirewise/quirewise-pdg.git",
-      "commit": "bdbcc06f1a2ceeda43c629027b2a0b9a8a70f8ae"
+      "commit": "013a6c2108b751da0257a43860c1b2ae3edb0519"
     },
     {
       "path": "libraries/quirewise-runtime",

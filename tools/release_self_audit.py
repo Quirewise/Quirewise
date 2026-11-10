@@ -77,8 +77,9 @@ def main() -> int:
     checks["first_party_entries"] = len(inventory["first_party"])
     checks["first_party_all_mit"] = all(
         item["license"] == "MIT" for item in inventory["first_party"])
-    checks["bundled_djvudec"] = any(
-        item["component"] == "djvudec" and item["license"] == "MIT"
+    checks["bundled_components"] = len(inventory["bundled"])
+    checks["bundled_all_permissive"] = all(
+        item["license"] in {"MIT", "Unlicense", "Public Domain"}
         for item in inventory["bundled"])
 
     manifests = {}
@@ -153,7 +154,8 @@ def main() -> int:
         and checks["installed_licenses_shared"] == 20
         and all(item["ok"] for item in checks["summaries"].values())
         and checks["first_party_all_mit"]
-        and checks["bundled_djvudec"]
+        and checks["bundled_components"] == 0
+        and checks["bundled_all_permissive"]
         and checks["manifest_recount_ok"]
         and all(item["ok"] for item in public_headers.values())
         and checks["header_ownership_gate_exit"] == 0

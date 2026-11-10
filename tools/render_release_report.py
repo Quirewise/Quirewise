@@ -231,7 +231,7 @@ python3 app/tools/run_acceptance.py --workspace . --shared --jobs 4
 | `verify_error_taxonomy.py` / `verify_resource_limits.py` | 0 findings，原始输出见 `.tmp/release/error-taxonomy.txt` 与 `.tmp/release/resource-limits.txt` |
 
 机械自检结果：`.tmp/release/self-audit.json`（仓库干净、20 份 MIT LICENSE、
-{win_static[0]} 步矩阵、SBOM 第一方全 MIT、djvudec MIT、公共头/所有权/边界/MuPDF/lock 闸门全部通过）。
+{win_static[0]} 步矩阵、SBOM 第一方全 MIT、内置第三方源码 0 文件/0 行、公共头/所有权/边界/MuPDF/vendored/lock 闸门全部通过）。
 Runtime 现有 `quirewise_runtime_abi` CTest，17 个库均有测试入口。
 
 公共头契约的迁移记录与设计评审见
