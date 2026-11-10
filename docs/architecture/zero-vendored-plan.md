@@ -110,4 +110,6 @@ W5 在四条流各自通过后执行。
 |---|---|---|---|
 | 2026-11-10 | 计划文档（总计划 + 4 份工作流设计） | 完成 | 本文档、`djvu-replacement.md`、`jpeg-replacement.md`、`lzma-replacement.md`、`aes-replacement.md` |
 | 2026-11-10 | W0 门禁工具与白名单 | 完成 | `app/tools/audit_vendored_sources.py`、`app/vendored-allowlist.json`（53 文件 / 38,602 行，PASS） |
+| 2026-11-10 | W1 D1 容器+ZP+BZZ | 完成 | page `f9f268b`：`djvu_iff/djvu_zp/djvu_bzz` + 2 项新 CTest；`text.djvu` TXTz 解压与替换前基线逐字节一致（66 字节） |
 | 待办 | W0 门禁接入验收矩阵（81 步）+ 基线哈希固化 | 下一步 | — |
+| 待办 | W1 D2 JB2（bitonal/multipage 逐字节对齐） | 下一步 | — |
