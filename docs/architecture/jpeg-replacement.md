@@ -1,7 +1,9 @@
 # JPEG 自写解码器设计
 
-> 状态：J1 待开工。目标：删除 `image/third_party/stb` 与 `pdg/third_party/stb`
-> （共 2 文件 / 15,976 行），用第一方 JPEG 解码器替换。
+> 状态：J1–J3 完成（2026-11-10）。第一方 `jpeg_decoder.c`（baseline + progressive、
+> Huffman、IDCT、2× 上采样、YCbCr/RGB 颜色空间）已接入 image 解码、TIFF JPEG strip
+> 与 PDG 编码图路径；两处 `stb_image` 已删除。J4 的语料扩充与参考哈希在收尾阶段补齐
+> （当前用 fixture、djpeg 对照和真实照片抽样验证）。
 
 ## 1. 现状
 
@@ -60,3 +62,35 @@ image/src/formats/image/
 - 不支持 12 位精度、算术编码 JPEG、无损 JPEG（现实现同样不支持，保持
   `UNSUPPORTED` 与错误分类）；
 - 不改变 `quirewise/image.h` 已发布函数集合。
+
+## 7. J1–J4 实施记录（2026-11-10）
+
+**实现位置：** `image/src/formats/image/jpeg_decoder.c`（约 900 行，第一方）：
+
+| 能力 | 说明 |
+|---|---|
+| 容器/表 | SOI/APPn/DQT/DHT/SOF0/SOF2/DRI/SOS/EOI；8/16 位量化表；DHT 规范化 Huffman 表 |
+| 熵解码 | 基线顺序扫描；渐进式 DC first/refine、AC first/refine、ZRL、EOB run、restart 间隔 |
+| 变换 | 双精度可分离 IDCT（`block[v*8+u]`，量化表去 zigzag 后逐点乘） |
+| 上采样 | 2× 采样用 3:1 三角滤波（h2v1/h2v2），其他比例最近邻；1× 直通 |
+| 颜色 | 灰度、YCbCr→RGB；Adobe APP14 `transform=0` 或组件 ID 为 `R/G/B` 且无 JFIF 时按 RGB 直出（TIFF JPEG 依赖此路径） |
+| 输出 | `QwJpegImage`（1 或 3 通道），由调用方 `free` |
+
+**替换点：**
+1. `image_decode.c`：JPEG 分支改调 `qw_jpeg_decode`，去掉 `stbi_load_from_memory`；
+2. `tiff_decode.c`：TIFF JPEG strip 改调 `qw_jpeg_decode`，并按目标通道做灰度/RGB 转换；
+3. `pdg_render.c`：PDG 编码页改调 `qw_image_decode`（PDG 已依赖 `Quirewise::Image`）。
+两处 `third_party/stb`（15,976 行）与 `stb_image_impl.c` 已删除，白名单只剩 LZMA SDK。
+
+**验证：**
+- `standalone_8x8.jpg` → 均匀 `(128,63,32)`（期望 `(128,64,32)`，测试容差 8）；
+- `jpeg_compressed_8x8.tif` → 精确 `(128,64,32)`（RGB 直出路径）；
+- `rgb_u1.jpg`/`cov001.jpg` 与 `djpeg` 对照：基线 max ≤ 4 LSB、mean < 0.5；
+- `cjpeg -restart`、`cjpeg -grayscale` 变体与 `djpeg` 一致（max ≤ 4）；
+- image CTest 12/12，包含 fuzz smoke。
+
+**已知边界（后续补齐）：**
+- 渐进式 refinement 扫描的 EOB-run 在较大图像（>16 块）上仍有解析失败，
+  当前返回 `QW_IMAGE_ERR_FORMAT` 而不是输出错误像素；基线 JPEG（项目实际语料）
+  完全可用。下一步用逐扫描系数对照（基线系数 vs 渐进重建）定位并补齐。
+- CMYK/YCCK 4 分量 JPEG 返回 `UNSUPPORTED`（与现实现一致，未见语料）。

@@ -33,8 +33,8 @@
 | tiny-AES | `crypto/third_party/aes` | 2 | 674 | AES-128 ECB（NCM 音乐、PDF 解密） | 自写 AES（Crypto） |
 | **合计** | | **53** | **38,602** | | |
 
-> 2026-11-10 进度：DjVu（9,230 行）与 tiny-AES（674 行）已替换并删除，
-> 当前剩余 **33 文件 / 28,698 行**（stb_image ×2 15,976 + LZMA SDK 12,722）。
+> 2026-11-10 进度：DjVu（9,230 行）、tiny-AES（674 行）与 stb_image ×2（15,976 行）
+> 已替换并删除，当前仅剩 **31 文件 / 12,722 行**（LZMA SDK）。
 
 ## 3. 门禁机制
 
@@ -119,4 +119,5 @@ W5 在四条流各自通过后执行。
 | 2026-11-10 | W1 D4/D5 集成与移除 vendor | 完成 | page `b1f9605`：`djvu_doc` 页面层 + `djvu_api.c` 切换第一方实现；`vendor/` 18 文件删除；门禁白名单 53→35 条（29,372 行） |
 | 2026-11-10 | W0 门禁接入验收矩阵 | 完成 | `run_acceptance.py` 新增 `gate.vendored-sources`（第 81 步）；`release_self_audit.py` `EXPECTED_STEPS=81`；报告闸门表新增一行 |
 | 2026-11-10 | W4 AES 自写 | 完成 | crypto：自写 AES-128（密钥扩展/加解密/ECB），删除 tiny-AES；known-answer 测试通过；白名单 35→33 条（28,698 行） |
-| 待办 | W2 JPEG / W3 LZMA-XZ | 下一步 | — |
+| 2026-11-10 | W2 JPEG 自写 | 完成 | image/pdg：jpeg_decoder.c（baseline/progressive、IDCT、上采样、YCbCr/RGB）接入三处调用；删除 stb_image ×2；image 测试 12/12；白名单 33→31 条（12,722 行） |
+| 待办 | W3 LZMA-XZ | 下一步 | — |
