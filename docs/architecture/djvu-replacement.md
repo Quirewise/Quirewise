@@ -1,7 +1,8 @@
 # DjVu 自写替换设计
 
-> 状态：D1 待开工。目标：删除 `page/src/formats/djvu/vendor`（18 文件 / 9,230 行），
-> 用第一方实现替换，公共 API 与行为保持不变。
+> 状态：D1 完成（IFF/ZP/BZZ，2026-11-10），D2（JB2）待开工。目标：删除
+> `page/src/formats/djvu/vendor`（18 文件 / 9,230 行），用第一方实现替换，
+> 公共 API 与行为保持不变。
 
 ## 1. 现状
 
@@ -79,8 +80,8 @@ typedef struct {                 /* IW44 平面 */
 
 | 里程碑 | 内容 | 门禁 | 预估 |
 |---|---|---|---|
-| **D1 容器+ZP+BZZ** | IFF 解析、DJVM 成员、ZP 算术解码、BZZ 解压 | `bitonal.djvu` 与 ref.pgm **逐字节一致**；`text.djvu` 文本可解压 | 4–5 人日 |
-| **D2 JB2** | 位图算术解码、符号字典、文本区域、模板、多页顺序 | `multipage.djvu` 两页与 refs 一致；`text.djvu` 提取 `Hello DjVu` | 4–5 人日 |
+| **D1 容器+ZP+BZZ** | IFF 解析、DJVM 成员、ZP 算术解码、BZZ 解压 | `text.djvu` 的 TXTz 解压结果与替换前基线**逐字节一致**（66 字节）；4 个夹具的 chunk 结构断言通过 | 4–5 人日（已完成） |
+| **D2 JB2** | 位图算术解码、符号字典、文本区域、模板、多页顺序 | `bitonal.djvu` 与 ref.pgm **逐字节一致**；`multipage.djvu` 两页与 refs 一致；`text.djvu` 提取 `Hello DjVu` | 4–5 人日 |
 | **D3 IW44** | 小波逆变换、渐进层、颜色变换、FGbz/FG44 调色板 | `photo.djvu` 与 photo.ref.ppm 逐字节一致；灰度/彩色 | 4–6 人日 |
 | **D4 合成与边界** | 图层合成、缩放、旋转、背景色、资源上限、错误分类 | page 现有 4 项 CTest 全绿；新增边界用例 | 2–3 人日 |
 | **D5 删除 vendor** | 删除 vendor 目录与许可证文件、更新文档、fuzz/ASan | 门禁白名单删除 18 条；四套矩阵全绿 | 1–2 人日 |
