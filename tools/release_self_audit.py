@@ -8,7 +8,7 @@ import json
 import subprocess
 from pathlib import Path
 
-EXPECTED_STEPS = 80
+EXPECTED_STEPS = 81
 
 
 def git(repo: Path, *args: str) -> str:
@@ -116,6 +116,9 @@ def main() -> int:
     boundary = run_tool(root, "app/tools/audit_release_boundaries.py", "--workspace", ".")
     checks["boundary_gate_exit"] = boundary.returncode
     checks["boundary_gate_output"] = boundary.stdout.strip()
+    vendored = run_tool(root, "app/tools/audit_vendored_sources.py", "--workspace", ".")
+    checks["vendored_gate_exit"] = vendored.returncode
+    checks["vendored_gate_output"] = vendored.stdout.strip()
     lock_verify = run_tool(root, "app/tools/fetch_workspace.py",
                            "--workspace", ".", "--verify-only")
     checks["lock_verify_exit"] = lock_verify.returncode
@@ -156,6 +159,7 @@ def main() -> int:
         and checks["header_ownership_gate_exit"] == 0
         and checks["mupdf_gate_exit"] == 0
         and checks["boundary_gate_exit"] == 0
+        and checks["vendored_gate_exit"] == 0
         and checks["lock_verify_exit"] == 0
         and checks["reviewer_signoff"]
         and checks["report_contains_signoff_hash"]

@@ -114,6 +114,8 @@ def main() -> int:
         root, "app/tools/verify_header_ownership.py", "--workspace", ".", "--strict")
     dag_code, dag_line = run_gate(
         root, "app/tools/validate_dependency_graph.py", "--workspace", ".")
+    vendored_code, vendored_line = run_gate(
+        root, "app/tools/audit_vendored_sources.py", "--workspace", ".")
 
     docs_dir = release / "release-docs"
     docs_dir.mkdir(parents=True, exist_ok=True)
@@ -224,6 +226,7 @@ python3 app/tools/run_acceptance.py --workspace . --shared --jobs 4
 | `verify_header_ownership.py --strict` | {ownership_line}（退出码 {ownership_code}） |
 | `audit_release_boundaries.py` | **0 findings、0 read errors**，仅 1 条开发期观察（app 的 Python3 查找） |
 | `audit_mupdf_removal.py` | **0 命中**；`qw_mupdf_*`、`mupdf_backend.h`、`QUIREWISE_WITH_MUPDF`、`<mupdf/...>` 与 MuPDF CMake 引用全部清零 |
+| `audit_vendored_sources.py` | {vendored_line}（退出码 {vendored_code}） |
 | `verify_public_headers.py`（静态与共享安装树） | {header_count}/{header_count} 公共头独立编译通过，0 失败，0 第三方头泄漏（共享树 {public_shared['header_count']}/{public_shared['header_count']}） |
 | `verify_error_taxonomy.py` / `verify_resource_limits.py` | 0 findings，原始输出见 `.tmp/release/error-taxonomy.txt` 与 `.tmp/release/resource-limits.txt` |
 

@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "note": "Vendored implementation sources that still need a first-party replacement. Entries may only be removed; adding or editing an entry requires a reviewed replacement plan. Hashes use LF-normalised content so the list is portable across checkouts.",
-  "generated_utc": "2026-11-10T16:12:49Z",
-  "file_count": 35,
-  "line_count": 29372,
+  "generated_utc": "2026-11-10T16:16:45Z",
+  "file_count": 33,
+  "line_count": 28698,
   "files": [
     {
       "path": "libraries/quirewise-compression/src/internal/lzma_sdk/7zCrc.c",
@@ -190,18 +190,6 @@
       "sha256": "a8fccfc039bc6852ad4333f291dac09e12911b82f13856caed65fa6fec9edbb3",
       "bytes": 69277,
       "lines": 2865
-    },
-    {
-      "path": "libraries/quirewise-crypto/third_party/aes/aes.c",
-      "sha256": "c4ddf2611a8d0d50d7ee6e67d31e22c151c108c89078bd7e0768bfc3d599889a",
-      "bytes": 19231,
-      "lines": 583
-    },
-    {
-      "path": "libraries/quirewise-crypto/third_party/aes/aes.h",
-      "sha256": "9f74a4de3bd11621ff6e8fb9b352b060f699e6c1c67f81a22d104aacad61a23b",
-      "bytes": 2790,
-      "lines": 91
     },
     {
       "path": "libraries/quirewise-image/third_party/stb/stb_image.h",

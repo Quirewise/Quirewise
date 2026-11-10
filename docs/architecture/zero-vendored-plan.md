@@ -33,6 +33,9 @@
 | tiny-AES | `crypto/third_party/aes` | 2 | 674 | AES-128 ECB（NCM 音乐、PDF 解密） | 自写 AES（Crypto） |
 | **合计** | | **53** | **38,602** | | |
 
+> 2026-11-10 进度：DjVu（9,230 行）与 tiny-AES（674 行）已替换并删除，
+> 当前剩余 **33 文件 / 28,698 行**（stb_image ×2 15,976 + LZMA SDK 12,722）。
+
 ## 3. 门禁机制
 
 `app/tools/audit_vendored_sources.py` 扫描工作区内 `third_party`、`vendor`、
@@ -113,6 +116,7 @@ W5 在四条流各自通过后执行。
 | 2026-11-10 | W1 D1 容器+ZP+BZZ | 完成 | page `f9f268b`：`djvu_iff/djvu_zp/djvu_bzz` + 2 项新 CTest；`text.djvu` TXTz 解压与替换前基线逐字节一致（66 字节） |
 | 2026-11-10 | W1 D2 JB2 | 完成 | page `685ff35`：`djvu_jb2` 记录层、直接/交叉位图编码、符号库与 blit；`bitonal.djvu` 渲染与 `bitonal.ref.pgm` 逐字节一致，page 测试 7/7 |
 | 2026-11-10 | W1 D3 IW44 | 完成（灰阶） | page `7a45cc3`：`djvu_iw44` 小波/桶解码/渐进层；`photo.djvu` 与 `photo.ref.ppm` 逐字节一致，page 测试 8/8；彩色路径待语料 |
-| 2026-11-10 | W1 D4/D5 集成与移除 vendor | 完成 | page（本轮）：`djvu_doc` 页面层 + `djvu_api.c` 切换第一方实现；`vendor/` 18 文件删除；门禁白名单 53→35 条（29,372 行） |
-| 待办 | W0 门禁接入验收矩阵（81 步）+ 基线哈希固化 | 下一步 | — |
-| 待办 | W2 JPEG / W3 LZMA/XZ / W4 AES | 下一步 | — |
+| 2026-11-10 | W1 D4/D5 集成与移除 vendor | 完成 | page `b1f9605`：`djvu_doc` 页面层 + `djvu_api.c` 切换第一方实现；`vendor/` 18 文件删除；门禁白名单 53→35 条（29,372 行） |
+| 2026-11-10 | W0 门禁接入验收矩阵 | 完成 | `run_acceptance.py` 新增 `gate.vendored-sources`（第 81 步）；`release_self_audit.py` `EXPECTED_STEPS=81`；报告闸门表新增一行 |
+| 2026-11-10 | W4 AES 自写 | 完成 | crypto：自写 AES-128（密钥扩展/加解密/ECB），删除 tiny-AES；known-answer 测试通过；白名单 35→33 条（28,698 行） |
+| 待办 | W2 JPEG / W3 LZMA-XZ | 下一步 | — |

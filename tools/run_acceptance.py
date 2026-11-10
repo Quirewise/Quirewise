@@ -248,6 +248,9 @@ class Runner:
             ("gate.mupdf-removal",
              [python, "app/tools/audit_mupdf_removal.py",
               "--workspace", "."]),
+            ("gate.vendored-sources",
+             [python, "app/tools/audit_vendored_sources.py",
+              "--workspace", "."]),
         ]
         all_ok = True
         for name, command in gates:

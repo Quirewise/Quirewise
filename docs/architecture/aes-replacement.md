@@ -1,7 +1,8 @@
 # AES 自写设计
 
-> 状态：A1 待开工。目标：删除 `crypto/third_party/aes`（2 文件 / 674 行，tiny-AES），
-> 用第一方 AES 实现替换。
+> 状态：A1 完成（2026-11-10）。`third_party/aes` 已删除，`qw_crypto_aes128_ecb_*`
+> 改为第一方实现（AES-128 密钥扩展 + 加解密 + ECB 封装）；AES-256 解密原本已是
+> 第一方实现（`src/aes256.c`）。
 
 ## 1. 现状
 
