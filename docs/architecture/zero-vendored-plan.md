@@ -31,10 +31,11 @@
 | LZMA SDK | `compression/src/internal/lzma_sdk` | 31 | 12,722 | LZMA1/LZMA2/XZ、BCJ/Delta 过滤、CRC64/SHA-256 | 自写 range coder + LZMA/XZ（Compression） |
 | djvudec | `page/src/formats/djvu/vendor` | 18 | 9,230 | DjVu IFF/BZZ/JB2/IW44/文本/渲染 | 自写 DjVu 解码器（Page） |
 | tiny-AES | `crypto/third_party/aes` | 2 | 674 | AES-128 ECB（NCM 音乐、PDF 解密） | 自写 AES（Crypto） |
-| **合计** | | **53** | **38,602** | | |
+| **合计** | | **53** | **38,602** | 已全部归零（2026-11-10） |
 
-> 2026-11-10 进度：DjVu（9,230 行）、tiny-AES（674 行）与 stb_image ×2（15,976 行）
-> 已替换并删除，当前仅剩 **31 文件 / 12,722 行**（LZMA SDK）。
+> 2026-11-10 进度：DjVu（9,230 行）、tiny-AES（674 行）、stb_image ×2（15,976 行）
+> 与 LZMA SDK（12,722 行）已全部替换并删除。**当前非自写实现：0 文件 / 0 行**，
+> 门禁白名单已归零。
 
 ## 3. 门禁机制
 
@@ -120,4 +121,5 @@ W5 在四条流各自通过后执行。
 | 2026-11-10 | W0 门禁接入验收矩阵 | 完成 | `run_acceptance.py` 新增 `gate.vendored-sources`（第 81 步）；`release_self_audit.py` `EXPECTED_STEPS=81`；报告闸门表新增一行 |
 | 2026-11-10 | W4 AES 自写 | 完成 | crypto：自写 AES-128（密钥扩展/加解密/ECB），删除 tiny-AES；known-answer 测试通过；白名单 35→33 条（28,698 行） |
 | 2026-11-10 | W2 JPEG 自写 | 完成 | image/pdg：jpeg_decoder.c（baseline/progressive、IDCT、上采样、YCbCr/RGB）接入三处调用；删除 stb_image ×2；image 测试 12/12；白名单 33→31 条（12,722 行） |
-| 待办 | W3 LZMA-XZ | 下一步 | — |
+| 2026-11-10 | W3 LZMA/XZ 自写 | 完成 | compression 345649c 后：internal/lzma.c（LZMA1/LZMA2、概率模型、距离槽）+ internal/xz_dec.c（容器/index/footer、Delta/BCJ、CRC32/CRC64/SHA-256）；9 组 xz 差分（none/crc32/crc64/sha256、preset 0/6/9、delta、x86）全通过；白名单 0 条（0 行） |
+| 待办 | Phase 5 发布收尾（矩阵重跑、SBOM/锁/报告、独立评审、tag） | 下一步 | — |

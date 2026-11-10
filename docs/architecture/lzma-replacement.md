@@ -1,7 +1,8 @@
 # LZMA/XZ 自写解码器设计
 
-> 状态：L1 待开工。目标：删除 `compression/src/internal/lzma_sdk`（31 文件 /
-> 12,722 行），用第一方 LZMA/LZMA2/XZ 解码器替换。
+> 状态：L1–L4 完成（2026-11-10）。`lzma_sdk`（31 文件 / 12,722 行）已删除，
+> 第一方 `internal/lzma.c` + `internal/xz_dec.c` 接管 LZMA1/LZMA2 与 XZ；
+> 7z 链的 Delta/BCJ 过滤与 CRC64/SHA-256 也由本包自实现。门禁白名单已归零。
 
 ## 1. 现状
 
@@ -60,3 +61,25 @@ CRC64/SHA-256 在该包内部实现（与 Crypto 的同名算法各自独立、�
 - 不引入 `liblzma`/`xz` 命令行或系统库；测试语料为已提交的二进制。
 - BCJ 覆盖以现 SDK 编译进包的范围为准（x86、ARM、ARMThumb、PPC、SPARC、IA64；
   ARM64 视语料需要补充）。
+
+## 6. L1–L4 实施记录（2026-11-10）
+
+**第一方实现：**
+
+| 文件 | 内容 |
+|---|---|
+| `src/internal/lzma.c`（约 640 行） | LZMA1 与 LZMA2：范围解码器、字面量/匹配/重复距离、长度树、距离槽（含 reverse 对齐树）、prob 模型、LZMA2 分块（字典/状态/属性重置、压缩与未压缩块） |
+| `src/internal/xz_dec.c`（约 700 行） | XZ 容器：流头/块头、VLI、filter 链（LZMA2、Delta、x86/PPC/ARM/ARMT/SPARC）、块填充、CRC32/CRC64/SHA-256 校验、index/footer、前缀模式 |
+| `src/seven_zip.c` | 7z coder 链：LZMA1/LZMA2 + Delta/BCJ 过滤，保持方法号与语义不变 |
+| `src/xz.c` | 公共 `inflate_xz`/`inflate_xz_prefix` 薄封装 |
+
+**验证：**
+- `test_xz`、`test_seven_zip`（LZMA1/LZMA2/Delta/x86 已知答案）全部通过；
+- 与 `xz` CLI 的 9 组差分：`-C none/crc32/crc64/sha256`、preset 0/6/9、
+  `--delta=dist=2 --lzma2`、`--x86 --lzma2`，全部逐字节一致；
+- `test_compression` 与 fuzz smoke 通过；默认 256 MB 内存上限下字典超限按原语义拒绝。
+
+**已知边界：**
+- IA64 BCJ 过滤未实现（7z 链遇到该方法返回失败；项目语料未见使用）；
+- 仅支持单 stream（与现有测试契约一致，多 stream 拼接按错误处理）；
+- 未实现 ARM64 BCJ（现 SDK 编译范围也未启用）。
