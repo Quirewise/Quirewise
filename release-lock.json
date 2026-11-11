@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_utc": "2026-11-10T17:49:08Z",
+  "generated_utc": "2026-11-11T11:12:07Z",
   "note": "Pin of the sibling repositories consumed by the Quirewise release.",
   "repositories": [
     {
@@ -11,7 +11,7 @@
     {
       "path": "libraries/quirewise-audio",
       "url": "https://github.com/Quirewise/quirewise-audio.git",
-      "commit": "d1a201ca7dfdee32a1410f4fd7f69f6af05a1efb"
+      "commit": "c2bf742fd0213b85a59968220c141300c7039fdf"
     },
     {
       "path": "libraries/quirewise-charset",
