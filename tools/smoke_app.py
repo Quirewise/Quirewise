@@ -145,6 +145,30 @@ def main() -> int:
         if not comic_pdf.is_file() or comic_pdf.read_bytes()[:5] != b"%PDF-":
             return fail("CBZ to PDF produced no PDF")
 
+        # Batch conversion into --out-dir.
+        outdir = root / "out"
+        outdir.mkdir()
+        run(exe, ["sample.html", "notes.txt", "--out-dir", str(outdir)], root)
+        for name in ("sample.pdf", "notes.pdf"):
+            if not (outdir / name).is_file():
+                return fail(f"--out-dir did not produce {name}")
+
+        # A4 page boxes for raster page routes.
+        if djvu.is_file():
+            a4_pdf = root / "a4.pdf"
+            run(exe, ["book.djvu", "--page", "a4", "-o", str(a4_pdf)], root)
+            if b"/MediaBox [0 0 595 842]" not in a4_pdf.read_bytes():
+                return fail("--page a4 did not emit an A4 media box")
+
+        # --quiet suppresses success output.
+        quiet_check = run(exe, ["sample.html", "--check", "--quiet"], root)
+        if quiet_check.stdout.strip():
+            return fail("--quiet still printed success output")
+
+        # Audio track selection is accepted by --check.
+        if wav.is_file():
+            run(exe, [str(wav), "--check", "--audio-track", "1"], root)
+
     print("CLI smoke OK")
     return 0
 

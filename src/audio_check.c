@@ -120,7 +120,8 @@ static int audio_magic_formats(const uint8_t *data, size_t size,
 }
 
 static int audio_scan(const uint8_t *data, size_t size,
-                      QwAudioInputFormat format, QwConvertReport *report)
+                      QwAudioInputFormat format, size_t audio_track,
+                      QwConvertReport *report)
 {
     QwAudioReader *reader = NULL;
     QwAudioStatus status;
@@ -128,7 +129,7 @@ static int audio_scan(const uint8_t *data, size_t size,
     size_t packets = 0u;
     int packet_route_missing = 0;
 
-    status = qw_audio_reader_open(data, size, format, 0u, &reader);
+    status = qw_audio_reader_open(data, size, format, audio_track, &reader);
     if (status != QW_AUDIO_OK || !reader) return 0;
     memset(&info, 0, sizeof(info));
     if (report && qw_audio_reader_get_info(reader, &info) == QW_AUDIO_OK) {
@@ -170,7 +171,8 @@ static int audio_scan(const uint8_t *data, size_t size,
     return 1;
 }
 
-int qw_app_audio_check_file(const char *path, QwConvertReport *report)
+int qw_app_audio_check_file(const char *path, size_t audio_track,
+                            QwConvertReport *report)
 {
     FILE *file;
     long length;
@@ -208,13 +210,15 @@ int qw_app_audio_check_file(const char *path, QwConvertReport *report)
     fclose(file);
 
     recognized = audio_extension_format(path, &format);
-    if (recognized) ok = audio_scan(data, (size_t)length, format, report);
+    if (recognized)
+        ok = audio_scan(data, (size_t)length, format, audio_track, report);
     if (!ok) {
         candidate_count = audio_magic_formats(data, (size_t)length, candidates,
                                               8u);
         for (index = 0; index < candidate_count && !ok; ++index) {
             if (recognized && candidates[index] == format) continue;
-            ok = audio_scan(data, (size_t)length, candidates[index], report);
+            ok = audio_scan(data, (size_t)length, candidates[index],
+                            audio_track, report);
         }
     }
     free(data);

@@ -22,6 +22,7 @@ static int page_is_pdf(const uint8_t *data, size_t size)
 }
 
 static int page_convert_djvu(const uint8_t *data, size_t size,
+                             const QwAppOptions *options,
                              uint8_t **out_pdf, size_t *out_size,
                              QwConvertReport *report)
 {
@@ -75,7 +76,9 @@ static int page_convert_djvu(const uint8_t *data, size_t size,
             image.format == QW_DJVU_PIXEL_RGB24 ? 3 : 1;
         qw_djvu_image_free(&image);
     }
-    rc = qw_raster_pages_to_pdf(pages, page_count, out_pdf, out_size, report);
+    rc = qw_raster_pages_to_pdf_mode(pages, page_count,
+                                     options->raster_page_mode, out_pdf,
+                                     out_size, report);
     for (page_index = 0u; page_index < page_count; ++page_index)
         free((void *)pages[page_index].pixels);
     free(pages);
@@ -83,6 +86,7 @@ static int page_convert_djvu(const uint8_t *data, size_t size,
 }
 
 static int page_convert_uvz(const uint8_t *data, size_t size,
+                            const QwAppOptions *options,
                             uint8_t **out_pdf, size_t *out_size,
                             QwConvertReport *report)
 {
@@ -173,7 +177,8 @@ static int page_convert_uvz(const uint8_t *data, size_t size,
                              "UVZ pages could not be decoded as images or PDG");
         return QW_STATUS_ERR_UNSUPPORTED;
     }
-    rc = qw_raster_pages_to_pdf(pages, decoded, out_pdf, out_size, report);
+    rc = qw_raster_pages_to_pdf_mode(pages, decoded, options->raster_page_mode,
+                                     out_pdf, out_size, report);
     for (page_index = 0u; page_index < decoded; ++page_index) {
         if (kinds[page_index] == 1u) qw_image_free(&images[page_index]);
         else if (kinds[page_index] == 2u) pdg_image_free(&pdg_images[page_index]);
@@ -186,21 +191,28 @@ static int page_convert_uvz(const uint8_t *data, size_t size,
 }
 
 int qw_app_page_convert(const uint8_t *data, size_t size,
+                        const QwAppOptions *options,
                         uint8_t **out_pdf, size_t *out_size,
                         QwConvertReport *report)
 {
+    static const QwAppOptions defaults = {
+        QW_RASTER_PAGE_MODE_IMAGE, 0, NULL, 0u
+    };
     if (!data || !size || !out_pdf || !out_size)
         return QW_STATUS_ERR_INVALID_ARGUMENT;
+    if (!options) options = &defaults;
     *out_pdf = NULL;
     *out_size = 0u;
 
     if (size >= 5u && memcmp(data, "%pdgz", 5u) == 0) {
         PdzPdfReport pdz_report;
         int status;
+        int page_mode = options->raster_page_mode == QW_RASTER_PAGE_MODE_A4
+                            ? PDZ_PDF_PAGE_A4
+                            : PDZ_PDF_PAGE_IMAGE;
         memset(&pdz_report, 0, sizeof(pdz_report));
-        status = pdz_pdf_from_pdz(data, size, NULL, PDZ_PDF_PAGES_AUTO,
-                                  PDZ_PDF_PAGE_A4, out_pdf, out_size,
-                                  &pdz_report);
+        status = pdz_pdf_from_pdz(data, size, NULL, options->pdz_page_rule,
+                                  page_mode, out_pdf, out_size, &pdz_report);
         if (status != 0) {
             if (report) snprintf(report->note, sizeof(report->note),
                                  "PDG container conversion failed with status %d",
@@ -247,13 +259,16 @@ int qw_app_page_convert(const uint8_t *data, size_t size,
                                                 : QW_STATUS_ERR_FORMAT;
     }
     if (qw_djvu_is_supported(data, size))
-        return page_convert_djvu(data, size, out_pdf, out_size, report);
+        return page_convert_djvu(data, size, options, out_pdf, out_size,
+                                 report);
     if (size >= 4u && memcmp(data, "PK\x03\x04", 4u) == 0)
-        return page_convert_uvz(data, size, out_pdf, out_size, report);
+        return page_convert_uvz(data, size, options, out_pdf, out_size,
+                                report);
     return QW_STATUS_ERR_UNSUPPORTED;
 }
 
 int qw_app_page_convert_file(const char *path,
+                             const QwAppOptions *options,
                              uint8_t **out_pdf, size_t *out_size,
                              QwConvertReport *report)
 {
@@ -288,7 +303,8 @@ int qw_app_page_convert_file(const char *path,
         return QW_STATUS_ERR_IO;
     }
     fclose(file);
-    rc = qw_app_page_convert(data, (size_t)length, out_pdf, out_size, report);
+    rc = qw_app_page_convert(data, (size_t)length, options, out_pdf, out_size,
+                             report);
     free(data);
     return rc;
 }

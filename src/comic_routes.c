@@ -41,9 +41,13 @@ static int comic_extension_format(const char *path,
 }
 
 int qw_app_comic_convert_file(const char *path,
+                              const QwAppOptions *options,
                               uint8_t **out_pdf, size_t *out_size,
                               QwConvertReport *report)
 {
+    static const QwAppOptions defaults = {
+        QW_RASTER_PAGE_MODE_IMAGE, 0, NULL, 0u
+    };
     QwComicArchiveFormat format;
     QwComicArchive *archive = NULL;
     QwComicStatus status;
@@ -58,6 +62,7 @@ int qw_app_comic_convert_file(const char *path,
     int rc;
 
     if (!path || !out_pdf || !out_size) return QW_STATUS_ERR_INVALID_ARGUMENT;
+    if (!options) options = &defaults;
     *out_pdf = NULL;
     *out_size = 0u;
     if (!comic_extension_format(path, &format)) {
@@ -89,8 +94,8 @@ int qw_app_comic_convert_file(const char *path,
     }
     fclose(file);
 
-    status = qw_comic_archive_open(data, (size_t)length, format, NULL,
-                                   &archive);
+    status = qw_comic_archive_open(data, (size_t)length, format,
+                                   options->archive_password, &archive);
     if (status != QW_COMIC_OK || !archive) {
         free(data);
         if (report) snprintf(report->note, sizeof(report->note),
@@ -150,7 +155,8 @@ int qw_app_comic_convert_file(const char *path,
                              "comic archive contains no decodable image pages");
         return QW_STATUS_ERR_UNSUPPORTED;
     }
-    rc = qw_raster_pages_to_pdf(pages, decoded, out_pdf, out_size, report);
+    rc = qw_raster_pages_to_pdf_mode(pages, decoded, options->raster_page_mode,
+                                     out_pdf, out_size, report);
     for (page_index = 0u; page_index < decoded; ++page_index)
         qw_image_free(&images[page_index]);
     free(images);

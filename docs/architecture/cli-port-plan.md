@@ -80,10 +80,23 @@
 
 ## C3：选项与批量
 
-- 选项映射到 `QwConvertOptions`：`--key`、`--pages`、`--archive-password`、
-  `--zip-password`、`--audio-track`、`--ekey`、`--kgm-key`、扫描页选项；
-- `--pdfa`/`--optimize` 在 PDF/A 后端可用时接入；
-- `--out-dir`、批量输入（目录/通配符）与 `--quiet` 语义统一。
+### C3 已落地（部分，2026-11-11）
+
+- 批量输入：一次接受多个 `INPUT`（上限 64），逐个转换/检查，任一失败返回非零；
+- `--out-dir DIR`：默认输出名放入 DIR（保持输入 basename + 目标扩展名）；
+- `--quiet`：成功时不打印路径/OK；
+- `--page image|a4`：页面族/漫画/图片栅格 PDF 的页面框选择（A4 或像素尺寸），
+  PDG 容器同步映射到 `PDZ_PDF_PAGE_A4/IMAGE`；
+- `--pages auto|body|body+att|all`：PDG 容器页面规则；
+- `--archive-password` / `--zip-password`：CBZ 解包密码；
+- `--audio-track N`：音频 `--check` 的音轨选择。
+
+### C3 剩余
+
+- `--key`、`--ekey`、`--kgm-*`（CONTAINER/加密音乐密钥；当前选项结构未接线）；
+- 扫描预处理（`--binarize`、`--deskew`、`--crop` 等）；
+- PDF/A（`--pdfa`/`--optimize`，依赖外部后端）；
+- 目录/通配符批量输入与并发。
 
 ## C4：验收与发布
 

@@ -8,6 +8,10 @@
 > JSON/JSONL/YAML/TOML/XML/OPML/IPYNB/vCard 结构化数据，以及 CBZ/CBT 漫画归档；
 > 非 PDF 输出目前为 PDF→TXT/PNG。`--check` 额外支持音频容器/包扫描（WAV/FLAC/MP3/OGG/M4A 等，
 > 不解码）。
+>
+> C3 已接入：多输入批量、`--out-dir`、`--quiet`、`--page image|a4`、`--pages auto|body|body+att|all`、
+> `--archive-password`/`--zip-password`、`--audio-track N`。尚未接入：`--key`/`--ekey`/`--kgm-*`、
+> 扫描预处理、`--pdfa`/`--optimize`、目录/通配符批量。
 > 本页其余选项（`--key`、`--pages`、扫描预处理、音频参数等）仍是目标/旧版行为，尚未接入。
 > 音频参数（`--audio-track`、`--ekey`、`--ekey-db`、`--kgm-key`、`--kgm-db`）与音频转码命令
 > 不适用于当前发布包：`quirewise-audio` 只提供容器/帧解析（packet reader），不含音频解码、
