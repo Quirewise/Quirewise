@@ -6,10 +6,12 @@
 
 ## 1. 现状
 
-- 编译进 Compression 的 SDK 单元：`LzmaDec`、`Lzma2Dec`、`XzDec`、`Xz`、
-  `Bra`/`Bra86`/`BraIA64`、`Delta`、`7zCrc`、`7zCrcOpt`、`XzCrc64`、`XzCrc64Opt`、
-  `Sha256`、`Sha256Opt`、`Alloc`、`CpuArch`，由 `src/internal/lzma_sdk_allocator.c`
-  与 `src/xz.c` 适配。
+- 第一方实现：`src/internal/lzma.c`（LZMA1/LZMA2 解码）与
+  `src/internal/xz_dec.c`（XZ 容器、过滤器与校验），内部头
+  `src/internal/qw_lzma.h`；`src/xz.c`、`src/seven_zip.c` 适配 XZ/7z 入口。
+- 原 LZMA SDK 单元（`LzmaDec`、`Lzma2Dec`、`XzDec`、`Xz`、`Bra`/`Bra86`/`BraIA64`、
+  `Delta`、`7zCrc`、`7zCrcOpt`、`XzCrc64`、`XzCrc64Opt`、`Sha256`、`Sha256Opt`、
+  `Alloc`、`CpuArch`）与 `src/internal/lzma_sdk_allocator.c` 均已删除。
 - 公共 API 不变：`qw_compression` 的 XZ 与 7z 入口（方法号常量
   `QW_COMPRESSION_7Z_LZMA1_METHOD = 0x030101`、`LZMA2 = 0x21`、`DELTA = 0x03`、
   `X86 = 0x03030103`、`POWERPC = 0x03030205`、`IA64 = 0x03030401`、

@@ -80,7 +80,7 @@ image/src/formats/image/
 1. `image_decode.c`：JPEG 分支改调 `qw_jpeg_decode`，去掉 `stbi_load_from_memory`；
 2. `tiff_decode.c`：TIFF JPEG strip 改调 `qw_jpeg_decode`，并按目标通道做灰度/RGB 转换；
 3. `pdg_render.c`：PDG 编码页改调 `qw_image_decode`（PDG 已依赖 `Quirewise::Image`）。
-两处 `third_party/stb`（15,976 行）与 `stb_image_impl.c` 已删除，白名单只剩 LZMA SDK。
+两处 `third_party/stb`（15,976 行）与 `stb_image_impl.c` 已删除；当时白名单只剩 LZMA SDK，W3 完成后归零。
 
 **验证：**
 - `standalone_8x8.jpg` → 均匀 `(128,63,32)`（期望 `(128,64,32)`，测试容差 8）；

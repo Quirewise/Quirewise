@@ -6,11 +6,13 @@
 
 ## 1. 现状
 
-- 实现位置：`libraries/quirewise-page/src/formats/djvu/vendor/`（vendored MIT
-  `djvudec`，上游 commit `f0412ee…`，见 `PROVENANCE.md` 与 `LICENSE.djvudec.md`）。
-- 调用方：`page/src/formats/djvu/djvu_page.c` 等，通过公共头
-  `quirewise/djvu.h` 暴露 `qw_djvu_get_page_info`、`qw_djvu_render_page`、
-  `qw_djvu_extract_text` 与 `qw_format_djvu` 描述符。
+- 第一方实现位置：`libraries/quirewise-page/src/formats/djvu/`：
+  `djvu_iff.c`（IFF 表单/块）、`djvu_parser.c`（INFO/页枚举）、`djvu_bzz.c`、
+  `djvu_jb2.c`、`djvu_iw44.c`、`djvu_doc.c`（页面层与渲染/文本）、
+  `djvu_api.c`（公共 API 适配），以及生成的数据表 `djvu_zp_table.c`、
+  `djvu_iw44_zigzag.c`。原 `vendor/`（vendored MIT `djvudec`）已删除。
+- 调用方：公共头 `quirewise/djvu.h` 暴露 `qw_djvu_get_page_info`、
+  `qw_djvu_render_page`、`qw_djvu_extract_text` 与 `qw_format_djvu` 描述符。
 - 现有夹具（`page/tests/data/djvu`）：
 
 | 夹具 | 规模 | 参考输出 |
