@@ -53,18 +53,24 @@
 - **纯文本 / Markdown → PDF**：`txt`/`text`/`md`/`markdown` 扩展名走段落渲染，
   跳过 UTF-8 BOM。
 - **图片 → PDF**：PNG/JPEG/GIF/BMP/WebP/TIFF 等由 `qw_image_probe` 探测，
-  解码为 Gray8/RGB24 后写入单页 PDF（页面尺寸 = 像素尺寸，未压缩图像
-  XObject）；PDF 可由项目自身 reader 重新打开。
+  解码为 Gray8/RGB24 后写入单页 PDF；新增公开的
+  `qw_raster_pages_to_pdf` 支持多页栅格（未压缩图像 XObject）。
 - **表格 → PDF**：XLSX/XLSM/XLTX/XLS/XLT/ODS/OTS/FODS 解析后按全部工作表
   渲染为 HTML 表格再转 PDF；CSV/TSV 保持原有路径。
+- **页面族 → PDF（app 侧路由）**：
+  - DjVu：逐页 `qw_djvu_render_page` → 多页栅格 PDF；
+  - PDG/PDZ（`%pdgz`）：`pdz_pdf_from_pdz` 直接生成 PDF；
+  - UVZ：逐页读取，优先 `qw_image_decode`，否则 `pdg_render_memory`；
+  - CAJ：经典 CAJ 与 KDH 两条 PDF 提取路线；
+  - CEB：`qw_ceb_decrypt_to_pdf`。
 - **检测**：`qw_detect_format` 增加图片兜底与常见 magic。
 
 ### C2 剩余
 
-- Page/PDG/DjVu/UVZ/CAJ/CEB → PDF（Page 层依赖，需要在 app 或专门调度层接入）；
 - 字幕、结构化数据 → PDF；
 - 音频 `--check`（app 侧用 audio packet reader 扫描）；
-- 多页图片/漫画归档 → PDF。
+- 多页图片/漫画归档（CBZ/CBT）→ PDF；
+- 页面族路由的选项（页面规则、扫描预处理、密钥）。
 
 ## C3：选项与批量
 

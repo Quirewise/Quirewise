@@ -7,6 +7,10 @@
 #include <quirewise/status.h>
 #endif
 
+#if defined(QUIREWISE_APP_PAGE_ROUTES)
+#include "page_routes.h"
+#endif
+
 static void print_version(void)
 {
     puts("Quirewise application 0.1.0");
@@ -168,6 +172,43 @@ static const char *cli_status_text(int status)
     }
 }
 
+static int cli_path_exists(const char *path)
+{
+    FILE *file = fopen(path, "rb");
+    if (!file) return 0;
+    fclose(file);
+    return 1;
+}
+
+static int cli_write_pdf(const char *path, const uint8_t *data, size_t size,
+                         QwConvertReport *report)
+{
+    FILE *file;
+    if (cli_path_exists(path)) {
+        if (report) snprintf(report->note, sizeof(report->note),
+                             "output already exists and is never overwritten");
+        return QW_STATUS_ERR_IO;
+    }
+    file = fopen(path, "wb");
+    if (!file) {
+        if (report) snprintf(report->note, sizeof(report->note),
+                             "cannot create output file");
+        return QW_STATUS_ERR_IO;
+    }
+    if (size > 0 && fwrite(data, 1u, size, file) != size) {
+        fclose(file);
+        remove(path);
+        if (report) snprintf(report->note, sizeof(report->note),
+                             "short write to output file");
+        return QW_STATUS_ERR_IO;
+    }
+    if (fclose(file) != 0) {
+        remove(path);
+        return QW_STATUS_ERR_IO;
+    }
+    return QW_STATUS_OK;
+}
+
 static int cli_run(const char *input, const char *output,
                    const char *target_name, int check)
 {
@@ -203,9 +244,38 @@ static int cli_run(const char *input, const char *output,
     memset(&report, 0, sizeof(report));
     if (check) {
         status = qw_check_file(input, &options, &report);
+#if defined(QUIREWISE_APP_PAGE_ROUTES)
+        if (status != QW_STATUS_OK) {
+            QwConvertReport page_report;
+            uint8_t *pdf = NULL;
+            size_t pdf_size = 0u;
+            memset(&page_report, 0, sizeof(page_report));
+            if (qw_app_page_convert_file(input, &pdf, &pdf_size,
+                                         &page_report) == QW_STATUS_OK) {
+                qw_buffer_free(pdf);
+                status = QW_STATUS_OK;
+                report = page_report;
+            }
+        }
+#endif
     } else {
         status = qw_convert_file_to_format(input, final_output, target->format,
                                            &options, &report);
+#if defined(QUIREWISE_APP_PAGE_ROUTES)
+        if (status != QW_STATUS_OK && target->format == QW_FORMAT_PDF) {
+            QwConvertReport page_report;
+            uint8_t *pdf = NULL;
+            size_t pdf_size = 0u;
+            memset(&page_report, 0, sizeof(page_report));
+            if (qw_app_page_convert_file(input, &pdf, &pdf_size,
+                                         &page_report) == QW_STATUS_OK) {
+                status = cli_write_pdf(final_output, pdf, pdf_size,
+                                       &page_report);
+                qw_buffer_free(pdf);
+                if (status == QW_STATUS_OK) report = page_report;
+            }
+        }
+#endif
     }
 
     if (status == QW_STATUS_OK) {

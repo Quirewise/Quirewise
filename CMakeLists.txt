@@ -53,6 +53,11 @@ quirewise_find_library(QUIREWISE_LINK_COMIC QuirewiseComic Quirewise::Comic QUIR
 
 target_link_libraries(quirewise PRIVATE ${QW_LINK_TARGETS})
 
+if(QUIREWISE_LINK_DOCUMENT AND QUIREWISE_LINK_PAGE AND QUIREWISE_LINK_PDG AND QUIREWISE_LINK_IMAGE)
+    target_sources(quirewise PRIVATE src/page_routes.c)
+    target_compile_definitions(quirewise PRIVATE QUIREWISE_APP_PAGE_ROUTES)
+endif()
+
 if(QUIREWISE_VALIDATE_DEPENDENCIES)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
     add_custom_target(quirewise_validate_dependencies

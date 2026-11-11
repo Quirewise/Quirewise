@@ -99,6 +99,18 @@ def main() -> int:
         if not table_pdf.is_file() or table_pdf.read_bytes()[:5] != b"%PDF-":
             return fail("CSV to PDF produced no PDF")
 
+        workspace = pathlib.Path(__file__).resolve().parents[2]
+        djvu = workspace / "libraries/quirewise-page/tests/data/djvu/multipage.djvu"
+        if djvu.is_file():
+            (root / "book.djvu").write_bytes(djvu.read_bytes())
+            run(exe, ["book.djvu"], root)
+            djvu_pdf = root / "book.pdf"
+            if not djvu_pdf.is_file() or djvu_pdf.read_bytes()[:5] != b"%PDF-":
+                return fail("DjVu to PDF produced no PDF")
+            check = run(exe, ["book.djvu", "--check"], root)
+            if check.stdout.strip() != "OK":
+                return fail(f"DjVu --check printed {check.stdout!r}")
+
     print("CLI smoke OK")
     return 0
 
