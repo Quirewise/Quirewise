@@ -1,15 +1,17 @@
 # 格式能力总览
 
-> **发布范围（2026-11-07）**：本表沿用迁移前的能力清单。当前可独立发布的
-> Quirewise 包只包含内部实现的路线；标注 LibRaw、Ghostscript、veraPDF、FFmpeg、
-> MuPDF 或类似外部后端的路线不在发布范围内，相应入口必须返回稳定的
-> `UNSUPPORTED`。实际支持子集以 `libraries/*/docs` 和验收证据为准。
+> **发布范围（2026-11-11 修正）**：本表沿用迁移前的能力清单，但音频相关行已按当前发布包修正。
+> 当前可独立发布的 Quirewise 包只包含内部实现的路线；标注 LibRaw、Ghostscript、veraPDF、
+> FFmpeg、MuPDF 或类似外部后端的路线不在发布范围内，相应入口必须返回稳定的
+> `UNSUPPORTED`。**音频/加密音乐行描述的是解析（packet reader）能力，不是转码能力**：
+> 发布包不包含音频解码器、重采样、编码器、muxer 或播放接口。实际支持子集以
+> `libraries/*/docs` 和验收证据为准。
 
 本页按输入类别汇总 Quirewise 可用的转换方向。精确子集、参数和限制见各分类文档。
 
 ## 转换方向
 
-| 输入类别 | 代表格式 | 可用输出方向 |
+| 输入类别 | 代表格式 | 当前发布包能力 |
 |---|---|---|
 | PDF 与扫描文档 | PDF、PAGE、CONTAINER、UVZ、DjVu、CAJ、KDH、CEB | PDF；PDF 还可输出受限图像、TXT，或经验证生成 PDF/A。 |
 | Office 与电子书 | DOCX/DOCM/DOTX/DOTM、ODT/OTT/FODT、HWPX、EPUB/KEPUB、MOBI/AZW3、FB2、XPS/OpenXPS | PDF、共享版式输出；MOBI/AZW3 和 XPS 的读取子集见[文档与文本](documents-and-text.md)。 |
@@ -22,8 +24,8 @@
 | 相机 RAW | DNG/TIFF-CFA、CR3、RAF、X3F、CRW、MRW 等 | PDF 和已注册的单页图像 writer；像素解码与去马赛克受 LibRaw 构建能力约束。 |
 | 矢量与打印图形 | SVG/SVGZ、EPS、PS、带 Illustrator 标记的 legacy AI | PDF、单页图像；部分路线可在 PDF 与 EPS/PS 之间转换。SVG 输出仅接受受支持页面图像。 |
 | 漫画与图像归档 | CBZ、CBR/RAR/RAR5、CB7/7z、CBT/USTAR、图像目录 | PDF、CBZ、CBT；归档成员按支持的图像格式逐页处理。 |
-| 标准音频 | MP2、MP3、FLAC、Musepack、M4A/AAC、WAV、OGG、Opus、AIFF、CAF、WMA、Matroska/WebM、DSF/DFF/DSS 等 | 已注册音频输出之间转码；具体解析子集、编解码器、采样率、位深和容器要求见[音频](audio.md)。 |
-| 加密音乐容器 | NCM、QMC、KGM/KGMA/VPR、旧版 KWM | 在密钥和容器变体受支持时解密并转为已注册音频格式。 |
+| 标准音频 | MP2、MP3、FLAC、Musepack、M4A/AAC、WAV、OGG、Opus、AIFF、CAF、WMA、Matroska/WebM、DSF/DFF/DSS 等 | **解析（packet reader）**：解析容器与音频包边界；PCM/未压缩容器输出未压缩采样包；压缩编码只输出压缩包。解码、重采样、编码/封装与播放不在发布包内（需外部解码器）。具体子集见[音频](audio.md)。 |
+| 加密音乐容器 | NCM、QMC、KGM/KGMA/VPR、旧版 KWM | **解析并解密为底层压缩音频负载**（不是 PCM）；不含解码/转码；KGM v5 等变体需要显式密钥。见[音频](audio.md)。 |
 
 ## 通用边界
 

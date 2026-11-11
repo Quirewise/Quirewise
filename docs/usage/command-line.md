@@ -1,8 +1,11 @@
 # 命令行使用
 
-> **迁移状态（2026-11-07）**：本页描述的是目标/旧版统一 CLI。当前 `app/` 仓库
+> **迁移状态（2026-11-07；2026-11-11 音频修正）**：本页描述的是目标/旧版统一 CLI。当前 `app/` 仓库
 > 的可执行文件只实现 `--version`、`--libraries` 和 `--help`；转换入口尚未移植，
 > 库级能力与验收方式见 `app/README.md` 和 `app/tools/run_acceptance.py`。
+> 其中音频参数（`--audio-track`、`--ekey`、`--ekey-db`、`--kgm-key`、`--kgm-db`）与音频转码命令
+> 不适用于当前发布包：`quirewise-audio` 只提供容器/帧解析（packet reader），不含音频解码、
+> 重采样、编码/封装或播放；音频能力边界见[音频](../formats/audio.md)。
 
 ## 统一转换入口
 
