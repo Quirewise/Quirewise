@@ -1,9 +1,11 @@
 # Quirewise 能力文档
 
-> **迁移状态（2026-11-11）**：当前 `app/` 已提供 CLI C1：
-> `quirewise INPUT [-o FILE] [--to pdf|txt|png] [--check] [--quiet]`，文件级转换 API
-> 已实现；其余选项与输入路线按[统一 CLI 移植计划](architecture/cli-port-plan.md)继续推进。
-> 发布包不包含任何外部格式后端。
+> **迁移状态（2026-11-11）**：当前 `app/` 已提供 CLI C1–C3 范围的能力：
+> `quirewise INPUT [INPUT ...] [-o FILE] [--to pdf|txt|png] [--check] [--quiet]
+> [--out-dir DIR] [--page image|a4] [--pages RULE] [--archive-password TEXT]
+> [--audio-track N]`，文件级转换 API 与主要输入路线（文档、图片、页面族、字幕、结构化数据、
+> 漫画归档）已接入；未接线项见[命令行使用](usage/command-line.md)与
+> [统一 CLI 移植计划](architecture/cli-port-plan.md)。发布包不包含任何外部格式后端。
 
 本文档集说明 Quirewise 可处理的输入、可生成的输出、转换选项和格式边界。
 
@@ -30,7 +32,10 @@
 
 ## 统一入口
 
-统一命令行入口目标为 **quirewise**。它支持按内容识别输入格式、通过 --to 指定输出格式、用 --check 检查当前读取路线，以及按格式选择密钥、音轨、页面规则或扫描预处理选项。完整选项见[命令行使用](usage/command-line.md)。**该 CLI 尚未移植到当前 `app/` 仓库，本节是目标行为说明。**
+统一命令行入口为 **quirewise**：按内容识别输入，支持 `--to pdf|txt|png`、`--check`、多输入、
+`--out-dir`、`--page`/`--pages`、`--archive-password` 与 `--audio-track`。完整选项、支持矩阵与
+限制见[命令行使用](usage/command-line.md)。密钥、扫描预处理、PDF/A、目录/通配符批量等尚未接线的
+能力在该文档中单列，不属于当前 CLI 能力。
 
 
 ## 仓库结构

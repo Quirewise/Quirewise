@@ -1,94 +1,97 @@
 # 命令行使用
 
-> **迁移状态（2026-11-11）**：统一 CLI 的 C1/C2 部分已移植，当前可用形式为
-> `quirewise INPUT [-o FILE] [--to pdf|txt|png] [--check] [--quiet]`；
-> 输入→PDF 覆盖：PDF、DOCX/ODT/FODT、HTML、EPUB(reflow)、FB2、CSV/TSV、
-> XLSX/XLSM/XLTX/XLS/XLT/ODS/OTS/FODS、纯文本/Markdown、PNG/JPEG/GIF/BMP/WebP/TIFF 等图片，
-> DjVu、PDG/PDZ、UVZ、CAJ、CEB 页面族，SRT/VTT/LRC/ASS/SSA/SAMI/MicroDVD/SCC 字幕，
-> JSON/JSONL/YAML/TOML/XML/OPML/IPYNB/vCard 结构化数据，以及 CBZ/CBT 漫画归档；
-> 非 PDF 输出目前为 PDF→TXT/PNG。`--check` 额外支持音频容器/包扫描（WAV/FLAC/MP3/OGG/M4A 等，
-> 不解码）。
->
-> C3 已接入：多输入批量、`--out-dir`、`--quiet`、`--page image|a4`、`--pages auto|body|body+att|all`、
-> `--archive-password`/`--zip-password`、`--audio-track N`。尚未接入：`--key`/`--ekey`/`--kgm-*`、
-> 扫描预处理、`--pdfa`/`--optimize`、目录/通配符批量。
-> 本页其余选项（`--key`、`--pages`、扫描预处理、音频参数等）仍是目标/旧版行为，尚未接入。
-> 音频参数（`--audio-track`、`--ekey`、`--ekey-db`、`--kgm-key`、`--kgm-db`）与音频转码命令
-> 不适用于当前发布包：`quirewise-audio` 只提供容器/帧解析（packet reader），不含音频解码、
-> 重采样、编码/封装或播放；音频能力边界见[音频](../formats/audio.md)。
+> **状态（2026-11-11）**：本文档已按当前 `app` 的可执行文件重写。下列命令与选项均已实现并通过
+> `app.smoke`（四套验收矩阵）覆盖；未实现的能力单列在“尚未移植”一节，不视为发布能力。
 
-## 统一转换入口
+## 1. 基本用法
 
-基本形式：
+```
+quirewise INPUT [INPUT ...] [-o FILE] [--to FORMAT] [--check] [--quiet]
+          [--out-dir DIR] [--page image|a4] [--pages RULE]
+          [--archive-password TEXT] [--audio-track N]
 
-    quirewise INPUT [-o OUTPUT] [--to FORMAT]
+quirewise --version | --libraries | --help
+```
 
-默认输出格式为 PDF；未指定输出路径时，使用输入文件名并替换为目标扩展名。使用 --to 指定目标格式。输入格式优先由内容识别；部分路径格式还使用扩展名或目录上下文。
+- 输入按内容识别；无法识别或没有对应内部实现时返回 `unsupported`。
+- 默认目标为 PDF；`--to` 目前支持 `pdf`、`txt`、`png`（非 PDF 输出仅用于 PDF 输入）。
+- 不指定 `-o` 时，输出使用输入同名文件 + 目标扩展名；`--out-dir` 可把默认输出放进指定目录。
+- **已有输出永不覆盖**；失败返回非零状态。
+- 多个输入逐个处理，任一失败则最终返回非零；`-o` 只能与单个输入同用。
 
-示例：
+## 2. 选项
 
-    quirewise book.container -o book.pdf --key BOOKKEY
-    quirewise scan.page -o scan.pdf --binarize wolf --deskew --crop
-    quirewise report.xlsx --to csv -o report.csv
-    quirewise track.flac --to opus -o track.opus --audio-track 2
-    quirewise document.pdf --to txt -o document.txt
-    quirewise document.pdf --check
-
-文件输出默认不覆盖已有路径。发生错误时，命令返回非零状态并提供错误类别和可用的路线说明。
-
-## 常用选项
-
-| 选项 | 用途 |
+| 选项 | 说明 |
 |---|---|
-| --to FORMAT | 选择输出格式。 |
-| -o FILE、--out FILE | 设置输出文件；默认使用输入名称和目标扩展名。 |
-| --check | 检查当前支持路线能否读取输入，不创建输出文件。 |
-| --quiet | 正常转换只输出目标路径；检查成功时输出 OK。 |
-| --key STRING | CONTAINER 成员密钥；默认可执行离线 SSCT bookkey 解析。 |
-| --pages RULE | CONTAINER 页面规则：auto、body、body+att 或 all。 |
-| --page MODE | 图像页页面尺寸：a4 或 image。 |
-| --archive-password TEXT | 加密 CBZ/CB7 归档密码。 |
-| --zip-password TEXT | --archive-password 的兼容别名。 |
-| --audio-track N | 选择从 1 开始的音轨序号；默认使用最佳音轨。 |
-| --ekey STRING | QMC 所需 EKey，或 KGM v5 的匹配歌曲 EKey。 |
-| --ekey-db PATH | QMC STag/MusicEx 使用的 player_process_db。 |
-| --kgm-key PATH | KGM v3/v4 公钥文件；默认使用随程序提供的密钥。 |
-| --kgm-db PATH | KGM v5 本地歌曲密钥数据库。 |
-| --pdfa LEVEL | 输出 PDF/A-1b、2b 或 3b。 |
-| --optimize | PDF/A 转换时使用 Ghostscript /ebook profile。 |
+| `-o, --out FILE` | 指定输出文件 |
+| `--out-dir DIR` | 默认输出名放入 DIR |
+| `--to FORMAT` | 目标格式：`pdf`（默认）、`txt`、`png` |
+| `--check` | 只验证输入可读，不写输出；成功打印 `OK` |
+| `--quiet` | 成功时不打印路径/OK |
+| `--page image\|a4` | 页面族/漫画/图片栅格 PDF 的页面框；A4 为 595×842，等比缩放居中 |
+| `--pages auto\|body\|body+att\|all` | PDG/PDZ 容器的页面规则 |
+| `--archive-password TEXT` | CBZ 解包密码（`--zip-password` 为别名） |
+| `--audio-track N` | `--check` 音频容器时选择从 1 开始的音轨 |
+| `--help` / `--version` / `--libraries` | 帮助、版本、已链接库列表 |
 
-## 扫描页选项
+## 3. 当前支持的输入 → PDF 路线
 
-扫描处理仅作用于可提供图像像素的页面路线，默认关闭。
-
-| 选项 | 参数与效果 |
+| 输入 | 说明 |
 |---|---|
-| --illumination | 校正纸张照度不均。 |
-| --perspective | 在页面四边形检测可信时校正透视。 |
-| --deskew | 校正最多约 5 度的页面倾斜。 |
-| --split-double | 按检测到的中缝输出左右两页。 |
-| --dewarp | 在检测可靠时展平弯曲文本行。 |
-| --crop | 裁切页面外边距。 |
-| --crop-padding N | 内容边缘保留像素，默认 12，最大 512。 |
-| --binarize MODE | 使用 otsu 或 wolf 二值化。 |
-| --wolf-window N | Wolf 局部奇数窗口，3–255，默认 31。 |
-| --despeckle N | 删除小于阈值的 8 连通斑点；须启用二值化。 |
-| --ccitt-g4 | 使用 Group 4 编码最终二值页面；须启用二值化。 |
+| PDF | 直接透传 |
+| DOCX/DOCM/DOTX、ODT/OTT/FODT | 内部布局转 PDF |
+| HTML、EPUB（reflow）、FB2 | 内部 HTML/布局转 PDF |
+| CSV/TSV、XLSX/XLSM/XLTX/XLS/XLT、ODS/OTS/FODS | 表格渲染为 PDF 表格 |
+| 纯文本 / Markdown（txt/md 等） | 按行渲染段落 |
+| PNG/JPEG/GIF/BMP/WebP/TIFF 等图片 | 单页 PDF，页面框可用 `--page` 控制 |
+| DjVu | 逐页渲染为多页 PDF |
+| PDG/PDZ（`%pdgz`） | 按 `--pages` 规则重建 PDF |
+| UVZ | 逐页解码（图片或 PDG）为多页 PDF |
+| CAJ、CEB | 提取/解密为 PDF |
+| SRT/VTT/LRC/ASS/SSA/SAMI/MicroDVD/SCC | 时间轴文本页转 PDF |
+| JSON/JSONL/YAML/TOML/XML/OPML/IPYNB/vCard | 类型化值树渲染为表格/列表后转 PDF |
+| CBZ（ZIP）、CBT（USTAR） | 逐页图片转多页 PDF |
 
-原生 PDF 页面路线只提供 PDF 字节，不提供可处理的扫描像素；扫描预处理参数用于 PAGE、图像页 CONTAINER、UVZ 等像素路线。
+PDF 输入还可以用 `--to txt`（文本抽取，无 OCR）或 `--to png`（首页栅格化，144 dpi）。
 
-## 只读检查
+`--check` 额外支持音频容器扫描（WAV/W64、AIFF/AIFC、CAF、DSF/DFF/DSS、M4A/MP4、Matroska/WebM、
+MPC、WMA/ASF、AU、ADTS AAC、FLAC、MP2/MP3、AMR、AC-3、DTS、TTA、TAK、WavPack、VOC、APE、
+Ogg/Opus），只解析容器/包，不解码。
 
---check 检查的是 Quirewise 当前读取路径，不是格式规范认证，也不创建输出文件。PDF 会逐页打开并渲染；其它文档通常完整走 PDF 转换路线；音频会转换为内存 FLAC 后释放。内存需求可能接近转换本身。
+## 4. 示例
 
-## 专用工具
+```bash
+quirewise manual.docx -o manual.pdf
+quirewise scan.pdf --to txt -o scan.txt
+quirewise cover.png --page a4 -o cover.pdf
+quirewise book.djvu --page a4 --out-dir out
+quirewise notes.txt summary.md --out-dir out
+quirewise book.pdz --pages body+att -o book.pdf
+quirewise track.flac --check --audio-track 1
+quirewise report.xlsx -o report.pdf --check      # 错误：--check 不写输出
+```
 
-- **container_extract**：读取 CONTAINER bookkey、列出成员或提取成员文件。
-- **container2pdf**：专用 CONTAINER→PDF 路线，可接受输入 CONTAINER 或 PAGE 目录。
-- **page_batch**：批量处理目录中的 PAGE 文件，可设置并行任务数。
+## 5. 退出码
 
-专用工具的参数范围以各自的 --help 输出为准。
+| 码 | 含义 |
+|---|---|
+| 0 | 全部成功 |
+| 1 | 转换/检查失败（含输出已存在、格式不支持、解析失败） |
+| 2 | 用法错误（未知选项、缺少输入、`-o` 与多输入/`--check` 冲突、目标格式不支持） |
 
-## 输出格式名称
+## 6. 尚未移植（明确不在当前 CLI 能力内）
 
-输出格式包括 PDF、PS/EPS、SVG/SVGZ、TXT/TXTz、JSON/JSONL/YAML/TOML/XML/vCard、CSV/TSV、常见字幕与标记文本、XLS/XLT/XLSX/XLTX/ODS/OTS/FODS、HTML/EPUB/HWPX/EML、CBZ/CBT、注册的图像格式和注册的音频格式。目标是否可用以及具体限制，以[格式能力总览](../formats/support-matrix.md)和对应分类文档为准。
+- `--key`、`--ekey`、`--ekey-db`、`--kgm-key`、`--kgm-db`：密钥选项尚未接入公开转换 API；
+- 扫描预处理（`--binarize`、`--deskew`、`--crop`、`--dewarp`、`--despeckle`、`--ccitt-g4` 等）：
+  库内扫描转换路线未暴露到文件 API；
+- `--pdfa`、`--optimize`：PDF/A 依赖外部后端（Ghostscript/veraPDF），发布包不包含；
+- 目录/通配符批量与并发：当前仅支持显式多个文件；
+- 音频解码/转码：`quirewise-audio` 仍是 packet reader，CLI 不提供音频输出；
+- 视频处理：不存在视频库；
+- 旧 CLI 的专用工具（`container_extract`、`container2pdf`、`page_batch`）未移植。
+
+## 7. 与旧文档的关系
+
+旧版本文档描述的是迁移前产品（FFmpeg libav、MuPDF、统一 CLI 全量选项）。当前发布包只包含
+内部实现与本文列出的路线；其余入口应返回稳定的 `UNSUPPORTED`。支持子集以各库文档与
+`app/tools/run_acceptance.py` 的验收结果为准。
