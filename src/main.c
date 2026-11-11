@@ -11,6 +11,14 @@
 #include "page_routes.h"
 #endif
 
+#if defined(QUIREWISE_APP_SUBTITLE_ROUTES)
+#include "subtitle_routes.h"
+#endif
+
+#if defined(QUIREWISE_APP_AUDIO_CHECK)
+#include "audio_check.h"
+#endif
+
 static void print_version(void)
 {
     puts("Quirewise application 0.1.0");
@@ -258,6 +266,32 @@ static int cli_run(const char *input, const char *output,
             }
         }
 #endif
+#if defined(QUIREWISE_APP_SUBTITLE_ROUTES)
+        if (status != QW_STATUS_OK) {
+            QwConvertReport subtitle_report;
+            uint8_t *pdf = NULL;
+            size_t pdf_size = 0u;
+            memset(&subtitle_report, 0, sizeof(subtitle_report));
+            if (qw_app_subtitle_convert_file(input, &pdf, &pdf_size,
+                                             &subtitle_report) ==
+                QW_STATUS_OK) {
+                qw_buffer_free(pdf);
+                status = QW_STATUS_OK;
+                report = subtitle_report;
+            }
+        }
+#endif
+#if defined(QUIREWISE_APP_AUDIO_CHECK)
+        if (status != QW_STATUS_OK) {
+            QwConvertReport audio_report;
+            memset(&audio_report, 0, sizeof(audio_report));
+            if (qw_app_audio_check_file(input, &audio_report) ==
+                QW_STATUS_OK) {
+                status = QW_STATUS_OK;
+                report = audio_report;
+            }
+        }
+#endif
     } else {
         status = qw_convert_file_to_format(input, final_output, target->format,
                                            &options, &report);
@@ -273,6 +307,22 @@ static int cli_run(const char *input, const char *output,
                                        &page_report);
                 qw_buffer_free(pdf);
                 if (status == QW_STATUS_OK) report = page_report;
+            }
+        }
+#endif
+#if defined(QUIREWISE_APP_SUBTITLE_ROUTES)
+        if (status != QW_STATUS_OK && target->format == QW_FORMAT_PDF) {
+            QwConvertReport subtitle_report;
+            uint8_t *pdf = NULL;
+            size_t pdf_size = 0u;
+            memset(&subtitle_report, 0, sizeof(subtitle_report));
+            if (qw_app_subtitle_convert_file(input, &pdf, &pdf_size,
+                                             &subtitle_report) ==
+                QW_STATUS_OK) {
+                status = cli_write_pdf(final_output, pdf, pdf_size,
+                                       &subtitle_report);
+                qw_buffer_free(pdf);
+                if (status == QW_STATUS_OK) report = subtitle_report;
             }
         }
 #endif

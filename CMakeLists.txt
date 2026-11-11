@@ -58,6 +58,16 @@ if(QUIREWISE_LINK_DOCUMENT AND QUIREWISE_LINK_PAGE AND QUIREWISE_LINK_PDG AND QU
     target_compile_definitions(quirewise PRIVATE QUIREWISE_APP_PAGE_ROUTES)
 endif()
 
+if(QUIREWISE_LINK_DOCUMENT AND QUIREWISE_LINK_SUBTITLE)
+    target_sources(quirewise PRIVATE src/subtitle_routes.c)
+    target_compile_definitions(quirewise PRIVATE QUIREWISE_APP_SUBTITLE_ROUTES)
+endif()
+
+if(QUIREWISE_LINK_DOCUMENT AND QUIREWISE_LINK_AUDIO)
+    target_sources(quirewise PRIVATE src/audio_check.c)
+    target_compile_definitions(quirewise PRIVATE QUIREWISE_APP_AUDIO_CHECK)
+endif()
+
 if(QUIREWISE_VALIDATE_DEPENDENCIES)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
     add_custom_target(quirewise_validate_dependencies

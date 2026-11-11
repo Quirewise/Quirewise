@@ -111,6 +111,23 @@ def main() -> int:
             if check.stdout.strip() != "OK":
                 return fail(f"DjVu --check printed {check.stdout!r}")
 
+        srt = workspace / "app/testfile/subtitle/srt/example.srt"
+        if srt.is_file():
+            subtitle_pdf = root / "subtitle.pdf"
+            run(exe, [str(srt), "-o", str(subtitle_pdf)], root)
+            if (not subtitle_pdf.is_file() or
+                    subtitle_pdf.read_bytes()[:5] != b"%PDF-"):
+                return fail("subtitle to PDF produced no PDF")
+            check = run(exe, [str(srt), "--check"], root)
+            if check.stdout.strip() != "OK":
+                return fail(f"subtitle --check printed {check.stdout!r}")
+
+        wav = workspace / "app/testfile/audio/wav/Sine440Hz_S16.wav"
+        if wav.is_file():
+            check = run(exe, [str(wav), "--check"], root)
+            if check.stdout.strip() != "OK":
+                return fail(f"audio --check printed {check.stdout!r}")
+
     print("CLI smoke OK")
     return 0
 

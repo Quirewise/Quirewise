@@ -63,12 +63,15 @@
   - UVZ：逐页读取，优先 `qw_image_decode`，否则 `pdg_render_memory`；
   - CAJ：经典 CAJ 与 KDH 两条 PDF 提取路线；
   - CEB：`qw_ceb_decrypt_to_pdf`。
+- **字幕 → PDF（app 侧路由）**：SRT/VTT/LRC/ASS/SSA/SAMI/MicroDVD/SCC 解析为
+  时间轴 + 文本页，经内部 HTML 布局写 PDF。
+- **音频 `--check`（app 侧）**：容器/包扫描（不解码）；PCM 容器若路由不暴露
+  包序列，按“容器已解析”通过并注明。
 - **检测**：`qw_detect_format` 增加图片兜底与常见 magic。
 
 ### C2 剩余
 
-- 字幕、结构化数据 → PDF；
-- 音频 `--check`（app 侧用 audio packet reader 扫描）；
+- 结构化数据（JSON/YAML/TOML/XML/vCard）→ PDF；
 - 多页图片/漫画归档（CBZ/CBT）→ PDF；
 - 页面族路由的选项（页面规则、扫描预处理、密钥）。
 
