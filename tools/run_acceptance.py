@@ -226,7 +226,8 @@ class Runner:
         exe = build / "quirewise.exe"
         if not exe.is_file():
             exe = build / "quirewise"
-        return self.run("app.smoke", [str(exe), "--libraries"])
+        return self.run("app.smoke", [
+            sys.executable, "app/tools/smoke_app.py", str(exe)])
 
     def run_gates(self) -> bool:
         python = sys.executable

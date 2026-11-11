@@ -31,11 +31,13 @@ cmake --build .tmp/build-app
 .\.tmp\build-app\quirewise.exe --libraries
 ```
 
-The current application executable is a composition shell: it reports the
-version and the libraries selected at configure time. Conversion dispatch is
-implemented in the library packages and exercised by the external consumer
-template; the former unified `quirewise INPUT --to FORMAT` command line is not
-ported to this repository yet.
+The current application executable provides the first CLI slice (C1): it reports
+the version and the libraries selected at configure time, and converts a single
+file with `--to pdf|txt|png`, `-o FILE` and `--check`. The remaining options and
+input routes follow the [CLI port plan](docs/architecture/cli-port-plan.md).
+Conversion dispatch lives in the library packages and is exercised by the
+external consumer template as well as the CLI smoke step in
+`tools/run_acceptance.py`.
 
 ## Validate the workspace
 

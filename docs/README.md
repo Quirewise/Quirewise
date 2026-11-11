@@ -1,9 +1,9 @@
 # Quirewise 能力文档
 
-> **迁移状态（2026-11-07）**：当前 `app/` 仓库只提供库组合 shell（`--version` /
-> `--libraries`）。本文档描述的统一命令行入口尚未移植到新应用仓库；格式能力由
-> `libraries/quirewise-*` 提供，并通过 `external-consumer-template` 与
-> `app/tools/run_acceptance.py` 验证。发布包不包含任何外部格式后端。
+> **迁移状态（2026-11-11）**：当前 `app/` 已提供 CLI C1：
+> `quirewise INPUT [-o FILE] [--to pdf|txt|png] [--check] [--quiet]`，文件级转换 API
+> 已实现；其余选项与输入路线按[统一 CLI 移植计划](architecture/cli-port-plan.md)继续推进。
+> 发布包不包含任何外部格式后端。
 
 本文档集说明 Quirewise 可处理的输入、可生成的输出、转换选项和格式边界。
 
