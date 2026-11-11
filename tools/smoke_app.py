@@ -8,12 +8,17 @@ step so every build matrix exercises the CLI.
 """
 from __future__ import annotations
 
+import base64
 import pathlib
 import subprocess
 import sys
 import tempfile
 
 HTML = "<html><body><h1>CLI port</h1><p>Smoke test.</p></body></html>"
+PNG_1X1 = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQ"
+    "DwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+)
 
 
 def fail(message: str) -> "NoReturn":
@@ -75,6 +80,24 @@ def main() -> int:
             return fail("existing output was overwritten")
 
         run(exe, ["sample.pdf", "--to", "jpg"], root, expect=2)
+
+        (root / "image.png").write_bytes(PNG_1X1)
+        run(exe, ["image.png"], root)
+        image_pdf = root / "image.pdf"
+        if not image_pdf.is_file() or image_pdf.read_bytes()[:5] != b"%PDF-":
+            return fail("image to PDF produced no PDF")
+
+        (root / "notes.txt").write_bytes(b"\xef\xbb\xbfHello\nWorld\n")
+        run(exe, ["notes.txt"], root)
+        notes_pdf = root / "notes.pdf"
+        if not notes_pdf.is_file() or notes_pdf.read_bytes()[:5] != b"%PDF-":
+            return fail("text to PDF produced no PDF")
+
+        (root / "table.csv").write_text("a,b\n1,2\n", encoding="utf-8")
+        run(exe, ["table.csv"], root)
+        table_pdf = root / "table.pdf"
+        if not table_pdf.is_file() or table_pdf.read_bytes()[:5] != b"%PDF-":
+            return fail("CSV to PDF produced no PDF")
 
     print("CLI smoke OK")
     return 0

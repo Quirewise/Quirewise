@@ -1,8 +1,10 @@
 # 命令行使用
 
-> **迁移状态（2026-11-11）**：统一 CLI 的 C1 已移植，当前可用形式为
+> **迁移状态（2026-11-11）**：统一 CLI 的 C1/C2 部分已移植，当前可用形式为
 > `quirewise INPUT [-o FILE] [--to pdf|txt|png] [--check] [--quiet]`；
-> 文件级 API `qw_convert_file` / `qw_convert_file_to_format` / `qw_check_file` 已实现。
+> 输入→PDF 覆盖：PDF、DOCX/ODT/FODT、HTML、EPUB(reflow)、FB2、CSV/TSV、
+> XLSX/XLSM/XLTX/XLS/XLT/ODS/OTS/FODS、纯文本/Markdown、PNG/JPEG/GIF/BMP/WebP/TIFF 等图片；
+> 非 PDF 输出目前为 PDF→TXT/PNG。
 > 本页其余选项（`--key`、`--pages`、扫描预处理、音频参数等）仍是目标/旧版行为，尚未接入。
 > 音频参数（`--audio-track`、`--ekey`、`--ekey-db`、`--kgm-key`、`--kgm-db`）与音频转码命令
 > 不适用于当前发布包：`quirewise-audio` 只提供容器/帧解析（packet reader），不含音频解码、

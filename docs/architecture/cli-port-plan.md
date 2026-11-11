@@ -48,13 +48,23 @@
 
 ## C2：扩展转换调度
 
-- 图片（Image）→ PDF/PNG/JPEG 等已注册 writer；
-- Page/PDG/DjVu/UVZ/CAJ 等页面输入 → PDF；
-- 表格（XLSX/ODS/BIFF）、结构化数据、字幕、电子书 → PDF；
-- 音频：`--check` 用 audio packet reader 扫描；音频输出在编码器实现前保持
-  `UNSUPPORTED`。
+### C2 已落地（部分，2026-11-11）
 
-验收：每种输入至少一个夹具端到端通过；不支持路线返回稳定状态码与说明。
+- **纯文本 / Markdown → PDF**：`txt`/`text`/`md`/`markdown` 扩展名走段落渲染，
+  跳过 UTF-8 BOM。
+- **图片 → PDF**：PNG/JPEG/GIF/BMP/WebP/TIFF 等由 `qw_image_probe` 探测，
+  解码为 Gray8/RGB24 后写入单页 PDF（页面尺寸 = 像素尺寸，未压缩图像
+  XObject）；PDF 可由项目自身 reader 重新打开。
+- **表格 → PDF**：XLSX/XLSM/XLTX/XLS/XLT/ODS/OTS/FODS 解析后按全部工作表
+  渲染为 HTML 表格再转 PDF；CSV/TSV 保持原有路径。
+- **检测**：`qw_detect_format` 增加图片兜底与常见 magic。
+
+### C2 剩余
+
+- Page/PDG/DjVu/UVZ/CAJ/CEB → PDF（Page 层依赖，需要在 app 或专门调度层接入）；
+- 字幕、结构化数据 → PDF；
+- 音频 `--check`（app 侧用 audio packet reader 扫描）；
+- 多页图片/漫画归档 → PDF。
 
 ## C3：选项与批量
 
