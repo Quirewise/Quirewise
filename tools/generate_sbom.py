@@ -33,37 +33,6 @@ DEPENDENCY_RE = re.compile(r"find_package\(\s*(Quirewise[A-Za-z0-9_]+)\s+CONFIG"
 FIRST_PARTY_LICENSE = "MIT"
 FIRST_PARTY_LICENSE_FILE = "LICENSE"
 
-BUNDLED_LICENSES: tuple[dict[str, object], ...] = (
-    {
-        "match": "stb",
-        "name": "stb_image",
-        "version": "2.30",
-        "license": "MIT OR Unlicense",
-        "note": "license text embedded at the end of stb_image.h",
-    },
-    {
-        "match": "aes",
-        "name": "tiny-AES-c",
-        "version": "unversioned",
-        "license": "Unlicense",
-        "note": "UNLICENSE.txt bundled in third_party/aes",
-    },
-    {
-        "match": "lzma_sdk",
-        "name": "LZMA SDK (7-Zip)",
-        "version": "unversioned",
-        "license": "Public Domain",
-        "note": "upstream LZMA SDK is public domain; no license file is bundled",
-    },
-    {
-        "match": "vendor",
-        "name": "djvudec",
-        "version": "f0412eea9fe2f8d633104aab99b0e009b586b181",
-        "license": "MIT",
-        "note": "PROVENANCE.md and LICENSE.djvudec.md in src/formats/djvu/vendor",
-    },
-)
-
 
 PLATFORM_COMPONENTS: tuple[dict[str, object], ...] = (
     {
@@ -230,25 +199,19 @@ def bundled_components(workspace: Path) -> list[dict[str, object]]:
         if key in seen:
             continue
         seen.add(key)
-        license_info = None
-        for candidate in BUNDLED_LICENSES:
-            if str(candidate["match"]) in entry.name:
-                license_info = candidate
-                break
-        if license_info is None:
-            continue
         reference = entry.relative_to(workspace).as_posix()
         components.append(
             {
                 "type": "library",
-                "bom-ref": f"pkg:generic/{license_info['name']}@{license_info['version']}?bundled={owner}",
-                "name": str(license_info["name"]),
-                "version": str(license_info["version"]),
-                "licenses": [{"license": {"name": str(license_info["license"])}}],
+                "bom-ref": f"pkg:generic/bundled/{owner}/{entry.name}",
+                "name": entry.name,
+                "version": "unversioned",
+                "licenses": [{"license": {"name": "UNKNOWN"}}],
                 "properties": [
                     {"name": "bundled.in", "value": owner},
                     {"name": "path", "value": reference},
-                    {"name": "license.evidence", "value": str(license_info["note"])},
+                    {"name": "license.evidence",
+                     "value": "no bundled license mapping; review required"},
                 ],
             }
         )
