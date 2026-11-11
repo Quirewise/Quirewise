@@ -4,7 +4,8 @@
 > `quirewise INPUT [-o FILE] [--to pdf|txt|png] [--check] [--quiet]`；
 > 输入→PDF 覆盖：PDF、DOCX/ODT/FODT、HTML、EPUB(reflow)、FB2、CSV/TSV、
 > XLSX/XLSM/XLTX/XLS/XLT/ODS/OTS/FODS、纯文本/Markdown、PNG/JPEG/GIF/BMP/WebP/TIFF 等图片，
-> DjVu、PDG/PDZ、UVZ、CAJ、CEB 页面族，以及 SRT/VTT/LRC/ASS/SSA/SAMI/MicroDVD/SCC 字幕；
+> DjVu、PDG/PDZ、UVZ、CAJ、CEB 页面族，SRT/VTT/LRC/ASS/SSA/SAMI/MicroDVD/SCC 字幕，
+> JSON/JSONL/YAML/TOML/XML/OPML/IPYNB/vCard 结构化数据，以及 CBZ/CBT 漫画归档；
 > 非 PDF 输出目前为 PDF→TXT/PNG。`--check` 额外支持音频容器/包扫描（WAV/FLAC/MP3/OGG/M4A 等，
 > 不解码）。
 > 本页其余选项（`--key`、`--pages`、扫描预处理、音频参数等）仍是目标/旧版行为，尚未接入。

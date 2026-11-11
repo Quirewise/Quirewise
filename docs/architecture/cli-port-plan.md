@@ -65,15 +65,18 @@
   - CEB：`qw_ceb_decrypt_to_pdf`。
 - **字幕 → PDF（app 侧路由）**：SRT/VTT/LRC/ASS/SSA/SAMI/MicroDVD/SCC 解析为
   时间轴 + 文本页，经内部 HTML 布局写 PDF。
+- **结构化数据 → PDF（app 侧路由）**：JSON/JSONL/YAML/TOML/XML/OPML/IPYNB/vCard
+  解析为类型化值树，对象/数组渲染成表格与列表后写 PDF。
+- **漫画归档 → PDF（app 侧路由）**：CBZ（ZIP）与 CBT（USTAR）逐页解码为
+  多页栅格 PDF；CBR/CB7 暂不支持。
 - **音频 `--check`（app 侧）**：容器/包扫描（不解码）；PCM 容器若路由不暴露
   包序列，按“容器已解析”通过并注明。
 - **检测**：`qw_detect_format` 增加图片兜底与常见 magic。
 
 ### C2 剩余
 
-- 结构化数据（JSON/YAML/TOML/XML/vCard）→ PDF；
-- 多页图片/漫画归档（CBZ/CBT）→ PDF；
-- 页面族路由的选项（页面规则、扫描预处理、密钥）。
+- 页面族/扫描选项（页面规则、扫描预处理、密钥）；
+- CBR/CB7 等漫画归档（需要 RAR/7z 解包）。
 
 ## C3：选项与批量
 

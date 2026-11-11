@@ -19,6 +19,14 @@
 #include "audio_check.h"
 #endif
 
+#if defined(QUIREWISE_APP_DATA_ROUTES)
+#include "data_routes.h"
+#endif
+
+#if defined(QUIREWISE_APP_COMIC_ROUTES)
+#include "comic_routes.h"
+#endif
+
 static void print_version(void)
 {
     puts("Quirewise application 0.1.0");
@@ -281,6 +289,34 @@ static int cli_run(const char *input, const char *output,
             }
         }
 #endif
+#if defined(QUIREWISE_APP_COMIC_ROUTES)
+        if (status != QW_STATUS_OK) {
+            QwConvertReport comic_report;
+            uint8_t *pdf = NULL;
+            size_t pdf_size = 0u;
+            memset(&comic_report, 0, sizeof(comic_report));
+            if (qw_app_comic_convert_file(input, &pdf, &pdf_size,
+                                          &comic_report) == QW_STATUS_OK) {
+                qw_buffer_free(pdf);
+                status = QW_STATUS_OK;
+                report = comic_report;
+            }
+        }
+#endif
+#if defined(QUIREWISE_APP_DATA_ROUTES)
+        if (status != QW_STATUS_OK) {
+            QwConvertReport data_report;
+            uint8_t *pdf = NULL;
+            size_t pdf_size = 0u;
+            memset(&data_report, 0, sizeof(data_report));
+            if (qw_app_data_convert_file(input, &pdf, &pdf_size,
+                                         &data_report) == QW_STATUS_OK) {
+                qw_buffer_free(pdf);
+                status = QW_STATUS_OK;
+                report = data_report;
+            }
+        }
+#endif
 #if defined(QUIREWISE_APP_AUDIO_CHECK)
         if (status != QW_STATUS_OK) {
             QwConvertReport audio_report;
@@ -323,6 +359,36 @@ static int cli_run(const char *input, const char *output,
                                        &subtitle_report);
                 qw_buffer_free(pdf);
                 if (status == QW_STATUS_OK) report = subtitle_report;
+            }
+        }
+#endif
+#if defined(QUIREWISE_APP_COMIC_ROUTES)
+        if (status != QW_STATUS_OK && target->format == QW_FORMAT_PDF) {
+            QwConvertReport comic_report;
+            uint8_t *pdf = NULL;
+            size_t pdf_size = 0u;
+            memset(&comic_report, 0, sizeof(comic_report));
+            if (qw_app_comic_convert_file(input, &pdf, &pdf_size,
+                                          &comic_report) == QW_STATUS_OK) {
+                status = cli_write_pdf(final_output, pdf, pdf_size,
+                                       &comic_report);
+                qw_buffer_free(pdf);
+                if (status == QW_STATUS_OK) report = comic_report;
+            }
+        }
+#endif
+#if defined(QUIREWISE_APP_DATA_ROUTES)
+        if (status != QW_STATUS_OK && target->format == QW_FORMAT_PDF) {
+            QwConvertReport data_report;
+            uint8_t *pdf = NULL;
+            size_t pdf_size = 0u;
+            memset(&data_report, 0, sizeof(data_report));
+            if (qw_app_data_convert_file(input, &pdf, &pdf_size,
+                                         &data_report) == QW_STATUS_OK) {
+                status = cli_write_pdf(final_output, pdf, pdf_size,
+                                       &data_report);
+                qw_buffer_free(pdf);
+                if (status == QW_STATUS_OK) report = data_report;
             }
         }
 #endif

@@ -13,6 +13,7 @@ import pathlib
 import subprocess
 import sys
 import tempfile
+import zipfile
 
 HTML = "<html><body><h1>CLI port</h1><p>Smoke test.</p></body></html>"
 PNG_1X1 = base64.b64decode(
@@ -127,6 +128,22 @@ def main() -> int:
             check = run(exe, [str(wav), "--check"], root)
             if check.stdout.strip() != "OK":
                 return fail(f"audio --check printed {check.stdout!r}")
+
+        (root / "data.json").write_text(
+            '{"name": "Quirewise", "items": [1, 2, {"ok": true}]}',
+            encoding="utf-8")
+        run(exe, ["data.json"], root)
+        data_pdf = root / "data.pdf"
+        if not data_pdf.is_file() or data_pdf.read_bytes()[:5] != b"%PDF-":
+            return fail("JSON to PDF produced no PDF")
+
+        with zipfile.ZipFile(root / "comic.cbz", "w") as archive:
+            archive.writestr("page-01.png", PNG_1X1)
+            archive.writestr("page-02.png", PNG_1X1)
+        run(exe, ["comic.cbz"], root)
+        comic_pdf = root / "comic.pdf"
+        if not comic_pdf.is_file() or comic_pdf.read_bytes()[:5] != b"%PDF-":
+            return fail("CBZ to PDF produced no PDF")
 
     print("CLI smoke OK")
     return 0
