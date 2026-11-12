@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_utc": "2026-11-12T15:52:48Z",
+  "generated_utc": "2026-11-12T16:20:01Z",
   "note": "Pin of the sibling repositories consumed by the Quirewise release.",
   "repositories": [
     {
@@ -31,7 +31,7 @@
     {
       "path": "libraries/quirewise-crypto",
       "url": "https://github.com/Hellohistory/quirewise-crypto.git",
-      "commit": "345649c6ecfe67ab6dcfef8b49d35672ca036ed5"
+      "commit": "3f7d64242bafe18f3747f06457e25971aa139c6b"
     },
     {
       "path": "libraries/quirewise-data",
@@ -56,7 +56,7 @@
     {
       "path": "libraries/quirewise-page",
       "url": "https://github.com/Hellohistory/quirewise-page.git",
-      "commit": "4c94fb22566c5e0cef67ef49e5a5cbafff179502"
+      "commit": "9a24e2b533725adeef819eb23e37cc0a7b9ccbdd"
     },
     {
       "path": "libraries/quirewise-pdg",
