@@ -48,9 +48,12 @@ page routes）调用本引擎完成，因此仍然只有一个 PDF 引擎：
 - 页载荷按单页语义处理：只渲染第 1 页，按 300 dpi（与 `PDZ_PDF_DPI` 一致）
   渲染，嵌入 PDF 后保持原始页面尺寸；
 - 渲染结果经 PDZ 的 PDF writer 嵌入，页面单位与图片内容流一致；
-- `pdg_type 0x1A` 成员保存的是完整的发行版 PDF（zlib 流）。组合层解密成员页
-  blob、inflate 后交给 `qw_pdf_merge`，按成员顺序与栅格页（各自先写成单页
-  PDF）合并，保持页面数与顺序；损坏的成员显式失败，不静默丢页。
+- `pdg_type 0x1A` 成员保存的是完整的发行版 PDF（zlib 流）。PDZ 包公开
+  `pdz_pdfpdg_decode_member` 完成成员页变换、inflate 与 `%PDF-` 校验；组合层
+  调用它，把解码结果与栅格页（各自先写成单页 PDF）按成员顺序交给
+  `qw_pdf_merge`。合并前用 `qw_pdf_open` 统计每个成员 PDF 的页数，合并后核对
+  输出页数；页数不一致、成员无法打开或总量超过 100000 页都显式失败，不静默
+  丢页或截断。
 
 PDG 包本身对 `pdg_render_memory` 的 `PDG_OUTPUT_PDF` 仍返回
 `PDG_ERR_EXTERNAL_DECODER_REQUIRED`：包边界不得依赖 document，组合层是唯一
@@ -58,9 +61,10 @@ PDG 包本身对 `pdg_render_memory` 的 `PDG_OUTPUT_PDF` 仍返回
 
 ## 回归与门禁
 
-- document：35 项 CTest（xref/ObjStm/加密/ToUnicode/图像/合并/公开 API）；
-- page：3 项 CTest（DjVu 解码、CEB 校验、容器模糊冒烟）；
-- 外部消费者 17 项、公共头独立编译、依赖图与边界审计、79 步验收矩阵。
+- document：41 项 CTest（xref/ObjStm/加密/ToUnicode/图像/合并/公开 API）；
+- page：8 项 CTest（DjVu 解码、CEB 校验、容器模糊冒烟）；
+- pdg：7 项 CTest（PDZ 容器/PDF writer/0x1A 解码辅助/模糊冒烟）；
+- 外部消费者 17 项、公共头独立编译、依赖图与边界审计、81 步验收矩阵。
 
 ## 非目标
 

@@ -420,6 +420,22 @@ static int cli_run(const char *input, const char *output,
 #endif
     }
 
+    if (status == QW_STATUS_OK && report.skipped_pages > 0u) {
+        if (check) {
+            /* --check must fail when part of the input could not be read. */
+            status = QW_STATUS_ERR_UNSUPPORTED;
+            if (!report.note[0]) {
+                snprintf(report.note, sizeof(report.note),
+                         "%zu page(s) could not be read", report.skipped_pages);
+            }
+        } else {
+            fprintf(stderr, "warning: %zu page(s) skipped",
+                    report.skipped_pages);
+            if (report.note[0]) fprintf(stderr, ": %s", report.note);
+            fprintf(stderr, "\n");
+        }
+    }
+
     if (status == QW_STATUS_OK) {
         if (!quiet) {
             if (check) {

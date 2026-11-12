@@ -13,9 +13,10 @@
  * exit 1: at least one file was rejected or sampled as blank/solid
  * exit 2: bad arguments
  *
- * Known limitation: the Document renderer decodes raw samples, JPEG and
- * CCITTFaxDecode image XObjects, but not JPX/JBIG2, so such a page reports
- * white no matter what it contains. Treat 255.0 as "not rendered" for those.
+ * The Document renderer decodes raw samples, JPEG, CCITTFaxDecode, JPX and
+ * JBIG2 image XObjects; unsupported drawing operators are reported through the
+ * route-loss note instead of failing the render. A page whose mean luminance is
+ * 255.0 while the renderer skipped objects means "not rendered", not "blank".
  */
 #include <quirewise/document.h>
 #include <quirewise/pdf.h>

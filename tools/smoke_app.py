@@ -488,6 +488,30 @@ def main() -> int:
             _pdz_container([(b"000001", bytes(broken))]))
         run(exe, ["broken.pdz"], root, expect=1)
 
+        # A member that cannot be decoded must warn and keep the good pages.
+        (root / "partial.pdz").write_bytes(
+            _pdz_container([(b"000001", page_pdf),
+                            (b"000002", b"this is not a page")]))
+        partial = run(exe, ["partial.pdz"], root)
+        if b"/Count 1" not in (root / "partial.pdf").read_bytes():
+            return fail("partial PDZ container lost its readable page")
+        if "skipped" not in partial.stderr:
+            return fail("partial PDZ container dropped a page without a warning")
+        run(exe, ["partial.pdz", "--check"], root, expect=1)
+
+        # --pages auto resolves against meta.xml instead of always using ALL.
+        meta = b'<?xml version="1.0"?><pages>1</pages>'
+        (root / "auto.pdz").write_bytes(
+            _pdz_container([(b"000001", page_pdf),
+                            (b"cov", page_pdf),
+                            (b"meta.xml", meta)]))
+        run(exe, ["auto.pdz", "--pages", "auto"], root)
+        if b"/Count 1" not in (root / "auto.pdf").read_bytes():
+            return fail("--pages auto did not resolve to the meta.xml body rule")
+        run(exe, ["auto.pdz", "--pages", "all", "-o", "auto-all.pdf"], root)
+        if b"/Count 2" not in (root / "auto-all.pdf").read_bytes():
+            return fail("--pages all did not select every page member")
+
         # Batch conversion into --out-dir.
         outdir = root / "out"
         outdir.mkdir()
@@ -500,7 +524,7 @@ def main() -> int:
         if djvu.is_file():
             a4_pdf = root / "a4.pdf"
             run(exe, ["book.djvu", "--page", "a4", "-o", str(a4_pdf)], root)
-            if b"/MediaBox [0 0 595 842]" not in a4_pdf.read_bytes():
+            if b"/MediaBox [0 0 595.276 841.89]" not in a4_pdf.read_bytes():
                 return fail("--page a4 did not emit an A4 media box")
 
         # --quiet suppresses success output.

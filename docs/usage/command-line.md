@@ -26,10 +26,10 @@ quirewise --version | --libraries | --help
 | `-o, --out FILE` | 指定输出文件 |
 | `--out-dir DIR` | 默认输出名放入 DIR |
 | `--to FORMAT` | 目标格式：`pdf`（默认）、`txt`、`png` |
-| `--check` | 只验证输入可读，不写输出；成功打印 `OK` |
+| `--check` | 只验证输入可读，不写输出；成功打印 `OK`；PDZ/UVZ 有页无法解码时返回非零 |
 | `--quiet` | 成功时不打印路径/OK |
-| `--page image\|a4` | 页面族/漫画/图片栅格 PDF 的页面框；A4 为 595×842，等比缩放居中 |
-| `--pages auto\|body\|body+att\|all` | PDG/PDZ 容器的页面规则 |
+| `--page image\|a4` | 页面族/漫画/图片栅格 PDF 的页面框；A4 为 595.276×841.89 点，等比缩放居中 |
+| `--pages auto\|body\|body+att\|all` | PDG/PDZ 容器的页面规则；`auto` 用 meta.xml 的 `<pages>` 匹配 BODY+ATT/BODY/ALL，缺 meta.xml 时回退 ALL |
 | `--archive-password TEXT` | CBZ 解包密码（`--zip-password` 为别名） |
 | `--audio-track N` | `--check` 音频容器时选择从 1 开始的音轨 |
 | `--help` / `--version` / `--libraries` | 帮助、版本、已链接库列表 |
@@ -53,6 +53,10 @@ quirewise --version | --libraries | --help
 | CBZ（ZIP）、CBT（USTAR） | 逐页图片转多页 PDF |
 
 PDF 输入还可以用 `--to txt`（文本抽取，无 OCR）或 `--to png`（首页栅格化，144 dpi）。
+
+PDZ/UVZ 转换中若有成员或页无法解码，转换仍会写出可读页，但会在 stderr 打印
+`warning: N page(s) skipped: ...`；`--check` 对这种情况返回非零，避免把部分可读
+误判为完整成功。
 
 `--check` 额外支持音频容器扫描（WAV/W64、AIFF/AIFC、CAF、DSF/DFF/DSS、M4A/MP4、Matroska/WebM、
 MPC、WMA/ASF、AU、ADTS AAC、FLAC、MP2/MP3、AMR、AC-3、DTS、TTA、TAK、WavPack、VOC、APE、
