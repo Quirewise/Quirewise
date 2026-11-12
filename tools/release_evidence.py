@@ -70,6 +70,8 @@ def main() -> int:
     parser.add_argument("--shared-summary", type=Path, required=True)
     parser.add_argument("--linux-static-summary", type=Path, required=True)
     parser.add_argument("--linux-shared-summary", type=Path, required=True)
+    parser.add_argument("--sanitizer-summary", type=Path,
+                        help="optional Linux ASan+UBSan matrix summary")
     parser.add_argument("--static-prefix", type=Path, required=True)
     parser.add_argument("--shared-prefix", type=Path, required=True)
     parser.add_argument("--nm", default="nm")
@@ -90,6 +92,13 @@ def main() -> int:
             print(f"error: missing summary {source}", file=sys.stderr)
             return 2
         shutil.copyfile(source, release / name)
+    if args.sanitizer_summary:
+        source = (root / args.sanitizer_summary).resolve()
+        if not source.is_file():
+            print(f"error: missing sanitizer summary {source}", file=sys.stderr)
+            return 2
+        shutil.copyfile(source, release / "sanitizer-summary.json")
+        print("[ok] sanitizer-summary")
 
     results: list[tuple[str, bool, str]] = []
 
@@ -198,6 +207,16 @@ def main() -> int:
         print(f"  {name}: {steps} step(s), failed={failed or '[]'}")
         if failed:
             results.append((name, False, f"{len(failed)} failed step(s)"))
+    if args.sanitizer_summary:
+        data = json.loads((release / "sanitizer-summary.json").read_text(
+            encoding="utf-8"))
+        steps = len(data.get("steps", []))
+        failed = data.get("failed", [])
+        print(f"  sanitizer-summary.json: {steps} step(s), "
+              f"failed={failed or '[]'}")
+        if failed:
+            results.append(("sanitizer-summary", False,
+                            f"{len(failed)} failed step(s)"))
 
     failed_names = [name for name, ok, _ in results if not ok]
     if failed_names:

@@ -39,6 +39,9 @@ def main() -> int:
     parser.add_argument("--allow-pending-signoff", action="store_true",
                         help="audit a new snapshot before the independent "
                              "reviewer has signed it")
+    parser.add_argument("--require-sanitizer", action="store_true",
+                        help="require release/sanitizer-summary.json to be a "
+                             "green sanitizer matrix")
     args = parser.parse_args()
     root = args.workspace.resolve()
     release = (root / args.release_dir).resolve()
@@ -91,6 +94,17 @@ def main() -> int:
             "failed": data["failed"],
             "ok": not data["failed"] and len(data["steps"]) == EXPECTED_STEPS,
         }
+
+    sanitizer_path = release / "sanitizer-summary.json"
+    if sanitizer_path.is_file():
+        data = json.loads(sanitizer_path.read_text(encoding="utf-8"))
+        checks["sanitizer"] = {
+            "steps": len(data["steps"]),
+            "failed": data["failed"],
+            "ok": not data["failed"] and len(data["steps"]) == EXPECTED_STEPS,
+        }
+    else:
+        checks["sanitizer"] = {"steps": 0, "failed": ["missing"], "ok": False}
 
     sbom = json.loads((release / "sbom-static.cdx.json").read_text(encoding="utf-8"))
     inventory = json.loads((release / "license-inventory-static.json").read_text(encoding="utf-8"))
@@ -179,6 +193,7 @@ def main() -> int:
         and checks["installed_licenses_static"] == 20
         and checks["installed_licenses_shared"] == 20
         and all(item["ok"] for item in checks["summaries"].values())
+        and (checks["sanitizer"]["ok"] or not args.require_sanitizer)
         and checks["first_party_all_mit"]
         and checks["bundled_components"] == 0
         and checks["bundled_all_permissive"]

@@ -37,12 +37,18 @@ def private_headers(workspace: Path):
             yield repo.name, path.relative_to(src).as_posix(), path
 
 
+def digest_of(path: Path) -> str:
+    """Hash with CRLF normalised so Windows and Linux checkouts agree."""
+
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
 def scan(workspace: Path) -> dict[str, dict[str, list[str]]]:
     """path -> sha256 -> repositories carrying that variant."""
 
     groups: dict[str, dict[str, list[str]]] = {}
     for repo, relative, path in private_headers(workspace):
-        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        digest = digest_of(path)
         groups.setdefault(relative, {}).setdefault(digest, []).append(repo)
     return groups
 

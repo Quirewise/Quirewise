@@ -107,6 +107,8 @@ def main() -> int:
         return (f"CMake {tc['cmake']}, {tc['generator']} {tc['ninja']}, "
                 f"{tc['cc']}, Python {tc['python']}")
 
+    sanitizer = summary_stats(release / "sanitizer-summary.json")
+
     matrix = []
     if win_static:
         matrix.append(("Windows", win_tc["os"], toolchain_text(win_tc), "static",
@@ -120,10 +122,14 @@ def main() -> int:
     if linux_shared:
         matrix.append(("Linux", linux_tc["os"], toolchain_text(linux_tc), "shared",
                        linux_shared[0], linux_shared[1]))
+    if sanitizer:
+        matrix.append(("Linux", linux_tc["os"] + "（ASan+UBSan）",
+                       toolchain_text(linux_tc), "static+asan",
+                       sanitizer[0], sanitizer[1]))
     matrix_rows = "\n".join(
         f"| {os_name} | {tc} | {mode} | {steps} 步全部通过（failed: {failed or '[]'}） |"
         for _, os_name, tc, mode, steps, failed in matrix)
-    matrix_note = (f"四组矩阵均为 {win_static[0]} 步"
+    matrix_note = (f"共 {len(matrix)} 组矩阵均为 {win_static[0]} 步"
                    if linux_static and linux_shared else
                    "Windows 两组矩阵为 "
                    f"{win_static[0]} 步；Linux 矩阵本轮未重跑（本机无可用 ELF 环境）")
@@ -149,6 +155,7 @@ def main() -> int:
         "dependency-closure.json", "public-headers-static.json",
         "public-headers-shared.json", "error-taxonomy.txt",
         "resource-limits.txt", "pdg-pdf-status.txt", "reviewer-signoff.md",
+        "sanitizer-summary.json",
     ]:
         path = release / name
         if path.is_file():
@@ -180,7 +187,7 @@ def main() -> int:
 
 - 报告时间：{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}
 - Goal：`QW-AUTONOMY-001`
-- 状态：**发布候选（RELEASE CANDIDATE）** — 代码、许可证、构建矩阵与验收证据齐备；仓库与 lock 已发布，四套矩阵在本机复现（GitHub Actions 尚未执行）
+- 状态：**发布候选（RELEASE CANDIDATE）** — 代码、许可证、构建矩阵与验收证据齐备；仓库与 lock 已发布，四套矩阵（另加 sanitizer 矩阵）在本机复现（GitHub Actions 尚未执行）
 - 依据：[QUIREWISE_AGENT_LONG_TERM_GOAL.md](QUIREWISE_AGENT_LONG_TERM_GOAL.md)、[DEPENDENCY_BOUNDARIES_AND_ACCEPTANCE.md](DEPENDENCY_BOUNDARIES_AND_ACCEPTANCE.md)
 
 ## 1. 范围
@@ -286,7 +293,7 @@ Runtime 现有 `quirewise_runtime_abi` CTest，17 个库均有测试入口。
 
 1. **CI 激活**：19 个仓库均已发布，`app/release-lock.json` 校验通过。CI 工作流
    （`app/.github/workflows/ci.yml`）尚未在 GitHub Actions 上实际执行，本报告的
-   四套矩阵均为本机复现；执行它仍需要能覆盖 `Quirewise/quirewise-pdg`（私有）的
+   四套矩阵（另加 sanitizer 矩阵）均为本机复现；执行它仍需要能覆盖 `Quirewise/quirewise-pdg`（私有）的
    token/可见性，才能拉取 lock 中的全部提交。
 2. **平台**：macOS/MSVC 未验证，属于明确排除范围（决策记录在本节与验收文档第 11 节），
    不作为本发布物的验收项。

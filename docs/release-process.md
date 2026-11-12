@@ -57,6 +57,7 @@ python app/tools/release_evidence.py --workspace . `
   --shared-summary .tmp/acceptance/windows-shared/summary.json `
   --linux-static-summary .tmp/acceptance/linux-static/summary.json `
   --linux-shared-summary .tmp/acceptance/linux-shared/summary.json `
+  --sanitizer-summary .tmp/acceptance/linux-static-asan/summary.json `
   --static-prefix .tmp/acceptance/windows-static/install `
   --shared-prefix .tmp/acceptance/windows-shared/install `
   --nm C:\msys64\mingw64\bin\nm.exe
@@ -91,7 +92,8 @@ python app/tools/release_self_audit.py --workspace . `
   --release-dir .tmp/release/2026-11-12 `
   --static-prefix .tmp/acceptance/windows-static/install `
   --shared-prefix .tmp/acceptance/windows-shared/install `
-  --report RELEASE_ACCEPTANCE_REPORT_2026-11-12.md
+  --report RELEASE_ACCEPTANCE_REPORT_2026-11-12.md `
+  --require-sanitizer
 ```
 
 独立复核尚未签字时，加 `--allow-pending-signoff` 只跑机械检查；结论会显示

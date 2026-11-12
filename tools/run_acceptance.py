@@ -87,6 +87,16 @@ class Runner:
             env["UBSAN_OPTIONS"] = "halt_on_error=1:print_stacktrace=1"
         return env
 
+    def sanitizer_cmake_flags(self) -> list[str]:
+        if not self.sanitize:
+            return []
+        return [
+            "-DCMAKE_C_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer -g",
+            "-DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer -g",
+            "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined",
+            "-DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address,undefined",
+        ]
+
     def run(self, name: str, command: list[str], cwd: Path | None = None,
             expect: int = 0) -> bool:
         self.logs.mkdir(parents=True, exist_ok=True)
@@ -121,13 +131,7 @@ class Runner:
               prefix_path: str, extra: list[str]) -> bool:
         if build.exists() and not self.keep:
             shutil.rmtree(build)
-        if self.sanitize:
-            extra = extra + [
-                "-DCMAKE_C_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer -g",
-                "-DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer -g",
-                "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined",
-                "-DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address,undefined",
-            ]
+        extra = extra + self.sanitizer_cmake_flags()
         command = [
             "cmake", "-S", str(source), "-B", str(build),
         ] + (["-G", self.generator] if self.generator else []) + [
@@ -220,6 +224,7 @@ class Runner:
             f"-DCMAKE_PREFIX_PATH={self.install_root}",
             "-DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF",
             "-DCMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY=OFF",
+            *self.sanitizer_cmake_flags(),
         ]):
             return False
         if not self.run("consumer.build", ["cmake", "--build", str(build),
