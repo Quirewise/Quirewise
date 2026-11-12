@@ -49,6 +49,9 @@ def main() -> int:
     parser.add_argument("--require-sanitizer", action="store_true",
                         help="require release/sanitizer-summary.json to be a "
                              "green sanitizer matrix")
+    parser.add_argument("--require-pushed", action="store_true",
+                        help="require release/remote-heads.json to show every "
+                             "local HEAD present on its origin")
     args = parser.parse_args()
     root = args.workspace.resolve()
     release = (root / args.release_dir).resolve()
@@ -112,6 +115,17 @@ def main() -> int:
         }
     else:
         checks["sanitizer"] = {"steps": 0, "failed": ["missing"], "ok": False}
+
+    remote_path = release / "remote-heads.json"
+    if remote_path.is_file():
+        data = json.loads(remote_path.read_text(encoding="utf-8"))
+        checks["remote_heads"] = {
+            "pushed": data["pushed_count"],
+            "total": data["total"],
+            "ok": bool(data.get("all_pushed")),
+        }
+    else:
+        checks["remote_heads"] = {"pushed": 0, "total": 0, "ok": False}
 
     sbom = json.loads((release / "sbom-static.cdx.json").read_text(encoding="utf-8"))
     inventory = json.loads((release / "license-inventory-static.json").read_text(encoding="utf-8"))
@@ -201,6 +215,7 @@ def main() -> int:
         and checks["installed_licenses_shared"] == 20
         and all(item["ok"] for item in checks["summaries"].values())
         and (checks["sanitizer"]["ok"] or not args.require_sanitizer)
+        and (checks["remote_heads"]["ok"] or not args.require_pushed)
         and checks["first_party_all_mit"]
         and checks["bundled_components"] == 0
         and checks["bundled_all_permissive"]
