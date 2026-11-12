@@ -148,8 +148,8 @@ def main() -> int:
         "blockers": [],
         "next_actions": [
             "Enable the CI workflow with a token that can read Quirewise/quirewise-pdg; the workflow has not run on Actions yet.",
-            "Implement Route 1: merge pdg_type 0x1A native PDF members into the output PDF; PDF page payloads already rasterise through the internal Document engine.",
-            "Finish the CLI options listed as remaining in app/docs/architecture/cli-port-plan.md (keys, scan preprocessing, PDF/A, directory inputs).",
+            "Finish the CLI options listed as remaining in app/docs/architecture/cli-port-plan.md (keys, scan preprocessing, directory inputs).",
+            "Regenerate the release evidence and acceptance report for the next candidate snapshot.",
         ],
         "generated_at_utc": now,
         "generator": "app/tools/generate_goal_state.py",

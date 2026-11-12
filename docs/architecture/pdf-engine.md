@@ -33,7 +33,10 @@ xref/ObjStm/页码解析器。
   结构模式下未知口令不影响页数/几何；
 - 页面盒：非法 `/MediaBox`/`/CropBox` 回退默认值而不是拒绝整份文档；
 - 文本：每个字体优先使用 `/ToUnicode` CMap，缺失时回退 UCS-2/单字节；
-- 容器：CEB 解密后的 PDF 由 document 读取，page 不再声称解析 PDF。
+- 容器：CEB 解密后的 PDF 由 document 读取，page 不再声称解析 PDF；
+- 栅格页写 PDF：IMAGE 模式的页面框是像素点数，图片内容流按页面尺寸缩放；
+  A4 模式等比内嵌（2026-11-12 修复内容流写入单位 `cm` 的缺陷，图片此前只覆盖
+  1 pt）。
 
 ## PDG 页内 PDF 载荷
 
@@ -45,8 +48,9 @@ page routes）调用本引擎完成，因此仍然只有一个 PDF 引擎：
 - 页载荷按单页语义处理：只渲染第 1 页，按 300 dpi（与 `PDZ_PDF_DPI` 一致）
   渲染，嵌入 PDF 后保持原始页面尺寸；
 - 渲染结果经 PDZ 的 PDF writer 嵌入，页面单位与图片内容流一致；
-- `pdg_type 0x1A` 成员保存的是完整的多页发行版 PDF，应按 Route 1 合并而不是
-  栅格化；合并尚未实现，容器转换对此保持显式 `UNSUPPORTED`，不静默丢页。
+- `pdg_type 0x1A` 成员保存的是完整的发行版 PDF（zlib 流）。组合层解密成员页
+  blob、inflate 后交给 `qw_pdf_merge`，按成员顺序与栅格页（各自先写成单页
+  PDF）合并，保持页面数与顺序；损坏的成员显式失败，不静默丢页。
 
 PDG 包本身对 `pdg_render_memory` 的 `PDG_OUTPUT_PDF` 仍返回
 `PDG_ERR_EXTERNAL_DECODER_REQUIRED`：包边界不得依赖 document，组合层是唯一

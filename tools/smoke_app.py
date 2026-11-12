@@ -103,17 +103,147 @@ def _pdg_pdf_page(pdf: bytes) -> bytes:
     return bytes(header) + pdf
 
 
+_SCRAMBLE_A = (
+    b"132jksdiau34ukjasdflkj!@#234afdji78#%234ADf v\x1c=-\x07"
+    b"sdkj908342<ADF>/#w%4t5o8uwrouyouhj8934038p350|+_SDFadwr"
+    b"!234gasM,.spfdlp[WEey3dfsfgsf4890^:9!@#56&89384978907890"
+    b"54ioerua^3~!2&*(_+*(80w&uidfs9ghidfower239-89taerC(!7a"
+) + b"\x00"
+_SCRAMBLE_B = (
+    b"Afgasdkol!@#$564746Lfat0[9i FDLAas090132!$@##$2354(*^78~*54"
+    b"sdfakl;ml;lak;j2a#$2342!@#128-reg;o[werqPWEQRioADSF1234&*"
+    b"(6908_)55454!"
+) + b"\x00"
+
+
+def _u8(value: int) -> int:
+    return value & 0xFF
+
+
+def _i16(value: int) -> int:
+    value &= 0xFFFF
+    return value - 0x10000 if value & 0x8000 else value
+
+
+def _scramble_tables() -> tuple[list[int], list[int]]:
+    fib = [1, 1]
+    for _ in range(2, 32):
+        fib.append(fib[-1] + fib[-2])
+    index = [2, 3]
+    state = 1
+    value = 5
+    while len(index) < 64:
+        if value not in (0x19, 0x31, 0x79, 0xA9, 0x121):
+            index.append(value)
+        state += 1
+        if state == 3:
+            value += 4
+            state = 1
+        else:
+            value += 2
+    return fib, index
+
+
+def _scramble_positions(header: bytearray) -> list[int]:
+    """Mirror of compute_scramble_positions() for a pdg_type 0x1A header."""
+    fib, index = _scramble_tables()
+    h5e = header[0x5E]
+    size16 = header[0x1C] | (header[0x1D] << 8)
+    width = header[0x10]
+    height = header[0x12]
+    size_high = size16 >> 8
+    sum_mix = _u8(height + header[0x1C] + width)
+    diff_mix = _u8(width - height)
+    or_mix = _u8(width | height)
+    mul_mix = _u8(width * height)
+    run_mix = _i16(sum_mix * diff_mix)
+    block_mix = _u8(width * size_high)
+    seed = _u8(h5e + width * height * width)
+    p0 = (or_mix * mul_mix + size_high * block_mix - run_mix + seed + 250) & 0x1FF
+    p12 = (or_mix * or_mix - block_mix * seed + run_mix * mul_mix + 250) & 0x1FF
+    mixed = (block_mix * block_mix + sum_mix + diff_mix + or_mix + mul_mix
+             + size_high + width)
+    v14 = (_SCRAMBLE_A[(mixed + _SCRAMBLE_A[seed % 0xD7]) % 0xD7]
+           * _SCRAMBLE_B[(mixed + _SCRAMBLE_B[seed % 0x82]) % 0x82])
+    v15 = _SCRAMBLE_A[(diff_mix * mul_mix - size_high) % 0xD7]
+    p1 = v14 & 0x1FF
+    v16 = fib[(size16 >> 8) & 0x1F]
+    p13 = (_SCRAMBLE_B[width % 0x82] * v15) & 0x1FF
+    v17 = index[(width * size_high) & 0x3F]
+    p2 = v16 & 0x1FF
+    p14 = v17 & 0x1FF
+    p3 = index[((v17 & 0xFF) * _SCRAMBLE_B[
+        (p2 * _SCRAMBLE_A[p2 % 0xD7]) % 0x82]) & 0x3F] & 0x1FF
+    p15 = fib[((v16 & 0xFF) * _SCRAMBLE_A[
+        (p14 * _SCRAMBLE_B[p14 % 0x82]) % 0xD7]) & 0x1F] & 0x1FF
+    short_mix = _i16(p1 * p15)
+    positions = [0] * 24
+    positions[0] = p0
+    positions[1] = p1
+    positions[2] = p2
+    positions[3] = p3
+    positions[4] = p0
+    positions[5] = (p12 * p1 - p0) & 0x1FF
+    positions[6] = (p14 - p0 * p1) & 0x1FF
+    positions[7] = (p3 - p12 * p14) & 0x1FF
+    positions[8] = (p12 + p0) & 0x1FF
+    positions[9] = (positions[5] + p13) & 0x1FF
+    positions[10] = (positions[6]
+                     + (p12 * p13 + p2 * p14 - short_mix + p3 + 250)
+                     - p1) & 0x1FF
+    positions[11] = (positions[7] + positions[8] - p15) & 0x1FF
+    positions[12] = p12
+    positions[13] = p13
+    positions[14] = p14
+    positions[15] = p15
+    positions[16] = (p12 * short_mix - p14 * p3 + p13 * p13 + 250) & 0x1FF
+    positions[17] = (p0 * p0 + p2 * p2 - p12 * p12) & 0x1FF
+    positions[18] = (p12 * p13 + p2 * p14 - short_mix + p3 + 250) & 0x1FF
+    positions[19] = (p3 * p15) & 0x1FF
+    positions[20] = (_SCRAMBLE_B[p12 % 0x82]
+                     + _SCRAMBLE_A[positions[16] % 0xD7]) & 0x1FF
+    positions[21] = index[((v14 & 0xFF) * _u8(
+        (p12 & 0xFF) * (v14 & 0xFF) - (p0 & 0xFF) + (p13 & 0xFF))) & 0x3F] & 0x1FF
+    positions[22] = index[_SCRAMBLE_A[positions[6] % 0xD7] & 0x3F] & 0x1FF
+    positions[23] = fib[_SCRAMBLE_B[positions[6] % 0x82] & 0x1F] & 0x1FF
+    return positions
+
+
+def _invert_midpoint(payload: bytearray, left: int, right: int) -> None:
+    """Undo the decoder's midpoint_sub step so it sees the intended stream."""
+    if left == right:
+        return
+    midpoint = (left >> 1) + (right >> 1)
+    value = (payload[left] + right) & 0xFF
+    if midpoint != left:
+        value ^= payload[midpoint]
+    payload[left] = value
+
+
 def _pdg_pdf_member(pdf: bytes) -> bytes:
-    """Wrap a PDF in a PDG 0x1A page blob (the native PDF-member form)."""
+    """Wrap a PDF in a realistic pdg_type 0x1A member (scrambled zlib(PDF))."""
     import zlib
-    stream = zlib.compress(pdf)
+    pad = b"".join(hashlib.sha256(str(index).encode()).digest()
+                   for index in range(24))
+    comment = b"% " + base64.b64encode(pad) + b"\n"
+    marker = pdf.rfind(b"startxref")
+    padded = pdf[:marker] + comment + pdf[marker:] if marker >= 0 else pdf
+    stream = bytearray(zlib.compress(padded))
     header = bytearray(0x8C)
     header[0:2] = b"HH"
     header[2] = 1
     header[0x0F] = 0x1A
+    header[0x10] = 200   # width_low keeps the scramble arithmetic non-negative
+    header[0x12] = 100   # height_low
+    header[0x5E] = 0x5A
     struct.pack_into("<I", header, 0x18, 0x8C)
     struct.pack_into("<I", header, 0x1C, len(stream))
-    return bytes(header) + stream
+    positions = _scramble_positions(header)
+    left, right = positions[9], positions[21]
+    if max(left, right) + 0x13 >= len(stream):
+        raise RuntimeError("0x1A fixture payload is too small")
+    _invert_midpoint(stream, left, right)
+    return bytes(header) + bytes(stream)
 
 
 def _pdf_page_fixture() -> bytes:
@@ -224,8 +354,14 @@ def main() -> int:
         (root / "image.png").write_bytes(PNG_1X1)
         run(exe, ["image.png"], root)
         image_pdf = root / "image.pdf"
-        if not image_pdf.is_file() or image_pdf.read_bytes()[:5] != b"%PDF-":
+        image_bytes = image_pdf.read_bytes() if image_pdf.is_file() else b""
+        if not image_pdf.is_file() or image_bytes[:5] != b"%PDF-":
             return fail("image to PDF produced no PDF")
+        # IMAGE mode page box == pixel size and the image fills it (a unit cm
+        # would paint the image into a single point).
+        if (b"/MediaBox [0 0 1 1]" not in image_bytes or
+                b"1.0000 0 0 1.0000" not in image_bytes):
+            return fail("image to PDF did not scale the image to the page")
 
         (root / "notes.txt").write_bytes(b"\xef\xbb\xbfHello\nWorld\n")
         run(exe, ["notes.txt"], root)
@@ -317,12 +453,40 @@ def main() -> int:
         if check.stdout.strip() != "OK":
             return fail(f"UVZ --check printed {check.stdout!r}")
 
-        # A pdg_type 0x1A member holds a multi-page publisher PDF; merging it
-        # is not implemented, so the container must fail rather than silently
-        # drop the page.
+        # A pdg_type 0x1A member holds a complete publisher PDF as a zlib
+        # stream; the internal Document merger keeps its pages.
         (root / "member.pdz").write_bytes(
             _pdz_container([(b"000001", _pdg_pdf_member(page_pdf))]))
-        run(exe, ["member.pdz"], root, expect=1)
+        run(exe, ["member.pdz"], root)
+        member_pdf = root / "member.pdf"
+        member = member_pdf.read_bytes()
+        if (not member_pdf.is_file() or member[:5] != b"%PDF-" or
+                b"/Count 1" not in member):
+            return fail("0x1A PDF member did not keep its page")
+        distinct, mean = _pdf_image_stats(member)
+        if distinct < 8 or not 5.0 <= mean <= 250.0:
+            return fail("0x1A PDF member page rendered blank")
+
+        # Mixed container: one raster page followed by one PDF member. The
+        # merge must keep both pages in member order.
+        (root / "mixed.pdz").write_bytes(
+            _pdz_container([(b"000001", PNG_1X1),
+                            (b"000002", _pdg_pdf_member(page_pdf))]))
+        run(exe, ["mixed.pdz"], root)
+        mixed = (root / "mixed.pdf").read_bytes()
+        if mixed[:5] != b"%PDF-" or b"/Count 2" not in mixed:
+            return fail("mixed PDZ container did not merge two pages")
+        first = mixed.find(b"/MediaBox [0 0 0.240 0.240]")
+        second = mixed.find(b"/MediaBox [0 0 72 72]")
+        if first < 0 or second < 0 or first > second:
+            return fail("merged page order is not member order")
+
+        # A damaged 0x1A payload must fail loudly instead of dropping a page.
+        broken = bytearray(_pdg_pdf_member(page_pdf))
+        struct.pack_into("<I", broken, 0x1C, 24)
+        (root / "broken.pdz").write_bytes(
+            _pdz_container([(b"000001", bytes(broken))]))
+        run(exe, ["broken.pdz"], root, expect=1)
 
         # Batch conversion into --out-dir.
         outdir = root / "out"

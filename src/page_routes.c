@@ -375,6 +375,164 @@ static int page_rasters_to_pdf(QwPageRasterList *rasters, int page_mode,
     return QW_STATUS_OK;
 }
 
+/* ------------------------------------------- mixed raster / PDF members -- */
+
+/*
+ * A PDZ container can mix image pages with native PDF members
+ * (pdg_type 0x1A): the latter hold a zlib stream of a complete publisher PDF.
+ * The output keeps the member order, so raster pages are turned into one-page
+ * PDFs and everything is merged by the internal Document engine.
+ */
+typedef struct QwPdzPart {
+    int is_pdf;
+    size_t raster_index;
+    uint8_t *pdf;
+    size_t pdf_size;
+} QwPdzPart;
+
+typedef struct QwPdzPartList {
+    QwPdzPart *items;
+    size_t count;
+    size_t capacity;
+} QwPdzPartList;
+
+static int page_part_list_push(QwPdzPartList *list, QwPdzPart part)
+{
+    if (list->count == list->capacity) {
+        size_t capacity = list->capacity ? list->capacity * 2u : 16u;
+        QwPdzPart *grown = (QwPdzPart *)realloc(
+            list->items, capacity * sizeof(*grown));
+        if (!grown) {
+            return 0;
+        }
+        list->items = grown;
+        list->capacity = capacity;
+    }
+    list->items[list->count++] = part;
+    return 1;
+}
+
+static void page_part_list_release(QwPdzPartList *list)
+{
+    size_t index;
+    for (index = 0u; index < list->count; ++index) {
+        free(list->items[index].pdf);
+    }
+    free(list->items);
+    memset(list, 0, sizeof(*list));
+}
+
+/* Decode a pdg_type 0x1A member: decrypt the page blob, inflate the zlib stream
+ * and check that it really is a PDF. */
+static int page_decode_pdf_member(const uint8_t *member, size_t member_size,
+                                  uint8_t **out_pdf, size_t *out_size,
+                                  QwConvertReport *report)
+{
+    PdgBuffer decrypted;
+    uint8_t *pdf = NULL;
+    size_t pdf_size = 0u;
+    int rc;
+
+    if (!member || !member_size || !out_pdf || !out_size) {
+        return QW_STATUS_ERR_INVALID_ARGUMENT;
+    }
+    *out_pdf = NULL;
+    *out_size = 0u;
+    if (!pdz_pdfpdg_is_member(member, member_size)) {
+        return QW_STATUS_ERR_UNSUPPORTED;
+    }
+    memset(&decrypted, 0, sizeof(decrypted));
+    rc = pdg_decrypt_memory(member, member_size, &decrypted);
+    if (rc != PDG_OK) {
+        return page_status_from_pdg(rc);
+    }
+    rc = pdz_inflate_zlib(decrypted.data, decrypted.size, &pdf, &pdf_size);
+    pdg_buffer_free(&decrypted);
+    if (rc != PDG_OK || !pdf || pdf_size < 5u ||
+        pdf_size > QW_PAGE_ROUTE_MAX_INPUT ||
+        memcmp(pdf, "%PDF-", 5u) != 0) {
+        if (report) {
+            snprintf(report->note, sizeof(report->note),
+                     "PDG PDF member could not be decoded as zlib(PDF)");
+        }
+        free(pdf);
+        return QW_STATUS_ERR_FORMAT;
+    }
+    *out_pdf = pdf;
+    *out_size = pdf_size;
+    return QW_STATUS_OK;
+}
+
+/* Turn the ordered part list into one PDF and merge it with qw_pdf_merge(). */
+static int page_merge_parts(const QwPageRasterList *rasters,
+                            const QwPdzPartList *parts, int page_mode,
+                            uint8_t **out_pdf, size_t *out_size,
+                            size_t *out_pages, QwConvertReport *report)
+{
+    const uint8_t **pdfs;
+    size_t *sizes;
+    uint8_t **owned;
+    size_t index;
+    int rc;
+
+    if (!parts || !parts->count) {
+        return QW_STATUS_ERR_EMPTY;
+    }
+    pdfs = (const uint8_t **)calloc(parts->count, sizeof(*pdfs));
+    sizes = (size_t *)calloc(parts->count, sizeof(*sizes));
+    owned = (uint8_t **)calloc(parts->count, sizeof(*owned));
+    if (!pdfs || !sizes || !owned) {
+        free(pdfs);
+        free(sizes);
+        free(owned);
+        return QW_STATUS_ERR_OUT_OF_MEMORY;
+    }
+    for (index = 0u; index < parts->count; ++index) {
+        const QwPdzPart *part = &parts->items[index];
+        if (part->is_pdf) {
+            pdfs[index] = part->pdf;
+            sizes[index] = part->pdf_size;
+            continue;
+        }
+        {
+            const QwRasterPage *raster = &rasters->pages[part->raster_index];
+            PdzPdfImage image;
+            uint8_t *one = NULL;
+            size_t one_size = 0u;
+            memset(&image, 0, sizeof(image));
+            image.data = raster->pixels;
+            image.size = (size_t)raster->stride * (size_t)raster->height;
+            image.kind = raster->channels == 3 ? QW_PAGE_IMAGE_RGB24
+                                               : QW_PAGE_IMAGE_GRAY8;
+            image.width = raster->width;
+            image.height = raster->height;
+            rc = pdz_pdf_from_images(&image, 1u, page_mode, &one, &one_size,
+                                     NULL);
+            if (rc != PDG_OK) {
+                free(pdfs);
+                free(sizes);
+                free(owned);
+                return page_status_from_pdg(rc);
+            }
+            pdfs[index] = one;
+            sizes[index] = one_size;
+            owned[index] = one;
+        }
+    }
+    rc = qw_pdf_merge(pdfs, sizes, parts->count, out_pdf, out_size, out_pages,
+                      report);
+    for (index = 0u; index < parts->count; ++index) {
+        free(owned[index]);
+    }
+    free(pdfs);
+    free(sizes);
+    free(owned);
+    if (rc != QW_STATUS_OK) {
+        return page_status_is_stable(rc) ? rc : QW_STATUS_ERR_FORMAT;
+    }
+    return QW_STATUS_OK;
+}
+
 /* --------------------------------------------------------------- DjVu ----- */
 
 static int page_convert_djvu(const uint8_t *data, size_t size,
@@ -585,7 +743,10 @@ static int page_convert_pdz(const uint8_t *data, size_t size,
     size_t index;
     size_t skipped = 0u;
     size_t written = 0u;
+    size_t pdf_members = 0u;
+    size_t raster_members = 0u;
     QwPageRasterList rasters;
+    QwPdzPartList parts;
     int rule = options ? options->pdz_page_rule : PDZ_PDF_PAGES_AUTO;
     int page_mode;
     int rc;
@@ -596,6 +757,7 @@ static int page_convert_pdz(const uint8_t *data, size_t size,
     *out_pdf = NULL;
     *out_size = 0u;
     memset(&rasters, 0, sizeof(rasters));
+    memset(&parts, 0, sizeof(parts));
     page_mode = (options && options->raster_page_mode == QW_RASTER_PAGE_MODE_A4)
                     ? PDZ_PDF_PAGE_A4
                     : PDZ_PDF_PAGE_IMAGE;
@@ -615,6 +777,7 @@ static int page_convert_pdz(const uint8_t *data, size_t size,
     for (index = 0u; index < member_count; ++index) {
         PdzBuffer payload;
         QwRasterPage page;
+        QwPdzPart part;
         int status;
         if (!page_member_selected(&members[index], rule)) continue;
         memset(&payload, 0, sizeof(payload));
@@ -624,16 +787,26 @@ static int page_convert_pdz(const uint8_t *data, size_t size,
             continue;
         }
         if (pdz_pdfpdg_is_member(payload.data, payload.size)) {
+            memset(&part, 0, sizeof(part));
+            rc = page_decode_pdf_member(payload.data, payload.size, &part.pdf,
+                                        &part.pdf_size, report);
             pdz_buffer_free(&payload);
-            if (report) {
-                snprintf(report->note, sizeof(report->note),
-                         "PDZ native PDF member (pdg_type 0x1A) is not "
-                         "supported: merging the publisher PDF is not "
-                         "implemented");
+            if (rc != QW_STATUS_OK) {
+                free(members);
+                page_part_list_release(&parts);
+                page_raster_list_release(&rasters);
+                return rc;
             }
-            free(members);
-            page_raster_list_release(&rasters);
-            return QW_STATUS_ERR_UNSUPPORTED;
+            part.is_pdf = 1;
+            if (!page_part_list_push(&parts, part)) {
+                free(part.pdf);
+                free(members);
+                page_part_list_release(&parts);
+                page_raster_list_release(&rasters);
+                return QW_STATUS_ERR_OUT_OF_MEMORY;
+            }
+            ++pdf_members;
+            continue;
         }
         memset(&page, 0, sizeof(page));
         status = page_rasterize_payload(payload.data, payload.size, &page,
@@ -646,21 +819,39 @@ static int page_convert_pdz(const uint8_t *data, size_t size,
         if (!page_raster_list_push(&rasters, page)) {
             free((void *)page.pixels);
             free(members);
+            page_part_list_release(&parts);
             page_raster_list_release(&rasters);
             return QW_STATUS_ERR_OUT_OF_MEMORY;
         }
+        memset(&part, 0, sizeof(part));
+        part.is_pdf = 0;
+        part.raster_index = rasters.count - 1u;
+        if (!page_part_list_push(&parts, part)) {
+            free(members);
+            page_part_list_release(&parts);
+            page_raster_list_release(&rasters);
+            return QW_STATUS_ERR_OUT_OF_MEMORY;
+        }
+        ++raster_members;
     }
     free(members);
 
-    if (rasters.count == 0u) {
+    if (parts.count == 0u) {
+        page_part_list_release(&parts);
         page_raster_list_release(&rasters);
         if (report) snprintf(report->note, sizeof(report->note),
                              "PDZ container produced no page image");
         return QW_STATUS_ERR_UNSUPPORTED;
     }
 
-    rc = page_rasters_to_pdf(&rasters, page_mode, out_pdf, out_size, &written,
-                             report);
+    if (pdf_members == 0u) {
+        rc = page_rasters_to_pdf(&rasters, page_mode, out_pdf, out_size,
+                                 &written, report);
+    } else {
+        rc = page_merge_parts(&rasters, &parts, page_mode, out_pdf, out_size,
+                              &written, report);
+    }
+    page_part_list_release(&parts);
     page_raster_list_release(&rasters);
     if (rc != QW_STATUS_OK) {
         return rc;
@@ -668,9 +859,16 @@ static int page_convert_pdz(const uint8_t *data, size_t size,
     if (report) {
         report->pages_written = written;
         report->skipped_pages = skipped;
-        snprintf(report->note, sizeof(report->note),
-                 "PDG pages converted (%zu pages written, %zu skipped)",
-                 written, skipped);
+        if (pdf_members == 0u) {
+            snprintf(report->note, sizeof(report->note),
+                     "PDG pages converted (%zu pages written, %zu skipped)",
+                     written, skipped);
+        } else {
+            snprintf(report->note, sizeof(report->note),
+                     "PDG pages merged (%zu pages: %zu raster, %zu PDF "
+                     "member(s), %zu skipped)",
+                     written, raster_members, pdf_members, skipped);
+        }
     }
     return page_is_pdf(*out_pdf, *out_size) ? QW_STATUS_OK
                                             : QW_STATUS_ERR_FORMAT;
