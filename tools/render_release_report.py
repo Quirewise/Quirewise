@@ -71,6 +71,21 @@ def main() -> int:
         linux_shared_path = release / "linux-shared-summary.json"
 
     heads = json.loads((release / "repository-heads.json").read_text(encoding="utf-8"))
+    release_rel = (release.relative_to(root).as_posix()
+                   if release.is_relative_to(root) else str(release))
+    remote = None
+    if (release / "remote-heads.json").is_file():
+        remote = json.loads(
+            (release / "remote-heads.json").read_text(encoding="utf-8"))
+    if remote:
+        push_text = (f"{remote['pushed_count']}/{remote['total']} 个仓库的本地 "
+                     f"HEAD 已推送到 origin")
+        push_note = ("远端推送尚未全部完成；在推送剩余提交之前，干净机器与 CI "
+                     "无法按 `release-lock.json` 拉取全部提交。")
+    else:
+        push_text = "未生成 remote-heads.json，推送状态未验证"
+        push_note = ("推送状态未验证；干净机器与 CI 复现前必须确认 lock 中的"
+                     "提交已推送到各自 origin。")
     win_static = summary_stats(release / "static-summary.json")
     win_shared = summary_stats(release / "shared-summary.json")
     linux_static = summary_stats(linux_static_path)
@@ -155,7 +170,7 @@ def main() -> int:
         "dependency-closure.json", "public-headers-static.json",
         "public-headers-shared.json", "error-taxonomy.txt",
         "resource-limits.txt", "pdg-pdf-status.txt", "reviewer-signoff.md",
-        "sanitizer-summary.json",
+        "sanitizer-summary.json", "remote-heads.json",
     ]:
         path = release / name
         if path.is_file():
@@ -166,7 +181,7 @@ def main() -> int:
         signoff_text = signoff_path.read_text(encoding="utf-8").strip()
         signoff_section = (
             "## 8. 独立复核\n\n"
-            f"- 签字文件：`.tmp/release/reviewer-signoff.md`"
+            f"- 签字文件：`{release_rel}/reviewer-signoff.md`"
             f"（SHA-256 `{hashes['reviewer-signoff.md']}`）\n"
             "- 说明：以下为独立 reviewer 写入的签字原文，未经 Lead 改写。\n\n"
             "```text\n" + signoff_text + "\n```\n"
@@ -174,7 +189,7 @@ def main() -> int:
     else:
         signoff_section = (
             "## 8. 独立复核\n\n"
-            "- 未提供 `.tmp/release/reviewer-signoff.md`；本报告不宣称独立 sign-off。\n"
+            "- 未提供 `" + release_rel + "/reviewer-signoff.md`；本报告不宣称独立 sign-off。\n"
         )
 
     commit_rows = "\n".join(
@@ -187,7 +202,7 @@ def main() -> int:
 
 - 报告时间：{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}
 - Goal：`QW-AUTONOMY-001`
-- 状态：**发布候选（RELEASE CANDIDATE）** — 代码、许可证、构建矩阵与验收证据齐备；仓库与 lock 已发布，四套矩阵（另加 sanitizer 矩阵）在本机复现（GitHub Actions 尚未执行）
+- 状态：**发布候选（RELEASE CANDIDATE）** — 代码、许可证、构建矩阵与验收证据齐备；快照仍为本地提交，{push_text}；四套矩阵（另加 sanitizer 矩阵）在本机复现（GitHub Actions 尚未执行）
 - 依据：[QUIREWISE_AGENT_LONG_TERM_GOAL.md](QUIREWISE_AGENT_LONG_TERM_GOAL.md)、[DEPENDENCY_BOUNDARIES_AND_ACCEPTANCE.md](DEPENDENCY_BOUNDARIES_AND_ACCEPTANCE.md)
 
 ## 1. 范围
@@ -205,7 +220,7 @@ LibLZMA/XZ、OpenSSL、WebP、OpenJPEG、DjVuLibre、MuPDF、Zlib、libjpeg、ic
 不在本发布范围：
 
 - macOS 与 MSVC 工具链（本机不可用，未验证；Windows 由 MinGW64 覆盖，Linux 由 Ubuntu/WSL2 覆盖）；
-- 迁移前的统一 `quirewise INPUT --to FORMAT` CLI（当前 `app/` 只提供组合 shell）；
+- 迁移前的统一 `quirewise INPUT --to FORMAT` CLI（当前 `app/` 已移植 C1–C3 选项；密钥、扫描预处理与目录输入仍未实现）；
 - 依赖 Ghostscript、veraPDF、FFmpeg、LibRaw 等外部后端的历史路线；
 - 各格式内部尚未实现的子集；这些入口稳定返回 `UNSUPPORTED`，见各库文档与支持矩阵。
 
@@ -215,8 +230,10 @@ LibLZMA/XZ、OpenSSL、WebP、OpenJPEG、DjVuLibre、MuPDF、Zlib、libjpeg、ic
 |---|---|---|---|
 {commit_rows}
 
-所有仓库 `git status --porcelain` 为空；本轮已按仓库推送到各自远端，
-`app/release-lock.json` 的 `fetch_workspace.py --verify-only` 校验通过。
+所有仓库 `git status --porcelain` 为空；快照提交与 lock 已固定。{push_text}。
+{push_note}
+`app/release-lock.json` 的 `fetch_workspace.py --verify-only` 校验通过（该检查只比较
+本地 HEAD 与 lock，不能证明提交已推送）。
 
 ## 3. 构建、安装与测试矩阵
 
@@ -253,9 +270,9 @@ python3 app/tools/run_acceptance.py --workspace . --shared --jobs 4
 | `audit_mupdf_removal.py` | **0 命中**；`qw_mupdf_*`、`mupdf_backend.h`、`QUIREWISE_WITH_MUPDF`、`<mupdf/...>` 与 MuPDF CMake 引用全部清零 |
 | `audit_vendored_sources.py` | {vendored_line}（退出码 {vendored_code}） |
 | `verify_public_headers.py`（静态与共享安装树） | {header_count}/{header_count} 公共头独立编译通过，0 失败，0 第三方头泄漏（共享树 {public_shared['header_count']}/{public_shared['header_count']}） |
-| `verify_error_taxonomy.py` / `verify_resource_limits.py` | 0 findings，原始输出见 `.tmp/release/error-taxonomy.txt` 与 `.tmp/release/resource-limits.txt` |
+| `verify_error_taxonomy.py` / `verify_resource_limits.py` | 0 findings，原始输出见 `{release_rel}/error-taxonomy.txt` 与 `{release_rel}/resource-limits.txt` |
 
-机械自检结果：`.tmp/release/self-audit.json`（仓库干净、20 份 MIT LICENSE、
+机械自检结果：`{release_rel}/self-audit.json`（仓库干净、20 份 MIT LICENSE、
 {win_static[0]} 步矩阵、SBOM 第一方全 MIT、内置第三方源码 0 文件/0 行、公共头/所有权/边界/MuPDF/vendored/lock 闸门全部通过）。
 Runtime 现有 `quirewise_runtime_abi` CTest，17 个库均有测试入口。
 
@@ -291,10 +308,10 @@ Runtime 现有 `quirewise_runtime_abi` CTest，17 个库均有测试入口。
 
 ## 7. 已知限制与外部前置
 
-1. **CI 激活**：19 个仓库均已发布，`app/release-lock.json` 校验通过。CI 工作流
+1. **CI 激活与推送**：19 个仓库均已提交并重新固定 lock（{push_text}）。CI 工作流
    （`app/.github/workflows/ci.yml`）尚未在 GitHub Actions 上实际执行，本报告的
-   四套矩阵（另加 sanitizer 矩阵）均为本机复现；执行它仍需要能覆盖 `Quirewise/quirewise-pdg`（私有）的
-   token/可见性，才能拉取 lock 中的全部提交。
+   四套矩阵（另加 sanitizer 矩阵）均为本机复现；执行它需要先把 lock 中的提交推送到
+   各远端，并提供能覆盖 `Quirewise/quirewise-pdg`（私有）的 token/可见性。
 2. **平台**：macOS/MSVC 未验证，属于明确排除范围（决策记录在本节与验收文档第 11 节），
    不作为本发布物的验收项。
 3. **应用入口**：`app` 统一 CLI 已移植（C1–C3）：`--to pdf|txt|png`、`--check`、
@@ -309,9 +326,9 @@ Runtime 现有 `quirewise_runtime_abi` CTest，17 个库均有测试入口。
 7. **依赖声明清理**：`comic` 与 `page` 的冗余 `image` 依赖已删除；未引用的私有头
    （`page` 的 image 副本、`ebook` 的 workspace/platform_unicode）已移除，
    `verify_private_header_copies.py` 防止跨仓库共享私有头漂移。
-8. **清理记录**：`.tmp/acceptance` 与 `.tmp/release` 保留为复核证据，不属于发布物；
+8. **清理记录**：`.tmp/acceptance` 与 `{release_rel}` 保留为复核证据，不属于发布物；
    报告与自检脚本位于 `app/tools/` 并纳入版本控制。两份根文档的副本与 SHA-256
-   记录在 `.tmp/release/release-docs/`（`release-docs.sha256`）。
+   记录在 `{release_rel}/release-docs/`（`release-docs.sha256`）。
 
 {signoff_section}"""
     out = (root / args.out).resolve()

@@ -35,6 +35,16 @@ def run(command: list[str], root: Path, capture: bool = True) -> subprocess.Comp
     )
 
 
+def os_label() -> str:
+    if os.name == "nt":
+        try:
+            build = sys.getwindowsversion().build
+        except AttributeError:
+            build = 0
+        return f"Windows {'11' if build >= 22000 else '10'} {platform.machine()}"
+    return f"{platform.system()} {platform.release()} {platform.machine()}"
+
+
 def toolchain() -> dict[str, str]:
     def first_line(command: list[str]) -> str:
         try:
@@ -52,7 +62,7 @@ def toolchain() -> dict[str, str]:
     if cc == "unknown":
         cc = first_line(["gcc", "--version"])
     return {
-        "os": f"{platform.system()} {platform.release()} {platform.machine()}",
+        "os": os_label(),
         "cmake": cmake,
         "ninja": first_line(["ninja", "--version"]),
         "cc": cc,

@@ -199,17 +199,21 @@ class Runner:
             for name, _ in LIBRARIES
         ]
         copied = 0
-        for source, destination in entries:
-            if not source.is_file():
-                print(f"[FAIL] license missing: {source}")
-                return False
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(source, destination)
-            copied += 1
+        log_path = self.logs / "licenses.copy.log"
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        with log_path.open("w", encoding="utf-8") as log:
+            for source, destination in entries:
+                if not source.is_file():
+                    print(f"[FAIL] license missing: {source}")
+                    return False
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, destination)
+                copied += 1
+                log.write(f"{source} -> {destination}\n")
         self.results.append({
             "step": "licenses.copy", "command": "copy LICENSE files",
             "exit_code": 0, "expected": 0, "ok": True, "seconds": 0.0,
-            "log": str(docroot),
+            "log": str(log_path),
         })
         print(f"[ok] licenses.copy ({copied} files)")
         return True
