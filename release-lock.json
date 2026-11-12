@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_utc": "2026-11-12T13:37:05Z",
+  "generated_utc": "2026-11-12T15:52:48Z",
   "note": "Pin of the sibling repositories consumed by the Quirewise release.",
   "repositories": [
     {
@@ -21,7 +21,7 @@
     {
       "path": "libraries/quirewise-comic",
       "url": "https://github.com/Hellohistory/quirewise-comic.git",
-      "commit": "c22cd2b2f3ee0dfc9b19c5acc9202a641d4dfca4"
+      "commit": "aa9c4d1b7f9d3ee3f327f45e2f44f8e9ae2c59a0"
     },
     {
       "path": "libraries/quirewise-compression",
@@ -41,12 +41,12 @@
     {
       "path": "libraries/quirewise-document",
       "url": "https://github.com/Quirewise/quirewise-document.git",
-      "commit": "06f5970dae16a354f1143aa4e5865e6c1cd3c234"
+      "commit": "00e7365bc79e07397343c9ca263768d92af35b6e"
     },
     {
       "path": "libraries/quirewise-ebook",
       "url": "https://github.com/Quirewise/quirewise-ebook.git",
-      "commit": "06b677eda175e82327a2a2169850030bf0d4a354"
+      "commit": "dd91b52c567789eb74bae77ecc16d4a13be68f7d"
     },
     {
       "path": "libraries/quirewise-image",
@@ -56,12 +56,12 @@
     {
       "path": "libraries/quirewise-page",
       "url": "https://github.com/Hellohistory/quirewise-page.git",
-      "commit": "b1f960584c69ae7bc16ec3a2013555223ac892f0"
+      "commit": "4c94fb22566c5e0cef67ef49e5a5cbafff179502"
     },
     {
       "path": "libraries/quirewise-pdg",
       "url": "https://github.com/Quirewise/quirewise-pdg.git",
-      "commit": "013a6c2108b751da0257a43860c1b2ae3edb0519"
+      "commit": "2420597907cebe2da216e0002513ea52788bf812"
     },
     {
       "path": "libraries/quirewise-runtime",
@@ -91,7 +91,7 @@
     {
       "path": "external-consumer-template",
       "url": "https://github.com/Quirewise/external-consumer-template.git",
-      "commit": "2129b48d4531504cdd664084e4dce8d1addd2367"
+      "commit": "358fbf1ca69c2dfe6655e3b7c4b73b1b07d44167"
     }
   ]
 }
