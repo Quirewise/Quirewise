@@ -20,6 +20,7 @@
 | 转换图像、矢量图、漫画归档 | [图像与归档](formats/images-and-archives.md) |
 | 解析标准音频或受支持的加密音乐容器 | [音频](formats/audio.md) |
 | 查看命令行选项和转换参数 | [命令行使用](usage/command-line.md) |
+| 生成发布证据、快照与报告 | [发布证据流程](release-process.md) |
 
 ## 如何理解格式能力
 

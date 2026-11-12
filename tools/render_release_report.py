@@ -46,15 +46,35 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workspace", type=Path,
                         default=Path(__file__).resolve().parents[2])
+    parser.add_argument("--release-dir", type=Path,
+                        default=Path(".tmp/release"))
+    parser.add_argument("--static-prefix", type=Path,
+                        default=Path(".tmp/acceptance/windows-static/install"))
+    parser.add_argument("--shared-prefix", type=Path,
+                        default=Path(".tmp/acceptance/windows-shared/install"))
+    parser.add_argument("--linux-static-summary", type=Path,
+                        default=Path(".tmp/acceptance/linux-static/summary.json"))
+    parser.add_argument("--linux-shared-summary", type=Path,
+                        default=Path(".tmp/acceptance/linux-shared/summary.json"))
+    parser.add_argument("--out", type=Path,
+                        default=Path("RELEASE_ACCEPTANCE_REPORT.md"))
     args = parser.parse_args()
     root = args.workspace.resolve()
-    release = root / ".tmp" / "release"
+    release = (root / args.release_dir).resolve()
+    static_prefix = (root / args.static_prefix).resolve()
+    shared_prefix = (root / args.shared_prefix).resolve()
+    linux_static_path = (root / args.linux_static_summary).resolve()
+    linux_shared_path = (root / args.linux_shared_summary).resolve()
+    if (release / "linux-static-summary.json").is_file():
+        linux_static_path = release / "linux-static-summary.json"
+    if (release / "linux-shared-summary.json").is_file():
+        linux_shared_path = release / "linux-shared-summary.json"
 
     heads = json.loads((release / "repository-heads.json").read_text(encoding="utf-8"))
     win_static = summary_stats(release / "static-summary.json")
     win_shared = summary_stats(release / "shared-summary.json")
-    linux_static = summary_stats(root / ".tmp/acceptance/linux-static/summary.json")
-    linux_shared = summary_stats(root / ".tmp/acceptance/linux-shared/summary.json")
+    linux_static = summary_stats(linux_static_path)
+    linux_shared = summary_stats(linux_shared_path)
 
     sbom = json.loads((release / "sbom-static.cdx.json").read_text(encoding="utf-8"))
     nodes = len(sbom["dependencies"])
@@ -71,10 +91,8 @@ def main() -> int:
         (release / "install-manifest-static.json").read_text(encoding="utf-8"))
     manifest_shared = json.loads(
         (release / "install-manifest-shared.json").read_text(encoding="utf-8"))
-    actual_static = sum(1 for p in (root / ".tmp/acceptance/static/install").rglob("*")
-                        if p.is_file())
-    actual_shared = sum(1 for p in (root / ".tmp/acceptance/shared/install").rglob("*")
-                        if p.is_file())
+    actual_static = sum(1 for p in static_prefix.rglob("*") if p.is_file())
+    actual_shared = sum(1 for p in shared_prefix.rglob("*") if p.is_file())
 
     win_tc = toolchain(release, "windows", {
         "os": "Windows 11 x64",
@@ -272,32 +290,32 @@ Runtime 现有 `quirewise_runtime_abi` CTest，17 个库均有测试入口。
    token/可见性，才能拉取 lock 中的全部提交。
 2. **平台**：macOS/MSVC 未验证，属于明确排除范围（决策记录在本节与验收文档第 11 节），
    不作为本发布物的验收项。
-3. **应用入口**：`app` 仍是组合 shell，旧统一 CLI 未移植；转换能力通过库包与外部消费者验证。
+3. **应用入口**：`app` 统一 CLI 已移植（C1–C3）：`--to pdf|txt|png`、`--check`、
+   `--page`、`--pages` 与拒绝覆盖均已落地；密钥、扫描预处理和目录输入仍未实现。
 4. **共享库部署**：Windows 共享消费者运行时需要把安装前缀的 `bin/` 加入 `PATH`
    （验收运行器已按此设置）；Linux 使用 `LD_LIBRARY_PATH` 或安装 RPATH。
 5. **能力子集**：Audio/Image 等库存在大量显式 `UNSUPPORTED` 路径；支持矩阵需按库文档解读。
-6. **PDG PDF**：PDG→PDF 的产出路径已迁移到内部实现（`pdz_pdf_from_images` 与流式
-   `pdz_pdf_writer_*`，含自有 T.6/G4 CCITT 编码，`verify_pdf_pages` 按页回读校验）；
-   但“PDG 页载荷本身以 PDF 存储”的解码/渲染仍返回
-   `PDG_ERR_EXTERNAL_DECODER_REQUIRED`（`pdg_output_requires_external_decoder(PDG_OUTPUT_PDF)`
-   为 1，证据 `.tmp/release/pdg-pdf-status.txt`），因为该路径需要 PDF 光栅化器，
-   不属于 PDG 包边界。M3-04 的“输出”部分已完成，载荷解码部分仍为后续能力项。
-7. **依赖声明清理**：`comic` 与 `page` 声明了 `image` 依赖但没有符号证据，属于可后续删除的冗余声明。
-8. **清理记录**：`.tmp/quirewise-agent-build`、`.tmp/quirewise-agent-evidence`、
-   `.tmp/acceptance` 与 `.tmp/release` 保留为复核证据，不属于发布物；报告与自检
-   脚本位于 `app/tools/` 并纳入版本控制。两份根文档的副本与 SHA-256 记录在
-   `.tmp/release/release-docs/`（`release-docs.sha256`）。
+6. **PDG PDF**：PDG 页载荷（`pdg_type 0x00` 的 PDF）由组合层用内部 PDF 引擎按页
+   栅格化；`pdg_type 0x1A` 发行版 PDF 由 `pdz_pdfpdg_decode_member` 解码后按成员
+   顺序合并，并核对合并页数与输入页数。PDG 包本身仍对 `PDG_OUTPUT_PDF` 返回
+   `PDG_ERR_EXTERNAL_DECODER_REQUIRED`，这是包边界而非构建缺失。
+7. **依赖声明清理**：`comic` 与 `page` 的冗余 `image` 依赖已删除；未引用的私有头
+   （`page` 的 image 副本、`ebook` 的 workspace/platform_unicode）已移除，
+   `verify_private_header_copies.py` 防止跨仓库共享私有头漂移。
+8. **清理记录**：`.tmp/acceptance` 与 `.tmp/release` 保留为复核证据，不属于发布物；
+   报告与自检脚本位于 `app/tools/` 并纳入版本控制。两份根文档的副本与 SHA-256
+   记录在 `.tmp/release/release-docs/`（`release-docs.sha256`）。
 
 {signoff_section}"""
-    out = root / "RELEASE_ACCEPTANCE_REPORT.md"
+    out = (root / args.out).resolve()
     out.write_text(report, encoding="utf-8")
-    report_copy = docs_dir / "RELEASE_ACCEPTANCE_REPORT.md"
+    report_copy = docs_dir / out.name
     shutil.copyfile(out, report_copy)
     (docs_dir / "release-docs.sha256").write_text(
         f"{hashlib.sha256(acceptance_copy.read_bytes()).hexdigest()}  "
         "DEPENDENCY_BOUNDARIES_AND_ACCEPTANCE.md\n"
         f"{hashlib.sha256(report_copy.read_bytes()).hexdigest()}  "
-        "RELEASE_ACCEPTANCE_REPORT.md\n",
+        f"{out.name}\n",
         encoding="utf-8")
     print(f"wrote {out}")
     return 0

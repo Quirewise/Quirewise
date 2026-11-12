@@ -1,0 +1,160 @@
+{
+  "paths": {
+    "core/architecture_metadata.h": {
+      "sha256": "247456ddea9633d74c403a40e3251c1320135aa2d83db1dd536ec75d8060d5e9",
+      "repositories": [
+        "quirewise-archive",
+        "quirewise-audio",
+        "quirewise-data",
+        "quirewise-document",
+        "quirewise-ebook",
+        "quirewise-image",
+        "quirewise-page",
+        "quirewise-spreadsheet",
+        "quirewise-subtitle",
+        "quirewise-text"
+      ]
+    },
+    "core/audio_document.h": {
+      "sha256": "e29ab53384a9394884513a5e0c2ba9494782ba9f77ac4a0268afd2c7db9f1700",
+      "repositories": [
+        "quirewise-audio",
+        "quirewise-data",
+        "quirewise-ebook",
+        "quirewise-page",
+        "quirewise-spreadsheet",
+        "quirewise-subtitle",
+        "quirewise-text"
+      ]
+    },
+    "core/byte_utils.h": {
+      "sha256": "970761d5ac2780619983a4d42e5f55548c17916687581aa9a730f01aa8eb4222",
+      "repositories": [
+        "quirewise-archive",
+        "quirewise-audio",
+        "quirewise-comic",
+        "quirewise-ebook",
+        "quirewise-image",
+        "quirewise-page",
+        "quirewise-pdg",
+        "quirewise-text",
+        "quirewise-vector"
+      ]
+    },
+    "core/data_document.h": {
+      "sha256": "851ae1729148344e9a0a97447d7c8f5a67f1b9896bbaf3b65699f84f18f331c7",
+      "repositories": [
+        "quirewise-audio",
+        "quirewise-data",
+        "quirewise-ebook",
+        "quirewise-page",
+        "quirewise-spreadsheet",
+        "quirewise-subtitle",
+        "quirewise-text"
+      ]
+    },
+    "core/format_registry.h": {
+      "sha256": "82c7b853dc7319c6571a162b1202b13ed095b3abf32aeba791cdb00e48c1cd26",
+      "repositories": [
+        "quirewise-audio",
+        "quirewise-data",
+        "quirewise-page",
+        "quirewise-spreadsheet",
+        "quirewise-subtitle",
+        "quirewise-text"
+      ]
+    },
+    "core/layout_document.h": {
+      "sha256": "9fda448338d612d4abbf281750ba6664d12761382e76af7dd916ca2e384b44f0",
+      "repositories": [
+        "quirewise-audio",
+        "quirewise-data",
+        "quirewise-ebook",
+        "quirewise-page",
+        "quirewise-spreadsheet",
+        "quirewise-subtitle",
+        "quirewise-text"
+      ]
+    },
+    "core/page_document.h": {
+      "sha256": "51d9081cbce01a34332b06c48b4ea9d2897636a904a09594287c828ccef3cb92",
+      "repositories": [
+        "quirewise-archive",
+        "quirewise-data",
+        "quirewise-document",
+        "quirewise-image",
+        "quirewise-page",
+        "quirewise-subtitle"
+      ]
+    },
+    "core/spreadsheet_document.h": {
+      "sha256": "be8837f2c6e826450fbacca44b9872cb493c5647fb3b6ea02c6d58b1b70299fe",
+      "repositories": [
+        "quirewise-audio",
+        "quirewise-data",
+        "quirewise-ebook",
+        "quirewise-page",
+        "quirewise-spreadsheet",
+        "quirewise-subtitle",
+        "quirewise-text"
+      ]
+    },
+    "core/subtitle_document.h": {
+      "sha256": "12bda4b43305e73012fea0ead9aedccb3def8bba6e09a4a057c0a809590cd49b",
+      "repositories": [
+        "quirewise-audio",
+        "quirewise-data",
+        "quirewise-ebook",
+        "quirewise-page",
+        "quirewise-spreadsheet",
+        "quirewise-subtitle",
+        "quirewise-text"
+      ]
+    },
+    "core/text_buffer.h": {
+      "sha256": "b701b9c19ba68a0e3dd47b87c8f036b5461c3de74260c171482b2230bd9f68e6",
+      "repositories": [
+        "quirewise-data",
+        "quirewise-document",
+        "quirewise-ebook",
+        "quirewise-spreadsheet",
+        "quirewise-subtitle",
+        "quirewise-text"
+      ]
+    },
+    "core/writer_registry.h": {
+      "sha256": "59030fa46ed6bc53a22cf64577548f1f5d40e54f7cc66549803e9ae5e3a0c575",
+      "repositories": [
+        "quirewise-data",
+        "quirewise-subtitle"
+      ]
+    },
+    "core/xml_parser.h": {
+      "sha256": "735f0cb439980f070398a1490b089328910bbd9bd644f0db6afab59ca98b3c10",
+      "repositories": [
+        "quirewise-data",
+        "quirewise-document",
+        "quirewise-ebook",
+        "quirewise-spreadsheet",
+        "quirewise-vector"
+      ]
+    },
+    "formats/archive/zip_native.h": {
+      "sha256": "aa1afe68df93227730649cff3d2f4dabdb6cc2038fdfc5fff75e98ed39989e49",
+      "repositories": [
+        "quirewise-archive",
+        "quirewise-document",
+        "quirewise-ebook",
+        "quirewise-page",
+        "quirewise-spreadsheet"
+      ]
+    },
+    "formats/svg/svg_limits.h": {
+      "sha256": "82b21f401f7b6d38f50a92826790834f413923e5d2bf3065ca551ab42b65b318",
+      "repositories": [
+        "quirewise-document",
+        "quirewise-vector"
+      ]
+    }
+  }
+}

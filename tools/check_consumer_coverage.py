@@ -20,6 +20,11 @@ from pathlib import Path
 
 IDENTIFIER_RE = re.compile(r"\b([A-Za-z][A-Za-z0-9_]*)\b")
 CALL_RE = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*\(")
+# Public API functions are declared with one of the export macros; the name
+# must use a public prefix so macro helpers on the same line are not matched.
+API_DECL_RE = re.compile(
+    r"\b(?:QW|PDG|PDZ)_API\b[^;{]*?\b((?:qw|pdg|pdz)_[A-Za-z0-9_]*)\s*\("
+)
 
 PACKAGE_TARGETS: dict[str, str] = {
     "quirewise-archive": "libquirewise_archive",
@@ -58,6 +63,19 @@ def header_declarations(include_dir: Path) -> set[str]:
     return names
 
 
+def header_function_declarations(include_dir: Path) -> set[str]:
+    """Function names declared with a public export macro in the headers."""
+
+    names: set[str] = set()
+    for header in sorted(include_dir.rglob("*.h")):
+        for line in header.read_text(encoding="utf-8", errors="replace").splitlines():
+            if line.lstrip().startswith("#"):
+                continue
+            for match in API_DECL_RE.finditer(line):
+                names.add(match.group(1))
+    return names
+
+
 def archive_symbols(archive: Path, nm: str) -> set[str]:
     completed = subprocess.run(
         [nm, "--defined-only", str(archive)],
@@ -92,6 +110,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--json", type=Path, required=True)
     parser.add_argument("--mapping-out", type=Path,
                         help="write per-package function-to-consumer mapping")
+    parser.add_argument("--strict", action="store_true",
+                        help="exit 1 when a header declares a function the "
+                             "library does not export")
     return parser.parse_args()
 
 
@@ -109,11 +130,17 @@ def main() -> int:
     packages: list[dict[str, object]] = []
     total_declared = 0
     total_covered = 0
+    total_missing = 0
     for package, target in PACKAGE_TARGETS.items():
         include_dir = workspace / "libraries" / package / "include"
         declared = header_declarations(include_dir) if include_dir.is_dir() else set()
+        declared_functions = (
+            header_function_declarations(include_dir)
+            if include_dir.is_dir() else set()
+        )
         archive = next(library_dir.glob(target + ".*"), None)
         exported = archive_symbols(archive, args.nm) if archive else set()
+        missing = sorted(declared_functions - exported)
         public_api = sorted(declared & exported)
         covered = sorted(set(public_api) & all_calls)
         uncovered = sorted(set(public_api) - all_calls)
@@ -125,16 +152,19 @@ def main() -> int:
         }
         total_declared += len(public_api)
         total_covered += len(covered)
+        total_missing += len(missing)
         packages.append(
             {
                 "package": package,
                 "target": target,
                 "declared_in_headers": len(declared),
+                "declared_functions": len(declared_functions),
                 "exported": len(exported),
                 "public_api": len(public_api),
                 "covered": len(covered),
                 "coverage": round(len(covered) / len(public_api), 4) if public_api else 0.0,
                 "uncovered": uncovered,
+                "declared_not_exported": missing,
                 "mapped": mapping,
             }
         )
@@ -145,6 +175,7 @@ def main() -> int:
         "public_api_total": total_declared,
         "covered_total": total_covered,
         "coverage": round(total_covered / total_declared, 4) if total_declared else 0.0,
+        "declared_not_exported_total": total_missing,
         "packages": packages,
     }
     if args.mapping_out:
@@ -173,7 +204,16 @@ def main() -> int:
           f"({report['coverage'] * 100:.1f}%)")
     for item in packages:
         print(f"  {item['package']:32s} api={item['public_api']:4d} "
-              f"covered={item['covered']:4d} ({item['coverage'] * 100:5.1f}%)")
+              f"covered={item['covered']:4d} ({item['coverage'] * 100:5.1f}%) "
+              f"missing={len(item['declared_not_exported']):d}")
+    if total_missing:
+        print(f"error: {total_missing} declared function(s) are not exported",
+              file=sys.stderr)
+        for item in packages:
+            for function in item["declared_not_exported"]:
+                print(f"  {item['package']}: {function}", file=sys.stderr)
+        if args.strict:
+            return 1
     return 0
 
 

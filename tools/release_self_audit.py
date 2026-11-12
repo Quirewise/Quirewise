@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -26,9 +27,26 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workspace", type=Path,
                         default=Path(__file__).resolve().parents[2])
+    platform_tag = "windows" if os.name == "nt" else "linux"
+    parser.add_argument("--release-dir", type=Path,
+                        default=Path(".tmp/release"))
+    parser.add_argument("--static-prefix", type=Path,
+                        default=Path(f".tmp/acceptance/{platform_tag}-static/install"))
+    parser.add_argument("--shared-prefix", type=Path,
+                        default=Path(f".tmp/acceptance/{platform_tag}-shared/install"))
+    parser.add_argument("--report", type=Path,
+                        default=Path("RELEASE_ACCEPTANCE_REPORT.md"))
+    parser.add_argument("--allow-pending-signoff", action="store_true",
+                        help="audit a new snapshot before the independent "
+                             "reviewer has signed it")
     args = parser.parse_args()
     root = args.workspace.resolve()
-    release = root / ".tmp" / "release"
+    release = (root / args.release_dir).resolve()
+    static_prefix = (root / args.static_prefix).resolve()
+    shared_prefix = (root / args.shared_prefix).resolve()
+    static_build = static_prefix.parent
+    shared_build = shared_prefix.parent
+    report_path = (root / args.report).resolve()
     repos = [root / "app", root / "external-consumer-template"] + [
         root / "libraries" / p.name
         for p in sorted((root / "libraries").glob("quirewise-*"))
@@ -46,15 +64,21 @@ def main() -> int:
     checks["license_identical_mit"] = (
         len(bodies) == 1 and next(iter(bodies)).startswith(b"MIT License"))
     checks["installed_licenses_static"] = sum(
-        1 for _ in (root / ".tmp/acceptance/static/install/share/doc/quirewise").rglob("LICENSE"))
+        1 for _ in (static_prefix / "share/doc/quirewise").rglob("LICENSE"))
     checks["installed_licenses_shared"] = sum(
-        1 for _ in (root / ".tmp/acceptance/shared/install/share/doc/quirewise").rglob("LICENSE"))
+        1 for _ in (shared_prefix / "share/doc/quirewise").rglob("LICENSE"))
 
+    legacy_linux_static = root / ".tmp/acceptance/linux-static/summary.json"
+    legacy_linux_shared = root / ".tmp/acceptance/linux-shared/summary.json"
     summaries = {
         "windows_static": release / "static-summary.json",
         "windows_shared": release / "shared-summary.json",
-        "linux_static": root / ".tmp/acceptance/linux-static/summary.json",
-        "linux_shared": root / ".tmp/acceptance/linux-shared/summary.json",
+        "linux_static": (release / "linux-static-summary.json"
+                         if (release / "linux-static-summary.json").is_file()
+                         else legacy_linux_static),
+        "linux_shared": (release / "linux-shared-summary.json"
+                         if (release / "linux-shared-summary.json").is_file()
+                         else legacy_linux_shared),
     }
     checks["summaries"] = {}
     for name, path in summaries.items():
@@ -88,9 +112,9 @@ def main() -> int:
         manifests[name] = manifest["file_count"]
     checks["manifest_file_counts"] = manifests
     checks["manifest_recount_ok"] = (
-        sum(1 for p in (root / ".tmp/acceptance/static/install").rglob("*") if p.is_file())
+        sum(1 for p in static_prefix.rglob("*") if p.is_file())
         == manifests["install-manifest-static.json"]
-        and sum(1 for p in (root / ".tmp/acceptance/shared/install").rglob("*") if p.is_file())
+        and sum(1 for p in shared_prefix.rglob("*") if p.is_file())
         == manifests["install-manifest-shared.json"]
     )
 
@@ -128,25 +152,27 @@ def main() -> int:
     checks["reviewer_signoff"] = signoff.is_file()
     checks["reviewer_signoff_sha256"] = (
         hashlib.sha256(signoff.read_bytes()).hexdigest() if signoff.is_file() else None)
-    report = root / "RELEASE_ACCEPTANCE_REPORT.md"
-    if report.is_file() and signoff.is_file():
+    if report_path.is_file() and signoff.is_file():
         checks["report_contains_signoff_hash"] = (
             checks["reviewer_signoff_sha256"]
-            in report.read_text(encoding="utf-8"))
+            in report_path.read_text(encoding="utf-8"))
     else:
         checks["report_contains_signoff_hash"] = False
 
     checks["workflow"] = (root / "app/.github/workflows/ci.yml").is_file()
-    checks["report"] = report.is_file()
+    checks["report"] = report_path.is_file()
     checks["app_tmp_removed"] = not (root / "app/.tmp").exists()
     checks["stray_tmp_removed"] = not (root / " .tmp").exists()
     checks["empty_to_delete_removed"] = not (root / ".to_delete").exists()
     checks["legacy_install_prefix_removed"] = not (root / ".tmp/quirewise-agent-install").exists()
-    checks["evidence_build_retained"] = (root / ".tmp/quirewise-agent-build").is_dir()
+    checks["evidence_build_retained"] = static_build.is_dir()
     checks["runtime_ctest_present"] = any(
         "quirewise_runtime_abi" in p.read_text(encoding="utf-8", errors="replace")
-        for p in (root / ".tmp/acceptance/static/logs").glob("quirewise-runtime.ctest.log"))
+        for p in (static_build / "logs").glob("quirewise-runtime.ctest.log"))
 
+    signoff_ok = (checks["reviewer_signoff"]
+                  and checks["report_contains_signoff_hash"])
+    checks["pending_signoff_allowed"] = args.allow_pending_signoff
     ok = (
         checks["repositories_clean"]
         and checks["license_identical_mit"]
@@ -163,8 +189,7 @@ def main() -> int:
         and checks["boundary_gate_exit"] == 0
         and checks["vendored_gate_exit"] == 0
         and checks["lock_verify_exit"] == 0
-        and checks["reviewer_signoff"]
-        and checks["report_contains_signoff_hash"]
+        and (signoff_ok or args.allow_pending_signoff)
         and checks["workflow"]
         and checks["report"]
         and checks["app_tmp_removed"]

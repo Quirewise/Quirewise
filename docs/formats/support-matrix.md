@@ -37,3 +37,11 @@
 6. 需要后端的路线受程序构建能力约束。PDF/A 还要求配置 veraPDF；未配置或验证未通过时不发布 PDF/A 结果。
 
 可选扫描页处理、CLI 格式别名和参数分别见[PDF 与页面格式](pdf-and-pages.md)及[命令行使用](../usage/command-line.md)。
+
+## CLI 注记（2026-11-12）
+
+`quirewise INPUT [--to pdf|txt|png]` 覆盖上表的 PDF 输出路线（含 PDZ/UVZ 的 PDF
+页载荷栅格化与 `pdg_type 0x1A` 发行版 PDF 合并）、PDF→TXT 与首页 PNG 栅格化；
+音频行只在 `--check` 下提供容器/包解析。依赖外部后端的路线（PDF/A、RAW
+去马赛克、视频等）在 CLI 中返回稳定的 `UNSUPPORTED`。`--page` 选择页面框，
+`--pages` 选择 PDG/PDZ 成员规则，参数细节见命令行文档。

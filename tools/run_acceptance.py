@@ -62,7 +62,8 @@ APP_LINK_OPTIONS = [
 
 class Runner:
     def __init__(self, workspace: Path, build_root: Path, install_root: Path,
-                 shared: bool, jobs: int, keep: bool, skip_tests: bool):
+                 shared: bool, jobs: int, keep: bool, skip_tests: bool,
+                 sanitize: bool = False):
         self.workspace = workspace
         self.build_root = build_root
         self.install_root = install_root
@@ -70,6 +71,7 @@ class Runner:
         self.jobs = jobs
         self.keep = keep
         self.skip_tests = skip_tests
+        self.sanitize = sanitize
         self.generator = "Ninja" if shutil.which("ninja") else ""
         self.logs = build_root / "logs"
         self.results: list[dict] = []
@@ -80,6 +82,9 @@ class Runner:
             env["PATH"] = str(self.install_root / "bin") + os.pathsep + env.get("PATH", "")
             env["LD_LIBRARY_PATH"] = (str(self.install_root / "lib") + ":"
                                       + env.get("LD_LIBRARY_PATH", ""))
+        if self.sanitize:
+            env["ASAN_OPTIONS"] = "detect_leaks=0:abort_on_error=1"
+            env["UBSAN_OPTIONS"] = "halt_on_error=1:print_stacktrace=1"
         return env
 
     def run(self, name: str, command: list[str], cwd: Path | None = None,
@@ -116,6 +121,13 @@ class Runner:
               prefix_path: str, extra: list[str]) -> bool:
         if build.exists() and not self.keep:
             shutil.rmtree(build)
+        if self.sanitize:
+            extra = extra + [
+                "-DCMAKE_C_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer -g",
+                "-DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer -g",
+                "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined",
+                "-DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address,undefined",
+            ]
         command = [
             "cmake", "-S", str(source), "-B", str(build),
         ] + (["-G", self.generator] if self.generator else []) + [
@@ -264,6 +276,7 @@ class Runner:
             "workspace": str(self.workspace),
             "install_root": str(self.install_root),
             "shared": self.shared,
+            "sanitize": self.sanitize,
             "steps": self.results,
             "failed": [item["step"] for item in self.results if not item["ok"]],
         }
@@ -283,12 +296,21 @@ def main() -> int:
     parser.add_argument("--skip-app", action="store_true")
     parser.add_argument("--skip-gates", action="store_true")
     parser.add_argument("--skip-tests", action="store_true")
+    parser.add_argument("--sanitize", action="store_true",
+                        help="build and test with ASan+UBSan (Linux/WSL only)")
     parser.add_argument("--summary", type=Path)
     args = parser.parse_args()
+    if args.sanitize and os.name == "nt":
+        parser.error("--sanitize needs a Linux/WSL toolchain; MinGW has no ASan runtime")
 
     workspace = args.workspace.resolve()
     suffix = "shared" if args.shared else "static"
-    build_root = (args.build_dir or workspace / ".tmp" / "acceptance" / suffix).resolve()
+    platform_tag = "windows" if os.name == "nt" else "linux"
+    if args.build_dir is None:
+        build_root = (workspace / ".tmp" / "acceptance" /
+                      f"{platform_tag}-{suffix}").resolve()
+    else:
+        build_root = args.build_dir.resolve()
     install_root = (args.install_dir or build_root / "install").resolve()
     build_root.mkdir(parents=True, exist_ok=True)
     # A reused install prefix keeps headers that a package stopped installing.
@@ -298,7 +320,7 @@ def main() -> int:
     install_root.mkdir(parents=True, exist_ok=True)
 
     runner = Runner(workspace, build_root, install_root, args.shared,
-                    args.jobs, args.keep, args.skip_tests)
+                    args.jobs, args.keep, args.skip_tests, args.sanitize)
     ok = runner.build_libraries()
     if ok:
         ok = runner.install_licenses()

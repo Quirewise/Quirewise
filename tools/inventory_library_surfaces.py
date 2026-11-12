@@ -358,7 +358,8 @@ def main() -> int:
             f"install_rules={len(library['install_rules'])} "
             f"tests={library['test_entrypoints']['status']}"
         )
-    return 0 if inventory["library_count"] == 14 and missing_git == 0 else 1
+    return 0 if (inventory["library_count"] > 0 and missing_git == 0
+                 and unverified_tests == 0) else 1
 
 
 if __name__ == "__main__":
