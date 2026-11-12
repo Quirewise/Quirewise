@@ -14,8 +14,12 @@ from pathlib import Path
 
 
 def git(repo: Path, *args: str) -> str:
-    completed = subprocess.run(["git", "-C", str(repo), *args],
-                               capture_output=True, text=True, check=False)
+    try:
+        completed = subprocess.run(["git", "-C", str(repo), *args],
+                                   capture_output=True, text=True, check=False,
+                                   timeout=60)
+    except subprocess.TimeoutExpired as error:
+        raise SystemExit(f"git {' '.join(args)} timed out in {repo}") from error
     if completed.returncode != 0:
         raise SystemExit(f"git {' '.join(args)} failed in {repo}: "
                          f"{completed.stderr.strip()}")

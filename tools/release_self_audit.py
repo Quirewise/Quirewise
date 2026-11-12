@@ -13,14 +13,21 @@ EXPECTED_STEPS = 81
 
 
 def git(repo: Path, *args: str) -> str:
-    result = subprocess.run(["git", "-C", str(repo), *args],
-                            capture_output=True, text=True, check=False)
+    try:
+        result = subprocess.run(["git", "-C", str(repo), *args],
+                                capture_output=True, text=True, check=False,
+                                timeout=60)
+    except subprocess.TimeoutExpired:
+        return "<git-timeout>"
     return result.stdout.strip()
 
 
 def run_tool(root: Path, *args: str) -> subprocess.CompletedProcess:
-    return subprocess.run(["python", *args], cwd=root,
-                          capture_output=True, text=True)
+    try:
+        return subprocess.run(["python", *args], cwd=root,
+                              capture_output=True, text=True, timeout=1200)
+    except subprocess.TimeoutExpired:
+        return subprocess.CompletedProcess(args, 124, "", "timeout")
 
 
 def main() -> int:

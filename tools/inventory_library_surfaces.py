@@ -92,15 +92,19 @@ def public_api_names(header: Path) -> list[str]:
 
 
 def git_value(repository: Path, *arguments: str) -> str | None:
-    result = subprocess.run(
-        ["git", *arguments],
-        cwd=repository,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
+    try:
+        result = subprocess.run(
+            ["git", *arguments],
+            cwd=repository,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+            timeout=60,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
     if result.returncode != 0:
         return None
     return result.stdout.strip()
