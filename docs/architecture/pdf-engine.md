@@ -35,6 +35,23 @@ xref/ObjStm/页码解析器。
 - 文本：每个字体优先使用 `/ToUnicode` CMap，缺失时回退 UCS-2/单字节；
 - 容器：CEB 解密后的 PDF 由 document 读取，page 不再声称解析 PDF。
 
+## PDG 页内 PDF 载荷
+
+PDG 页（`%pdgz` 容器成员或 UVZ 页）的载荷可能直接是 PDF 文件。PDG 包只识别
+并返回该 PDF 字节（`PDG_OUTPUT_PDF`），不解析内容；栅格化由组合层（app 的
+page routes）调用本引擎完成，因此仍然只有一个 PDF 引擎：
+
+- `qw_pdf_open` → `qw_pdf_page_geometry` → `qw_pdf_render_page`；
+- 页载荷按单页语义处理：只渲染第 1 页，按 300 dpi（与 `PDZ_PDF_DPI` 一致）
+  渲染，嵌入 PDF 后保持原始页面尺寸；
+- 渲染结果经 PDZ 的 PDF writer 嵌入，页面单位与图片内容流一致；
+- `pdg_type 0x1A` 成员保存的是完整的多页发行版 PDF，应按 Route 1 合并而不是
+  栅格化；合并尚未实现，容器转换对此保持显式 `UNSUPPORTED`，不静默丢页。
+
+PDG 包本身对 `pdg_render_memory` 的 `PDG_OUTPUT_PDF` 仍返回
+`PDG_ERR_EXTERNAL_DECODER_REQUIRED`：包边界不得依赖 document，组合层是唯一
+允许同时持有两者的位置。产品路径（CLI 的 PDZ/UVZ 转换）不再需要外部光栅化器。
+
 ## 回归与门禁
 
 - document：35 项 CTest（xref/ObjStm/加密/ToUnicode/图像/合并/公开 API）；

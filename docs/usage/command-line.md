@@ -45,8 +45,8 @@ quirewise --version | --libraries | --help
 | 纯文本 / Markdown（txt/md 等） | 按行渲染段落 |
 | PNG/JPEG/GIF/BMP/WebP/TIFF 等图片 | 单页 PDF，页面框可用 `--page` 控制 |
 | DjVu | 逐页渲染为多页 PDF |
-| PDG/PDZ（`%pdgz`） | 按 `--pages` 规则重建 PDF |
-| UVZ | 逐页解码（图片或 PDG）为多页 PDF |
+| PDG/PDZ（`%pdgz`） | 按 `--pages` 规则重建 PDF；页载荷本身是 PDF 时由内部 PDF 引擎按 300 dpi 栅格化首页（`pdg_type 0x1A` 多页 PDF 成员仍需合并，当前返回不支持） |
+| UVZ | 逐页解码（图片、PDG 或 PDF 页载荷）为多页 PDF |
 | CAJ、CEB | 提取/解密为 PDF |
 | SRT/VTT/LRC/ASS/SSA/SAMI/MicroDVD/SCC | 时间轴文本页转 PDF |
 | JSON/JSONL/YAML/TOML/XML/OPML/IPYNB/vCard | 类型化值树渲染为表格/列表后转 PDF |

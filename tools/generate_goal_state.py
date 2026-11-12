@@ -148,8 +148,8 @@ def main() -> int:
         "blockers": [],
         "next_actions": [
             "Enable the CI workflow with a token that can read Quirewise/quirewise-pdg; the workflow has not run on Actions yet.",
-            "Decide whether PDG_OUTPUT_PDF payload decoding needs an internal PDF rasteriser, or record it as a documented limitation.",
-            "Port the unified quirewise INPUT --to FORMAT CLI into the app composition shell.",
+            "Implement Route 1: merge pdg_type 0x1A native PDF members into the output PDF; PDF page payloads already rasterise through the internal Document engine.",
+            "Finish the CLI options listed as remaining in app/docs/architecture/cli-port-plan.md (keys, scan preprocessing, PDF/A, directory inputs).",
         ],
         "generated_at_utc": now,
         "generator": "app/tools/generate_goal_state.py",

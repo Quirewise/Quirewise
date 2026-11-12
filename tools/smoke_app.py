@@ -3,13 +3,18 @@
 
 The test writes a small HTML file inside a temporary directory, converts it to
 PDF, extracts the text back, checks --check, and verifies that existing outputs
-are never overwritten. It is invoked by run_acceptance.py as the app.smoke
-step so every build matrix exercises the CLI.
+are never overwritten. It also covers the PDG page routes: a PDZ container and
+a UVZ bundle whose page payload is a PDF must be rasterised through the
+internal PDF engine (no external rasteriser). It is invoked by
+run_acceptance.py as the app.smoke step so every build matrix exercises the
+CLI.
 """
 from __future__ import annotations
 
 import base64
+import hashlib
 import pathlib
+import struct
 import subprocess
 import sys
 import tempfile
@@ -20,6 +25,140 @@ PNG_1X1 = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQ"
     "DwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
 )
+
+# --- PDG page-payload PDF fixtures -----------------------------------------
+# The PDZ container table is encrypted with the engine's TEA-128 variant; the
+# helpers below mirror quirewise-crypto's qw_crypto_pdg_tea128_ecb_decrypt so
+# the fixture can be built without a Quirewise dependency.
+
+_M32 = 0xFFFFFFFF
+_TEA_DELTA = 0x61C88647
+_TEA_SUM0 = 0xE3779B90
+_PDZ_CATALOG_KEY = (
+    b"4D346125645E6543205C6240795C206A50346141634C6B6F655C742F505E6466"
+)
+_PDZ_KEY_CONST = (0x00820208, 0x01220208, 0x00805038, 0x00920208)
+
+
+def _tea_f(a: int, s: int, ka: int, kb: int) -> int:
+    return (((a >> 5) + ka) ^ ((a << 4) + kb) ^ (a + s)) & _M32
+
+
+def _tea_encrypt_block(block: bytes, key: tuple[int, int, int, int]) -> bytes:
+    v0, v1, v2, v3 = struct.unpack("<4I", block)
+    for round_index in range(15, -1, -1):
+        total = (_TEA_SUM0 + round_index * _TEA_DELTA) & _M32
+        v0 = (v0 + _tea_f(v1, total, key[1], key[0])) & _M32
+        v1 = (v1 + _tea_f(v2, total, key[3], key[2])) & _M32
+        v2 = (v2 + _tea_f(v3, total, key[3], key[0])) & _M32
+        v3 = (v3 + _tea_f(v0, total, key[1], key[2])) & _M32
+    return struct.pack("<4I", v0, v1, v2, v3)
+
+
+def _pdz_catalog_key() -> tuple[int, int, int, int]:
+    digest = hashlib.md5(_PDZ_CATALOG_KEY).digest()
+    words = []
+    for index in range(4):
+        value = struct.unpack("<I", digest[index * 4:index * 4 + 4])[0]
+        words.append(value ^ _PDZ_KEY_CONST[index])
+    return tuple(words)
+
+
+def _pdz_container(members: list[tuple[bytes, bytes]]) -> bytes:
+    """Build a %pdgz container with plaintext members and an encrypted table."""
+    header = bytearray(0x60)
+    header[0:5] = b"%pdgz"
+    header[8:12] = b"1.01"
+    header[0x0D] = 4
+    header[0x0F] = 2
+    header[0x1C:0x1C + 17] = b"Made by PacketPdg"
+    payload = bytearray()
+    table = bytearray()
+    cursor = 0x60
+    for name, data in members:
+        table += name.ljust(12, b"\x00") + struct.pack("<II", cursor, len(data))
+        payload += data
+        cursor += len(data)
+    while len(table) % 16:
+        table += b"\x00"
+    while len(table) // 20 < len(members):
+        table += b"\x00" * 20
+    key = _pdz_catalog_key()
+    encrypted = b"".join(
+        _tea_encrypt_block(bytes(table[index:index + 16]), key)
+        for index in range(0, len(table), 16))
+    struct.pack_into("<I", header, 0x14, 0x60 + len(payload))
+    struct.pack_into("<I", header, 0x18, len(encrypted))
+    return bytes(header) + bytes(payload) + encrypted
+
+
+def _pdg_pdf_page(pdf: bytes) -> bytes:
+    """Wrap a PDF in a PDG type 0x00 page blob (payload stored as-is)."""
+    header = bytearray(0x8C)
+    header[0:2] = b"HH"
+    header[2] = 1
+    header[0x0F] = 0x00
+    struct.pack_into("<I", header, 0x18, 0x8C)
+    struct.pack_into("<I", header, 0x1C, len(pdf))
+    return bytes(header) + pdf
+
+
+def _pdg_pdf_member(pdf: bytes) -> bytes:
+    """Wrap a PDF in a PDG 0x1A page blob (the native PDF-member form)."""
+    import zlib
+    stream = zlib.compress(pdf)
+    header = bytearray(0x8C)
+    header[0:2] = b"HH"
+    header[2] = 1
+    header[0x0F] = 0x1A
+    struct.pack_into("<I", header, 0x18, 0x8C)
+    struct.pack_into("<I", header, 0x1C, len(stream))
+    return bytes(header) + stream
+
+
+def _pdf_page_fixture() -> bytes:
+    """A one-page 72x72 pt PDF drawing an 8x8 grey image."""
+    pixels = bytes((index * 37) & 0xFF for index in range(64))
+    content = b"q 72 0 0 72 0 0 cm /Im0 Do Q"
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 72 72] "
+        b"/Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>",
+        b"<< /Length %d >>\nstream\n" % len(content) + content + b"\nendstream",
+        b"<< /Type /XObject /Subtype /Image /Width 8 /Height 8 "
+        b"/ColorSpace /DeviceGray /BitsPerComponent 8 /Length 64 >>\nstream\n"
+        + pixels + b"\nendstream",
+    ]
+    document = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
+    offsets = [0]
+    for number, body in enumerate(objects, start=1):
+        offsets.append(len(document))
+        document += b"%d 0 obj\n" % number + body + b"\nendobj\n"
+    xref = len(document)
+    document += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objects) + 1)
+    for offset in offsets[1:]:
+        document += b"%010d 00000 n \n" % offset
+    document += (b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n"
+                 % (len(objects) + 1, xref))
+    return bytes(document)
+
+
+def _pdf_image_stats(pdf: bytes) -> tuple[int, float]:
+    """Distinct byte values and mean byte of the first raw image stream."""
+    marker = b"/Subtype /Image"
+    position = pdf.find(marker)
+    if position < 0:
+        return 0, -1.0
+    stream = pdf.find(b"stream\n", position)
+    length_at = pdf.rfind(b"/Length ", position, stream)
+    if stream < 0 or length_at < 0:
+        return 0, -1.0
+    length = int(pdf[length_at + 8:pdf.find(b" ", length_at + 8)])
+    data = pdf[stream + 7:stream + 7 + length]
+    if len(data) != length or not data:
+        return 0, -1.0
+    return len(set(data)), sum(data) / len(data)
 
 
 def fail(message: str) -> "NoReturn":
@@ -144,6 +283,46 @@ def main() -> int:
         comic_pdf = root / "comic.pdf"
         if not comic_pdf.is_file() or comic_pdf.read_bytes()[:5] != b"%PDF-":
             return fail("CBZ to PDF produced no PDF")
+
+        # PDG page payload stored as PDF (PDZ container and UVZ page): the
+        # page routes rasterise it with the internal PDF engine.
+        page_pdf = _pdf_page_fixture()
+        (root / "pdzbook.pdz").write_bytes(
+            _pdz_container([(b"000001", page_pdf)]))
+        run(exe, ["pdzbook.pdz"], root)
+        pdzbook_pdf = root / "pdzbook.pdf"
+        if (not pdzbook_pdf.is_file() or
+                pdzbook_pdf.read_bytes()[:5] != b"%PDF-" or
+                b"/Count 1" not in pdzbook_pdf.read_bytes()):
+            return fail("PDZ PDF payload page did not become one PDF page")
+        distinct, mean = _pdf_image_stats(pdzbook_pdf.read_bytes())
+        if distinct < 8 or not 5.0 <= mean <= 250.0:
+            return fail("PDZ PDF payload page rendered blank")
+        check = run(exe, ["pdzbook.pdz", "--check"], root)
+        if check.stdout.strip() != "OK":
+            return fail(f"PDZ --check printed {check.stdout!r}")
+
+        with zipfile.ZipFile(root / "uvzbook.uvz", "w") as archive:
+            archive.writestr("000001.pdg", _pdg_pdf_page(page_pdf))
+        run(exe, ["uvzbook.uvz"], root)
+        uvzbook_pdf = root / "uvzbook.pdf"
+        if (not uvzbook_pdf.is_file() or
+                uvzbook_pdf.read_bytes()[:5] != b"%PDF-" or
+                b"/Count 1" not in uvzbook_pdf.read_bytes()):
+            return fail("UVZ PDF payload page did not become one PDF page")
+        distinct, mean = _pdf_image_stats(uvzbook_pdf.read_bytes())
+        if distinct < 8 or not 5.0 <= mean <= 250.0:
+            return fail("UVZ PDF payload page rendered blank")
+        check = run(exe, ["uvzbook.uvz", "--check"], root)
+        if check.stdout.strip() != "OK":
+            return fail(f"UVZ --check printed {check.stdout!r}")
+
+        # A pdg_type 0x1A member holds a multi-page publisher PDF; merging it
+        # is not implemented, so the container must fail rather than silently
+        # drop the page.
+        (root / "member.pdz").write_bytes(
+            _pdz_container([(b"000001", _pdg_pdf_member(page_pdf))]))
+        run(exe, ["member.pdz"], root, expect=1)
 
         # Batch conversion into --out-dir.
         outdir = root / "out"
