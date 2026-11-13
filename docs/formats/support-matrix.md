@@ -23,7 +23,7 @@
 | 单页图像 | JPEG、PNG、BMP、GIF、TIFF、WebP、JP2/J2K、QOI、Netpbm 等 | PDF 和已注册的单页图像 writer；动画或多页输入只在明确支持的目标上保留为多页。 |
 | 相机 RAW | DNG/TIFF-CFA、CR3、RAF、X3F、CRW、MRW 等 | PDF 和已注册的单页图像 writer；像素解码与去马赛克受 LibRaw 构建能力约束。 |
 | 矢量与打印图形 | SVG/SVGZ、EPS、PS、带 Illustrator 标记的 legacy AI | PDF、单页图像；部分路线可在 PDF 与 EPS/PS 之间转换。SVG 输出仅接受受支持页面图像。 |
-| CAD 图纸 | DXF（ASCII/binary）、DWG R13/R14/R2000/R2004、DWG R2007+ | DXF 完整常用实体；DWG 当前为 LINE/CIRCLE/ARC/LWPOLYLINE/TEXT，R2007+ 仅探测。详见 [CAD](cad.md)。 |
+| CAD 图纸 | DXF（ASCII/binary）、DWG R13/R14/R2000/R2004/R2007、DWG R2010+ | DXF 完整常用实体；DWG 当前为 LINE/CIRCLE/ARC/LWPOLYLINE/TEXT（R2007 TEXT 暂未接入），R2010+ 仅探测。详见 [CAD](cad.md)。 |
 | 漫画与图像归档 | CBZ、CBR/RAR/RAR5、CB7/7z、CBT/USTAR、图像目录 | PDF、CBZ、CBT；归档成员按支持的图像格式逐页处理。 |
 | 标准音频 | MP2、MP3、FLAC、Musepack、M4A/AAC、WAV、OGG、Opus、AIFF、CAF、WMA、Matroska/WebM、DSF/DFF/DSS 等 | **解析（packet reader）**：解析容器与音频包边界；PCM/未压缩容器输出未压缩采样包；压缩编码只输出压缩包。解码、重采样、编码/封装与播放不在发布包内（需外部解码器）。具体子集见[音频](audio.md)。 |
 | 加密音乐容器 | NCM、QMC、KGM/KGMA/VPR、旧版 KWM | **解析并解密为底层压缩音频负载**（不是 PCM）；不含解码/转码；KGM v5 等变体需要显式密钥。见[音频](audio.md)。 |
@@ -45,6 +45,7 @@
 页载荷栅格化与 `pdg_type 0x1A` 发行版 PDF 合并）、PDF→TXT 与首页 PNG 栅格化；
 音频行只在 `--check` 下提供容器/包解析。DXF/DWG 走 CAD 栅格路线（文本暂为
 占位条，矢量文本用库级 SVG 输出；`--to txt` 输出文本清单）；DWG
-R13/R14/R2000/R2004 走同一路线，R2007+ 在 CLI 中返回稳定的 `UNSUPPORTED`。依赖外部
+R13/R14/R2000/R2004/R2007 走同一路线，R2010+ 在 CLI 中返回稳定的
+`UNSUPPORTED`。依赖外部
 后端的路线（PDF/A、RAW 去马赛克、视频等）在 CLI 中返回稳定的 `UNSUPPORTED`。
 `--page` 选择页面框，`--pages` 选择 PDG/PDZ 成员规则，参数细节见命令行文档。

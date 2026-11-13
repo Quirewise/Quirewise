@@ -443,6 +443,15 @@ def main() -> int:
             check = run(exe, [str(dwg2004), "--check"], root)
             if check.stdout.strip() != "OK":
                 return fail(f"DWG R2004 --check printed {check.stdout!r}")
+        dwg2007 = workspace / "app/testfile/cad/line_2007.dwg"
+        if dwg2007.is_file():
+            pdf2007 = root / "cad-2007.pdf"
+            run(exe, [str(dwg2007), "-o", str(pdf2007)], root)
+            if not pdf2007.is_file() or pdf2007.read_bytes()[:5] != b"%PDF-":
+                return fail("DWG R2007 to PDF produced no PDF")
+            check = run(exe, [str(dwg2007), "--check"], root)
+            if check.stdout.strip() != "OK":
+                return fail(f"DWG R2007 --check printed {check.stdout!r}")
 
         (root / "data.json").write_text(
             '{"name": "Quirewise", "items": [1, 2, {"ok": true}]}',
