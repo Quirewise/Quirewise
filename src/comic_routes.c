@@ -104,7 +104,12 @@ int qw_app_comic_convert_file(const char *path,
         if (report) snprintf(report->note, sizeof(report->note),
                              "comic archive open failed with status %d",
                              (int)status);
-        return QW_STATUS_ERR_UNSUPPORTED;
+        return status == QW_COMIC_ERR_OUT_OF_MEMORY
+                   ? QW_STATUS_ERR_OUT_OF_MEMORY
+                   : (status == QW_COMIC_ERR_FORMAT ||
+                      status == QW_COMIC_ERR_EXTRACT)
+                         ? QW_STATUS_ERR_FORMAT
+                         : QW_STATUS_ERR_UNSUPPORTED;
     }
     page_count = qw_comic_archive_page_count(archive);
     if (page_count == 0u) {

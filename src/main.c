@@ -34,6 +34,10 @@
 #include "cad_routes.h"
 #endif
 
+#if defined(QUIREWISE_APP_SVG_ROUTES)
+#include "svg_routes.h"
+#endif
+
 static void print_version(void)
 {
 #ifdef QUIREWISE_APP_VERSION
@@ -277,6 +281,20 @@ static int cli_write_pdf(const char *path, const uint8_t *data, size_t size,
     return QW_STATUS_OK;
 }
 
+/* Route failures used to be discarded: the final message always came from the
+ * document-level attempt, so e.g. a CAD parse error was reported as
+ * "no internal renderer". Remember the first specific (non-UNSUPPORTED)
+ * failure and prefer it when every route declines. */
+static void cli_remember_route_error(int rc, const QwConvertReport *route_report,
+                                     int *route_status,
+                                     QwConvertReport *saved_report)
+{
+    if (rc == QW_STATUS_OK || rc == QW_STATUS_ERR_UNSUPPORTED) return;
+    if (*route_status != QW_STATUS_OK) return;
+    *route_status = rc;
+    if (route_report) *saved_report = *route_report;
+}
+
 static int cli_run(const char *input, const char *output,
                    const char *target_name, int check, const char *out_dir,
                    int quiet, const QwAppOptions *app_options)
@@ -287,6 +305,9 @@ static int cli_run(const char *input, const char *output,
     char *default_output = NULL;
     const char *final_output = output;
     int status;
+    int route_status = QW_STATUS_OK;
+    QwConvertReport route_report;
+    memset(&route_report, 0, sizeof(route_report));
 
     /* The two option structures used to be disconnected: the app carried the
      * archive password, page box and audio track, but the library call always
@@ -335,11 +356,15 @@ static int cli_run(const char *input, const char *output,
             uint8_t *pdf = NULL;
             size_t pdf_size = 0u;
             memset(&page_report, 0, sizeof(page_report));
-            if (qw_app_page_convert_file(input, app_options, &pdf, &pdf_size,
-                                         &page_report) == QW_STATUS_OK) {
+            int route_rc = qw_app_page_convert_file(
+                input, app_options, &pdf, &pdf_size, &page_report);
+            if (route_rc == QW_STATUS_OK) {
                 qw_buffer_free(pdf);
                 status = QW_STATUS_OK;
                 report = page_report;
+            } else {
+                cli_remember_route_error(route_rc, &page_report,
+                                         &route_status, &route_report);
             }
         }
 #endif
@@ -349,12 +374,17 @@ static int cli_run(const char *input, const char *output,
             uint8_t *pdf = NULL;
             size_t pdf_size = 0u;
             memset(&subtitle_report, 0, sizeof(subtitle_report));
-            if (qw_app_subtitle_convert_file(input, &pdf, &pdf_size,
-                                             &subtitle_report) ==
-                QW_STATUS_OK) {
-                qw_buffer_free(pdf);
-                status = QW_STATUS_OK;
-                report = subtitle_report;
+            {
+                int route_rc = qw_app_subtitle_convert_file(
+                    input, &pdf, &pdf_size, &subtitle_report);
+                if (route_rc == QW_STATUS_OK) {
+                    qw_buffer_free(pdf);
+                    status = QW_STATUS_OK;
+                    report = subtitle_report;
+                } else {
+                    cli_remember_route_error(route_rc, &subtitle_report,
+                                             &route_status, &route_report);
+                }
             }
         }
 #endif
@@ -364,11 +394,17 @@ static int cli_run(const char *input, const char *output,
             uint8_t *pdf = NULL;
             size_t pdf_size = 0u;
             memset(&comic_report, 0, sizeof(comic_report));
-            if (qw_app_comic_convert_file(input, app_options, &pdf, &pdf_size,
-                                          &comic_report) == QW_STATUS_OK) {
-                qw_buffer_free(pdf);
-                status = QW_STATUS_OK;
-                report = comic_report;
+            {
+                int route_rc = qw_app_comic_convert_file(
+                    input, app_options, &pdf, &pdf_size, &comic_report);
+                if (route_rc == QW_STATUS_OK) {
+                    qw_buffer_free(pdf);
+                    status = QW_STATUS_OK;
+                    report = comic_report;
+                } else {
+                    cli_remember_route_error(route_rc, &comic_report,
+                                             &route_status, &route_report);
+                }
             }
         }
 #endif
@@ -378,11 +414,17 @@ static int cli_run(const char *input, const char *output,
             uint8_t *pdf = NULL;
             size_t pdf_size = 0u;
             memset(&data_report, 0, sizeof(data_report));
-            if (qw_app_data_convert_file(input, &pdf, &pdf_size,
-                                         &data_report) == QW_STATUS_OK) {
-                qw_buffer_free(pdf);
-                status = QW_STATUS_OK;
-                report = data_report;
+            {
+                int route_rc = qw_app_data_convert_file(
+                    input, &pdf, &pdf_size, &data_report);
+                if (route_rc == QW_STATUS_OK) {
+                    qw_buffer_free(pdf);
+                    status = QW_STATUS_OK;
+                    report = data_report;
+                } else {
+                    cli_remember_route_error(route_rc, &data_report,
+                                             &route_status, &route_report);
+                }
             }
         }
 #endif
@@ -392,9 +434,38 @@ static int cli_run(const char *input, const char *output,
             uint8_t *pdf = NULL;
             size_t pdf_size = 0u;
             memset(&cad_report, 0, sizeof(cad_report));
-            if (qw_app_cad_check_file(input, &cad_report) == QW_STATUS_OK) {
-                status = QW_STATUS_OK;
-                report = cad_report;
+            {
+                int route_rc = qw_app_cad_check_file(input, &cad_report);
+                if (route_rc == QW_STATUS_OK) {
+                    status = QW_STATUS_OK;
+                    report = cad_report;
+                } else {
+                    cli_remember_route_error(route_rc, &cad_report,
+                                             &route_status, &route_report);
+                }
+            }
+        }
+#endif
+#if defined(QUIREWISE_APP_SVG_ROUTES)
+        if (status != QW_STATUS_OK) {
+            QwConvertReport svg_report;
+            memset(&svg_report, 0, sizeof(svg_report));
+            {
+                int route_rc = qw_app_svg_check_file(input, &svg_report);
+                if (route_rc == QW_STATUS_OK) {
+                    status = QW_STATUS_OK;
+                    report = svg_report;
+                } else if (route_rc == QW_STATUS_ERR_UNSUPPORTED &&
+                           (cli_has_extension(input, "svg") ||
+                            cli_has_extension(input, "svgz"))) {
+                    if (route_status == QW_STATUS_OK) {
+                        route_status = route_rc;
+                        route_report = svg_report;
+                    }
+                } else {
+                    cli_remember_route_error(route_rc, &svg_report,
+                                             &route_status, &route_report);
+                }
             }
         }
 #endif
@@ -402,10 +473,16 @@ static int cli_run(const char *input, const char *output,
         if (status != QW_STATUS_OK) {
             QwConvertReport audio_report;
             memset(&audio_report, 0, sizeof(audio_report));
-            if (qw_app_audio_check_file(input, app_options->audio_track,
-                                        &audio_report) == QW_STATUS_OK) {
-                status = QW_STATUS_OK;
-                report = audio_report;
+            {
+                int route_rc = qw_app_audio_check_file(
+                    input, app_options->audio_track, &audio_report);
+                if (route_rc == QW_STATUS_OK) {
+                    status = QW_STATUS_OK;
+                    report = audio_report;
+                } else {
+                    cli_remember_route_error(route_rc, &audio_report,
+                                             &route_status, &route_report);
+                }
             }
         }
 #endif
@@ -418,12 +495,23 @@ static int cli_run(const char *input, const char *output,
             uint8_t *pdf = NULL;
             size_t pdf_size = 0u;
             memset(&page_report, 0, sizeof(page_report));
-            if (qw_app_page_convert_file(input, app_options, &pdf, &pdf_size,
-                                         &page_report) == QW_STATUS_OK) {
-                status = cli_write_pdf(final_output, pdf, pdf_size,
-                                       &page_report);
-                qw_buffer_free(pdf);
-                if (status == QW_STATUS_OK) report = page_report;
+            {
+                int route_rc = qw_app_page_convert_file(
+                    input, app_options, &pdf, &pdf_size, &page_report);
+                if (route_rc == QW_STATUS_OK) {
+                    status = cli_write_pdf(final_output, pdf, pdf_size,
+                                           &page_report);
+                    qw_buffer_free(pdf);
+                    if (status == QW_STATUS_OK) {
+                        report = page_report;
+                    } else {
+                        cli_remember_route_error(status, &page_report,
+                                                 &route_status, &route_report);
+                    }
+                } else {
+                    cli_remember_route_error(route_rc, &page_report,
+                                             &route_status, &route_report);
+                }
             }
         }
 #endif
@@ -433,13 +521,23 @@ static int cli_run(const char *input, const char *output,
             uint8_t *pdf = NULL;
             size_t pdf_size = 0u;
             memset(&subtitle_report, 0, sizeof(subtitle_report));
-            if (qw_app_subtitle_convert_file(input, &pdf, &pdf_size,
-                                             &subtitle_report) ==
-                QW_STATUS_OK) {
-                status = cli_write_pdf(final_output, pdf, pdf_size,
-                                       &subtitle_report);
-                qw_buffer_free(pdf);
-                if (status == QW_STATUS_OK) report = subtitle_report;
+            {
+                int route_rc = qw_app_subtitle_convert_file(
+                    input, &pdf, &pdf_size, &subtitle_report);
+                if (route_rc == QW_STATUS_OK) {
+                    status = cli_write_pdf(final_output, pdf, pdf_size,
+                                           &subtitle_report);
+                    qw_buffer_free(pdf);
+                    if (status == QW_STATUS_OK) {
+                        report = subtitle_report;
+                    } else {
+                        cli_remember_route_error(status, &subtitle_report,
+                                                 &route_status, &route_report);
+                    }
+                } else {
+                    cli_remember_route_error(route_rc, &subtitle_report,
+                                             &route_status, &route_report);
+                }
             }
         }
 #endif
@@ -449,12 +547,23 @@ static int cli_run(const char *input, const char *output,
             uint8_t *pdf = NULL;
             size_t pdf_size = 0u;
             memset(&comic_report, 0, sizeof(comic_report));
-            if (qw_app_comic_convert_file(input, app_options, &pdf, &pdf_size,
-                                          &comic_report) == QW_STATUS_OK) {
-                status = cli_write_pdf(final_output, pdf, pdf_size,
-                                       &comic_report);
-                qw_buffer_free(pdf);
-                if (status == QW_STATUS_OK) report = comic_report;
+            {
+                int route_rc = qw_app_comic_convert_file(
+                    input, app_options, &pdf, &pdf_size, &comic_report);
+                if (route_rc == QW_STATUS_OK) {
+                    status = cli_write_pdf(final_output, pdf, pdf_size,
+                                           &comic_report);
+                    qw_buffer_free(pdf);
+                    if (status == QW_STATUS_OK) {
+                        report = comic_report;
+                    } else {
+                        cli_remember_route_error(status, &comic_report,
+                                                 &route_status, &route_report);
+                    }
+                } else {
+                    cli_remember_route_error(route_rc, &comic_report,
+                                             &route_status, &route_report);
+                }
             }
         }
 #endif
@@ -464,12 +573,23 @@ static int cli_run(const char *input, const char *output,
             uint8_t *pdf = NULL;
             size_t pdf_size = 0u;
             memset(&data_report, 0, sizeof(data_report));
-            if (qw_app_data_convert_file(input, &pdf, &pdf_size,
-                                         &data_report) == QW_STATUS_OK) {
-                status = cli_write_pdf(final_output, pdf, pdf_size,
-                                       &data_report);
-                qw_buffer_free(pdf);
-                if (status == QW_STATUS_OK) report = data_report;
+            {
+                int route_rc = qw_app_data_convert_file(
+                    input, &pdf, &pdf_size, &data_report);
+                if (route_rc == QW_STATUS_OK) {
+                    status = cli_write_pdf(final_output, pdf, pdf_size,
+                                           &data_report);
+                    qw_buffer_free(pdf);
+                    if (status == QW_STATUS_OK) {
+                        report = data_report;
+                    } else {
+                        cli_remember_route_error(status, &data_report,
+                                                 &route_status, &route_report);
+                    }
+                } else {
+                    cli_remember_route_error(route_rc, &data_report,
+                                             &route_status, &route_report);
+                }
             }
         }
 #endif
@@ -479,12 +599,23 @@ static int cli_run(const char *input, const char *output,
             uint8_t *pdf = NULL;
             size_t pdf_size = 0u;
             memset(&cad_report, 0, sizeof(cad_report));
-            if (qw_app_cad_convert_file(input, app_options, &pdf, &pdf_size,
-                                        &cad_report) == QW_STATUS_OK) {
-                status = cli_write_pdf(final_output, pdf, pdf_size,
-                                       &cad_report);
-                qw_buffer_free(pdf);
-                if (status == QW_STATUS_OK) report = cad_report;
+            {
+                int route_rc = qw_app_cad_convert_file(
+                    input, app_options, &pdf, &pdf_size, &cad_report);
+                if (route_rc == QW_STATUS_OK) {
+                    status = cli_write_pdf(final_output, pdf, pdf_size,
+                                           &cad_report);
+                    qw_buffer_free(pdf);
+                    if (status == QW_STATUS_OK) {
+                        report = cad_report;
+                    } else {
+                        cli_remember_route_error(status, &cad_report,
+                                                 &route_status, &route_report);
+                    }
+                } else {
+                    cli_remember_route_error(route_rc, &cad_report,
+                                             &route_status, &route_report);
+                }
             }
         }
         if (status != QW_STATUS_OK && target->format == QW_FORMAT_TXT) {
@@ -492,15 +623,65 @@ static int cli_run(const char *input, const char *output,
             uint8_t *text = NULL;
             size_t text_size = 0u;
             memset(&cad_report, 0, sizeof(cad_report));
-            if (qw_app_cad_extract_text(input, &text, &text_size,
-                                        &cad_report) == QW_STATUS_OK) {
-                status = cli_write_pdf(final_output, text, text_size,
-                                       &cad_report);
-                qw_buffer_free(text);
-                if (status == QW_STATUS_OK) report = cad_report;
+            {
+                int route_rc = qw_app_cad_extract_text(
+                    input, &text, &text_size, &cad_report);
+                if (route_rc == QW_STATUS_OK) {
+                    status = cli_write_pdf(final_output, text, text_size,
+                                           &cad_report);
+                    qw_buffer_free(text);
+                    if (status == QW_STATUS_OK) {
+                        report = cad_report;
+                    } else {
+                        cli_remember_route_error(status, &cad_report,
+                                                 &route_status, &route_report);
+                    }
+                } else {
+                    cli_remember_route_error(route_rc, &cad_report,
+                                             &route_status, &route_report);
+                }
             }
         }
 #endif
+#if defined(QUIREWISE_APP_SVG_ROUTES)
+        if (status != QW_STATUS_OK && target->format == QW_FORMAT_PDF) {
+            QwConvertReport svg_report;
+            uint8_t *pdf = NULL;
+            size_t pdf_size = 0u;
+            memset(&svg_report, 0, sizeof(svg_report));
+            {
+                int route_rc = qw_app_svg_convert_file(
+                    input, app_options, &pdf, &pdf_size, &svg_report);
+                if (route_rc == QW_STATUS_OK) {
+                    status = cli_write_pdf(final_output, pdf, pdf_size,
+                                           &svg_report);
+                    qw_buffer_free(pdf);
+                    if (status == QW_STATUS_OK) {
+                        report = svg_report;
+                    } else {
+                        cli_remember_route_error(status, &svg_report,
+                                                 &route_status, &route_report);
+                    }
+                } else if (route_rc == QW_STATUS_ERR_UNSUPPORTED &&
+                           (cli_has_extension(input, "svg") ||
+                            cli_has_extension(input, "svgz"))) {
+                    if (route_status == QW_STATUS_OK) {
+                        route_status = route_rc;
+                        route_report = svg_report;
+                    }
+                } else {
+                    cli_remember_route_error(route_rc, &svg_report,
+                                             &route_status, &route_report);
+                }
+            }
+        }
+#endif
+    }
+
+    /* Prefer the most specific route failure over the generic document error. */
+    if (status != QW_STATUS_OK && route_status != QW_STATUS_OK) {
+        status = route_status;
+        report = route_report;
     }
 
     if (status == QW_STATUS_OK && report.skipped_pages > 0u) {

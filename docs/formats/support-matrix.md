@@ -27,7 +27,7 @@
 | 字幕 | SRT、WebVTT、LRC、MicroDVD、TTML、ASS/SSA、SAMI、SCC | →PDF（时间轴文本页） | cue 模型、格式互转 | 样式/定位/说话人/特效保留、字幕封装 |
 | 单页图像 | JPEG、PNG、BMP、GIF、TIFF、WebP、JP2/J2K、QOI、Netpbm、PSD/PSB、EXR、HDR、TGA、PCX、ICO/ICNS、DDS、XPM/XBM、SGI、RAS、MIFF、DCM 等 | →PDF（单页） | 解码、动画/多页展开、图像写出（PNG/JPEG/BMP/TIFF/WebP/…） | AVIF/HEIC/JXL/PCD 解码、RAW 去马赛克 |
 | 相机 RAW | DNG/TIFF-CFA、CR3、RAF、X3F、CRW、MRW | — | 文件签名/结构探测 | **像素解码恒返回 `UNSUPPORTED`**（发布包不含 LibRaw 或自研去马赛克） |
-| 矢量 | SVG/SVGZ | — | 子集解析 + RGBA 栅格化 | SVG→PDF/图像（CLI 无路由）、EPS/PS/AI |
+| 矢量 | SVG/SVGZ | →PDF（自研子集；`<text>` 等未支持特性返回 `unsupported`） | 子集解析 + RGBA 栅格化 | EPS/PS/AI |
 | CAD | DXF（ASCII/binary）、DWG R13–R2018 | →PDF（A4 栅格）、→TXT（文本清单） | 文档模型、RGBA/SVG 渲染（SVG 文本可读） | DWG 图层句柄/块/ATTRIB、MTEXT/HATCH/ACIS/3D/代理对象、精确 NURBS、CJK 字形 |
 | 漫画归档 | CBZ、CBT | →PDF（图像页；坏页告警，`--check` 失败） | 归档页序/页字节 | CBR/CB7（RAR 仅解析头、7z 未接入 comic 路由）、其它归档 |
 | 图像目录 | 目录 | — | 非递归枚举（`quirewise-image` 的 image_folder） | CLI 目录输入 |

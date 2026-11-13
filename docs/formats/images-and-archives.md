@@ -52,7 +52,7 @@ AVIF/HEIC/JXL"的列表与当前 API 不符；这些写出器不在发布范围�
 | EPS / PS / legacy AI | 无实现 | 历史文档声称的 PDF 互转已不在发布包内 |
 | EMF/WMF/CGM/CDR/VSD/FODG | 无实现 | 未进入发布包 |
 
-SVG/SVGZ 目前只有库 API：CLI 没有 SVG→PDF/图像路由，`--to` 不接受 SVG 输入。
+SVG/SVGZ 已接入 CLI：`.svg/.svgz` 可用 `--to pdf`（以及 `--check`）栅格化为单页 PDF；`--page image|a4` 控制页面框。仅支持自研子集，含 `<text>` 等未支持特性时返回 `UNSUPPORTED`。
 
 ## 5. 漫画与归档
 

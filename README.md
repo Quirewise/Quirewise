@@ -52,13 +52,13 @@ cmake --build .tmp/build-app
 
 - PDF, DOCX/ODT/HTML/EPUB/FB2, PPTX/ODP, HWPX, EML, MOBI/AZW3, HTMLZ/TXTZ/PMLZ, RTF,
   spreadsheets, subtitles, structured data, images, DjVu/PDZ/UVZ/CAJ/CEB,
-  CBZ/CBT and DXF/DWG convert to PDF.
+  CBZ/CBT, DXF/DWG and SVG/SVGZ (supported subset) convert to PDF.
 - PDF also converts to TXT (text extraction, no OCR) and PNG (first page).
 - `--check` verifies inputs without writing; audio inputs are parsed as
   container/packet streams.
 - Outputs are never overwritten and the `-o` extension must match `--to`.
 - DXF/DWG `--to txt` emits the drawing text inventory.
-- Unreachable routes (RTF, XPS, SVG, RAW, CBR/CB7, image folders, legacy Office)
+- Unreachable routes (XPS, RAW, CBR/CB7, image folders, legacy Office)
   return a stable `unsupported`; see
   [the support matrix](docs/formats/support-matrix.md).
 - Options that are not wired (`--key`, scan preprocessing, `--pdfa`,

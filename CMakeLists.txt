@@ -90,6 +90,11 @@ if(QUIREWISE_LINK_DOCUMENT AND QUIREWISE_LINK_VECTOR)
     target_compile_definitions(quirewise PRIVATE QUIREWISE_APP_CAD_ROUTES)
 endif()
 
+if(QUIREWISE_LINK_DOCUMENT AND QUIREWISE_LINK_VECTOR)
+    target_sources(quirewise PRIVATE src/svg_routes.c)
+    target_compile_definitions(quirewise PRIVATE QUIREWISE_APP_SVG_ROUTES)
+endif()
+
 if(QUIREWISE_VALIDATE_DEPENDENCIES)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
     add_custom_target(quirewise_validate_dependencies
