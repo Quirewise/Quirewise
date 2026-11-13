@@ -24,7 +24,7 @@ quirewise --version | --libraries | --help
 | 选项 | 说明 |
 |---|---|
 | `-o, --out FILE` | 指定输出文件 |
-| `--out-dir DIR` | 默认输出名放入 DIR |
+| `--out-dir DIR` | 默认输出名放入 DIR；不能与 `--check` 同用 |
 | `--to FORMAT` | 目标格式：`pdf`（默认）、`txt`、`png` |
 | `--check` | 只验证输入可读，不写输出；成功打印 `OK`；PDZ/UVZ 有页无法解码时返回非零 |
 | `--quiet` | 成功时不打印路径/OK |

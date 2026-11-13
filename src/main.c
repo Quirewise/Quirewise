@@ -903,6 +903,10 @@ static int quirewise_main(int argc, char **argv)
         fprintf(stderr, "error: -o cannot be combined with --check\n");
         return 2;
     }
+    if (check && out_dir) {
+        fprintf(stderr, "error: --out-dir cannot be combined with --check\n");
+        return 2;
+    }
 
 #if defined(QUIREWISE_LINK_DOCUMENT)
     for (index = 0; index < input_count; ++index) {
