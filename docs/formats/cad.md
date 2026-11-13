@@ -46,7 +46,7 @@ DXF 已映射的实体：`LINE`、`LWPOLYLINE`、`POLYLINE`+`VERTEX`、`CIRCLE`�
 
 ## 4. 后续阶段
 
-阶段 2 的目标是补上 DWG 解码，按容器代际分三步：
+阶段 2 的目标是补上 DWG 解码，按容器代际分四步：
 
 1. R13/R14/R2000：section locator、对象映射、句柄流和常用实体记录；
    **当前已完成 LINE/CIRCLE/ARC/LWPOLYLINE/TEXT 的读取与测试**，图层句柄
@@ -63,4 +63,5 @@ DXF 已映射的实体：`LINE`、`LWPOLYLINE`、`POLYLINE`+`VERTEX`、`CIRCLE`�
 
 - 参考能力与验证语料：<https://github.com/unitedrhino/go-cad>（Apache-2.0）。
 - 本地测试：`quirewise-vector` 的 `quirewise_vector_cad_test`；应用 smoke 使用
-  `app/testfile/cad/sample.dxf` 和 `line_2000.dwg` 验证 DXF/DWG → PDF 与 `--check`。
+  `app/testfile/cad/sample.dxf`、`line_2000.dwg`、`line_2004.dwg` 和
+  `line_2007.dwg` 验证 DXF/DWG → PDF 与 `--check`。
