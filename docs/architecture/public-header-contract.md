@@ -13,7 +13,7 @@
    头文件，也不得通过相对路径引用兄弟仓库。
 
 `run_acceptance.py` 以 `--strict` 运行 `verify_header_ownership.py`：17 个包、
-59 个安装路径、**0 条共享路径**才算通过；任何重复路径都会阻断验收。
+60 个安装路径、**0 条共享路径**才算通过；任何重复路径都会阻断验收。
 
 ## 所有权
 
@@ -26,6 +26,7 @@
 | `quirewise/convert.h` | document | 转换调度函数声明（`qw_detect_format`、`qw_convert_*`、`qw_check_file` 等） |
 | `quirewise/archive.h` | archive | 归档 API |
 | `quirewise/xml.h` | data | 有序 XML 树 API |
+| `quirewise/cad.h` | vector | DXF/CAD 文档、文本清单与渲染 API |
 | `quirewise/plain_text.h` | text | 纯文本 API |
 | `quirewise/pml.h`、`quirewise/text_archive.h` | ebook | PML 与文本归档 API（实现所在包） |
 
@@ -47,5 +48,5 @@
   映射到 58 个安装路径，`convert.h` 出现 3 个版本，安装结果依赖安装顺序。
 - 2026-11-08：`convert.h` 统一、`pml.h`/`text_archive.h` 归位到 ebook；随后按
   [设计评审](shared-contract-ownership.md) 将三类契约头上移到 runtime，12 个包
-  新增 `Quirewise::Runtime` 边，其余副本全部删除。结果：59 个安装路径、0 条共享
+  新增 `Quirewise::Runtime` 边，其余副本全部删除。结果：60 个安装路径、0 条共享
   路径、依赖图无环。

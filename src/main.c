@@ -29,6 +29,10 @@
 #include "comic_routes.h"
 #endif
 
+#if defined(QUIREWISE_APP_CAD_ROUTES)
+#include "cad_routes.h"
+#endif
+
 static void print_version(void)
 {
     puts("Quirewise application 0.1.0");
@@ -343,6 +347,18 @@ static int cli_run(const char *input, const char *output,
             }
         }
 #endif
+#if defined(QUIREWISE_APP_CAD_ROUTES)
+        if (status != QW_STATUS_OK) {
+            QwConvertReport cad_report;
+            uint8_t *pdf = NULL;
+            size_t pdf_size = 0u;
+            memset(&cad_report, 0, sizeof(cad_report));
+            if (qw_app_cad_check_file(input, &cad_report) == QW_STATUS_OK) {
+                status = QW_STATUS_OK;
+                report = cad_report;
+            }
+        }
+#endif
 #if defined(QUIREWISE_APP_AUDIO_CHECK)
         if (status != QW_STATUS_OK) {
             QwConvertReport audio_report;
@@ -415,6 +431,34 @@ static int cli_run(const char *input, const char *output,
                                        &data_report);
                 qw_buffer_free(pdf);
                 if (status == QW_STATUS_OK) report = data_report;
+            }
+        }
+#endif
+#if defined(QUIREWISE_APP_CAD_ROUTES)
+        if (status != QW_STATUS_OK && target->format == QW_FORMAT_PDF) {
+            QwConvertReport cad_report;
+            uint8_t *pdf = NULL;
+            size_t pdf_size = 0u;
+            memset(&cad_report, 0, sizeof(cad_report));
+            if (qw_app_cad_convert_file(input, app_options, &pdf, &pdf_size,
+                                        &cad_report) == QW_STATUS_OK) {
+                status = cli_write_pdf(final_output, pdf, pdf_size,
+                                       &cad_report);
+                qw_buffer_free(pdf);
+                if (status == QW_STATUS_OK) report = cad_report;
+            }
+        }
+        if (status != QW_STATUS_OK && target->format == QW_FORMAT_TXT) {
+            QwConvertReport cad_report;
+            uint8_t *text = NULL;
+            size_t text_size = 0u;
+            memset(&cad_report, 0, sizeof(cad_report));
+            if (qw_app_cad_extract_text(input, &text, &text_size,
+                                        &cad_report) == QW_STATUS_OK) {
+                status = cli_write_pdf(final_output, text, text_size,
+                                       &cad_report);
+                qw_buffer_free(text);
+                if (status == QW_STATUS_OK) report = cad_report;
             }
         }
 #endif

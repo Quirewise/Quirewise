@@ -51,8 +51,11 @@ quirewise --version | --libraries | --help
 | SRT/VTT/LRC/ASS/SSA/SAMI/MicroDVD/SCC | 时间轴文本页转 PDF |
 | JSON/JSONL/YAML/TOML/XML/OPML/IPYNB/vCard | 类型化值树渲染为表格/列表后转 PDF |
 | CBZ（ZIP）、CBT（USTAR） | 逐页图片转多页 PDF |
+| DXF（ASCII/binary） | 解析图层/块/常用实体，栅格化为 A4 单页 PDF；文本暂为占位条，DWG 返回 `UNSUPPORTED` |
 
 PDF 输入还可以用 `--to txt`（文本抽取，无 OCR）或 `--to png`（首页栅格化，144 dpi）。
+DXF 输入可用 `--to txt` 导出图纸文本清单（每行一个 TEXT/MTEXT），用 `--to pdf`
+生成栅格页；DWG 在 CLI 中仍返回 `UNSUPPORTED`。
 
 PDZ/UVZ 转换中若有成员或页无法解码，转换仍会写出可读页，但会在 stderr 打印
 `warning: N page(s) skipped: ...`；`--check` 对这种情况返回非零，避免把部分可读

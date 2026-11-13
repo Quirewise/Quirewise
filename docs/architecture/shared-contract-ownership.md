@@ -86,7 +86,7 @@ charset、compression、crypto 不引用契约类型，保持无 runtime 依赖�
   接入 `run_acceptance.py`。
 - `verify_public_headers.py`：安装头独立编译 0 失败、0 第三方泄漏。
 - `verify_header_isolation.py`：每包只安装自身与依赖闭包后，公共头 0 失败。
-- `check_consumer_coverage.py`：外部消费者对导出 API 的覆盖不下降（当前 373/373）；
+- `check_consumer_coverage.py`：外部消费者对导出 API 的覆盖不下降（当前 388/388）；
   `--strict` 同时拦截“头文件声明但库未导出”的函数。
 - `verify_private_header_copies.py`：按 `app/tools/private-header-copies.json`
   固定跨仓库共享私有头的字节；只允许删除副本，不允许在已登记仓库里漂移。

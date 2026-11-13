@@ -18,6 +18,7 @@
 | 转换 Office、电子书、HTML 或标记文本 | [文档与文本](formats/documents-and-text.md) |
 | 转换工作簿、结构化数据或字幕 | [表格、结构化数据与字幕](formats/spreadsheets-data-subtitles.md) |
 | 转换图像、矢量图、漫画归档 | [图像与归档](formats/images-and-archives.md) |
+| 读取 DXF 图纸或查看 DWG 支持边界 | [CAD](formats/cad.md) |
 | 解析标准音频或受支持的加密音乐容器 | [音频](formats/audio.md) |
 | 查看命令行选项和转换参数 | [命令行使用](usage/command-line.md) |
 | 生成发布证据、快照与报告 | [发布证据流程](release-process.md) |

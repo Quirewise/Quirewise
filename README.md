@@ -33,8 +33,10 @@ cmake --build .tmp/build-app
 
 The current application executable provides the first CLI slice (C1): it reports
 the version and the libraries selected at configure time, and converts a single
-file with `--to pdf|txt|png`, `-o FILE` and `--check`. The remaining options and
-input routes follow the [CLI port plan](docs/architecture/cli-port-plan.md).
+file with `--to pdf|txt|png`, `-o FILE` and `--check`. DXF drawings are routed
+through `quirewise-vector` (PDF raster or `--to txt` text inventory); DWG is
+detected but returns `UNSUPPORTED`. The remaining options and input routes
+follow the [CLI port plan](docs/architecture/cli-port-plan.md).
 Conversion dispatch lives in the library packages and is exercised by the
 external consumer template as well as the CLI smoke step in
 `tools/run_acceptance.py`.
