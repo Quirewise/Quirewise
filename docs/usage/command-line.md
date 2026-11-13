@@ -48,6 +48,7 @@ quirewise --version | --libraries | --help
 | MOBI/AZW3/AZW | PalmDOC 文本转 PDF；HUFF/CDIC 压缩和 DRM 内容返回不支持 |
 | HTMLZ、TXTZ、PMLZ | 取包内主文档/文本转 PDF |
 | 纯文本 / Markdown（txt/md 等） | 按行渲染段落 |
+| RTF | 段落、粗体/斜体/下划线/删除线、字号、对齐、分页和内嵌 PNG/JPEG 转 PDF；表格扁平化 |
 | PNG/JPEG/GIF/BMP/WebP/TIFF 等图片 | 单页 PDF；默认像素尺寸，可用 `--page a4` 改为 A4 |
 | DjVu | 逐页渲染为多页 PDF |
 | PDG/PDZ（`%pdgz`） | 按 `--pages` 规则重建 PDF；页载荷本身是 PDF 时由内部 PDF 引擎按 300 dpi 栅格化首页；`pdg_type 0x1A` 发行版 PDF 成员由内部 Document 引擎按成员顺序合并 |
@@ -72,7 +73,7 @@ Ogg/Opus），只解析容器/包，不解码。
 
 ### 3.1 明确不可达的输入（返回 `unsupported`）
 
-RTF、XPS/OpenXPS、SVG/SVGZ、EPS/PS/AI、相机 RAW（DNG/CR3/RAF/X3F/CRW/MRW）、
+XPS/OpenXPS、SVG/SVGZ、EPS/PS/AI、相机 RAW（DNG/CR3/RAF/X3F/CRW/MRW）、
 CBR/CB7、图像目录、旧版 .doc/.wps/.pages、CHM/LIT/LRF 等：对应库可能已有解析器或
 部分实现，但统一转换入口没有路由，CLI 不提供转换。详见
 [格式能力总览](../formats/support-matrix.md)。

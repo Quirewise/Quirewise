@@ -50,7 +50,7 @@ cmake --build .tmp/build-app
 [--check] [--quiet] [--page image|a4] [--pages RULE]
 [--archive-password TEXT] [--audio-track N]`
 
-- PDF, DOCX/ODT/HTML/EPUB/FB2, PPTX/ODP, HWPX, EML, MOBI/AZW3, HTMLZ/TXTZ/PMLZ,
+- PDF, DOCX/ODT/HTML/EPUB/FB2, PPTX/ODP, HWPX, EML, MOBI/AZW3, HTMLZ/TXTZ/PMLZ, RTF,
   spreadsheets, subtitles, structured data, images, DjVu/PDZ/UVZ/CAJ/CEB,
   CBZ/CBT and DXF/DWG convert to PDF.
 - PDF also converts to TXT (text extraction, no OCR) and PNG (first page).

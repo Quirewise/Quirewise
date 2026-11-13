@@ -1,3 +1,7 @@
+> **历史快照（2026-11-14 注）**：本文件记录的是当时一轮运行的原始结果，其中的失败项与
+> “需要静态 FFmpeg/pkg-config”等描述属于迁移前状态，不代表当前发布包。当前能力与验收以
+> [格式能力总览](app/docs/formats/support-matrix.md)、[2026-11-12 验收报告](RELEASE_ACCEPTANCE_REPORT_2026-11-12.md)
+> 和 [2026-11-14 缺陷修补报告](MAINTENANCE_REPORT_2026-11-14.md) 为准。
 # Conversion Smoke Results
 
 Date: 2026-10-18 (Asia/Singapore).

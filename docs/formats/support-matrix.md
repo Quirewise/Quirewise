@@ -21,7 +21,7 @@
 | 邮件 | EML | →PDF（正文；附件只列名称） | MIME 解析、附件数据 | MSG、签名语义、RFC 2231 文件名 |
 | XPS | XPS/OpenXPS | — | 页面 XML 读取 | →PDF（缺少 XPS→版式/PDF 适配层） |
 | 电子书 | EPUB/KEPUB、MOBI/AZW3/AZW、FB2、PMLZ、TXTZ、HTMLZ | →PDF | 段落/章节模型 | DRM、HUFF/CDIC 压缩的 MOBI、CHM/LIT/LRF/PDB/RB/SNB/TCR |
-| 轻量标记 | TXT、Markdown、HTML | →PDF | 读取后转 HTML/Markdown | RTF、AsciiDoc、LaTeX、Org、RST、Textile、Typst、DocBook、Man、MediaWiki 的统一转换入口（库里有读取器，CLI 未接线） |
+| 轻量标记 | TXT、Markdown、HTML、RTF | →PDF | 读取后转 HTML/Markdown | AsciiDoc、LaTeX、Org、RST、Textile、Typst、DocBook、Man、MediaWiki 的统一转换入口（库里有读取器，CLI 未接线） |
 | 工作簿 | XLSX/XLSM/XLTX、BIFF8 XLS/XLT、ODS/OTS/FODS、CSV/TSV | →PDF（按工作表渲染表格） | 单元格/公式缓存读取 | **任何工作簿写出**（库是只读解析器）、公式重算、图表/图片/合并区域样式 |
 | 结构化数据 | JSON、JSONL、YAML、TOML、XML、OPML、IPYNB、vCard | →PDF（值树渲染为表格/列表） | 类型化值树、XML 序列化 | 其它格式的写出器、YAML anchor/tag、XML DTD 之外的校验 |
 | 字幕 | SRT、WebVTT、LRC、MicroDVD、TTML、ASS/SSA、SAMI、SCC | →PDF（时间轴文本页） | cue 模型、格式互转 | 样式/定位/说话人/特效保留、字幕封装 |

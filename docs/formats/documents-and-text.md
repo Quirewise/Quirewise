@@ -1,8 +1,8 @@
 # 文档、电子书与文本
 
 > 状态（2026-11-14）：下表中的 DOCX/ODT 系列、EPUB、FB2、PPTX/ODP 系列、HWPX、EML、
-> MOBI/AZW3、HTMLZ、TXTZ、PMLZ、TXT/Markdown/HTML 已接入统一转换入口，可用 CLI 转
-> PDF；XPS、RTF、旧版 .doc/.wps/.pages、CHM/LIT/LRF 等仍只有库 API（或完全没有实现），
+> MOBI/AZW3、HTMLZ、TXTZ、PMLZ、RTF、TXT/Markdown/HTML 已接入统一转换入口，可用 CLI 转
+> PDF；XPS、旧版 .doc/.wps/.pages、CHM/LIT/LRF 等仍只有库 API（或完全没有实现），
 > CLI 返回 `unsupported`。以 [格式能力总览](support-matrix.md) 的三态口径为准。
 
 本文说明版式类文件当前可转换的内容范围。输出通常保留可识别的文字结构，而不是原文件的完整视觉效果或所有元数据。
