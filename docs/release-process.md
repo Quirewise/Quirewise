@@ -1,6 +1,6 @@
 # 发布证据与快照流程
 
-本流程把“四套验收矩阵”变成可复核的发布证据，并生成发布候选报告。所有命令在
+本流程把“四套平台验收矩阵（另加可选 sanitizer 矩阵）”变成可复核的发布证据，并生成发布候选报告。所有命令在
 工作区根目录执行；证据文件都在 `.tmp/` 下，不属于发布物。
 
 ## 1. 前置条件
@@ -13,7 +13,7 @@
 - 私有仓库 `Quirewise/quirewise-pdg` 的可读 token 只对 CI 需要；本机矩阵不依赖
   GitHub。
 
-## 2. 重建四套矩阵
+## 2. 重建四套平台矩阵（另可选 sanitizer 矩阵）
 
 ```powershell
 python app/tools/run_acceptance.py --workspace . --jobs 8 `
@@ -31,7 +31,7 @@ python app/tools/run_acceptance.py --workspace . --jobs 8 --shared \
   --summary .tmp/acceptance/linux-shared/summary.json
 ```
 
-四套矩阵默认都是 81 步；`failed` 必须为空。
+四套平台矩阵默认都是 81 步；sanitizer 矩阵同样按 81 步运行。`failed` 必须为空。
 
 可选的 sanitizer 矩阵（仅 Linux/WSL）：
 
@@ -75,7 +75,7 @@ python app/tools/release_evidence.py --workspace . `
 .tmp/release/2026-11-12/reviewer-signoff.md
 ```
 
-签字应列出：快照提交号、四套矩阵步数与失败项、关键闸门输出、未验证项
+签字应列出：快照提交号、四套平台（及 sanitizer）矩阵步数与失败项、关键闸门输出、未验证项
 （CI、macOS/MSVC）、以及签字的 SHA-256 自述。没有签字时报告会明确写“未提供
 独立 sign-off”，不得对外声称已复核。
 
