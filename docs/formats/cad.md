@@ -16,7 +16,7 @@
 | DWG R2007（AC1021） | RS 去交织第二头部、页表、段表、R21 数据页解压、`AcDb:Handles` 与对象数据段；同 DXF 的常用实体子集。 |
 | DWG R2010/R2013/R2018（AC1024/AC1027/AC1032） | R2004 式分页容器 + UMC/OT 对象记录 + R2010/R2013 实体头；同 DXF 的常用实体子集。 |
 
-DXF 已映射的实体：`LINE`、`LWPOLYLINE`、`POLYLINE`+`VERTEX`、`CIRCLE`、`ARC`、
+DXF 已映射的实体：`LINE`、`LWPOLYLINE`（含 bulge 弧段）、`POLYLINE`+`VERTEX`、`CIRCLE`、`ARC`、
 `ELLIPSE`、`SPLINE`（按控制点折线化）、`TEXT`/`MTEXT`、`ATTDEF`、`INSERT`
 （块展开，含比例/旋转/嵌套）、`POINT`、`SOLID`/`TRACE`/`3DFACE`、`LEADER`、
 `DIMENSION`（仅当其匿名块可作为 INSERT 展开）、`HATCH`（实心多边界
@@ -41,6 +41,7 @@ DXF 已映射的实体：`LINE`、`LWPOLYLINE`、`POLYLINE`+`VERTEX`、`CIRCLE`�
   圆弧/椭圆边界与非实心轮廓描边；样条边界、图案填充、标注文字、ACIS 实体、
   代理对象和 3D 实体不做几何展开。
 - 样条仅按控制点折线化，不做精确 NURBS 求值；椭圆弧参数按 DXF 约定读取。
+  `LWPOLYLINE` 的 bulge 弧段在栅格中按圆弧绘制，SVG 输出仍为折线。
 - 资源限制：输入 256 MiB、实体 200000、点 2000000、文本累计 1 MiB、
   单次渲染 2000 万像素；超限返回 `RESOURCE_LIMIT`。
 - DWG R2010–R2018 解码、CJK 字形和智能分图属于后续阶段，不在当前发布能力内；
