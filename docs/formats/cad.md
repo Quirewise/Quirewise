@@ -20,7 +20,7 @@ DXF 已映射的实体：`LINE`、`LWPOLYLINE`、`POLYLINE`+`VERTEX`、`CIRCLE`�
 `ELLIPSE`、`SPLINE`（按控制点折线化）、`TEXT`/`MTEXT`、`ATTDEF`、`INSERT`
 （块展开，含比例/旋转/嵌套）、`POINT`、`SOLID`/`TRACE`/`3DFACE`、`LEADER`、
 `DIMENSION`（仅当其匿名块可作为 INSERT 展开）、`HATCH`（实心多边界
-/孔洞 even-odd；非实心按各边界轮廓描边）。DWG 当前只解码
+/孔洞 even-odd、圆弧边界；非实心按各边界轮廓描边）。DWG 当前只解码
 `LINE`/`CIRCLE`/`ARC`/`LWPOLYLINE`，`TEXT` 到 R2004 为止；其余 DWG 实体、
 图层句柄和 R2007+ 文本流留到后续阶段。未知 DXF 实体显式计数并跳过。
 
@@ -37,9 +37,9 @@ DXF 已映射的实体：`LINE`、`LWPOLYLINE`、`POLYLINE`+`VERTEX`、`CIRCLE`�
 - 栅格渲染暂不包含字体引擎：TEXT/MTEXT 在当前 PNG/PDF 路线中以
   “基线条 + 竖线”占位；需要可读文字时使用 `qw_cad_render_svg()`，或后续
   的字体接入阶段。
-- 块属性（ATTRIB）暂按 TEXT 实体读取；HATCH 支持实心多边界/孔洞（even-odd）
-  与非实心轮廓描边，圆弧/样条边界、图案填充、标注文字、ACIS 实体、代理对象
-  和 3D 实体不做几何展开。
+- 块属性（ATTRIB）暂按 TEXT 实体读取；HATCH 支持实心多边界/孔洞（even-odd）、
+  圆弧边界与非实心轮廓描边；椭圆/样条边界、图案填充、标注文字、ACIS 实体、
+  代理对象和 3D 实体不做几何展开。
 - 样条仅按控制点折线化，不做精确 NURBS 求值；椭圆弧参数按 DXF 约定读取。
 - 资源限制：输入 256 MiB、实体 200000、点 2000000、文本累计 1 MiB、
   单次渲染 2000 万像素；超限返回 `RESOURCE_LIMIT`。
