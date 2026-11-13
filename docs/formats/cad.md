@@ -37,7 +37,19 @@
   单次渲染 2000 万像素；超限返回 `RESOURCE_LIMIT`。
 - DWG R13–R2018 解码、CJK 字形和智能分图属于后续阶段，不在当前发布能力内。
 
-## 4. 参考
+## 4. 后续阶段
+
+阶段 2 的目标是补上 DWG 解码，按容器代际分三步：
+
+1. R13/R14/R2000：section locator、对象映射、句柄流和常用实体记录；
+2. R2004：分页 section map、页表和数据页重组；
+3. R2007/R2010/R2013/R2018：RS 交织流和更新的对象编码。
+
+每步以 `unitedrhino/go-cad` 的 macOS/Linux/Windows 无关测试语料（公开
+LibreDWG 样本）做交叉验证；不引入 Go、LibreDWG 或其他第三方运行库。
+HATCH、ACIS、标注文字、CJK 字形和智能分图在 DWG 基础实体之后补齐。
+
+## 5. 参考
 
 - 参考能力与验证语料：<https://github.com/unitedrhino/go-cad>（Apache-2.0）。
 - 本地测试：`quirewise-vector` 的 `quirewise_vector_cad_test`；应用 smoke 使用
