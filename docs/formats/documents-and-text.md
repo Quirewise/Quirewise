@@ -1,5 +1,10 @@
 # 文档、电子书与文本
 
+> 状态（2026-11-14）：下表中的 DOCX/ODT 系列、EPUB、FB2、PPTX/ODP 系列、HWPX、EML、
+> MOBI/AZW3、HTMLZ、TXTZ、PMLZ、TXT/Markdown/HTML 已接入统一转换入口，可用 CLI 转
+> PDF；XPS、RTF、旧版 .doc/.wps/.pages、CHM/LIT/LRF 等仍只有库 API（或完全没有实现），
+> CLI 返回 `unsupported`。以 [格式能力总览](support-matrix.md) 的三态口径为准。
+
 本文说明版式类文件当前可转换的内容范围。输出通常保留可识别的文字结构，而不是原文件的完整视觉效果或所有元数据。
 
 ## 文档与电子书
@@ -9,7 +14,7 @@
 | DOCX、DOCM、DOTX、DOTM | 正文、常见字符和段落样式、内置标题、对齐、分节纸张尺寸和边距、分页符、基础表格、水平合并、部分单元格底色、JPEG/PNG/GIF/BMP/TIFF/SVG 图片、安全外链、书签及常见编号列表。 | 宏和模板语义不保留。页眉页脚、复杂表格布局、纵向合并、浮动环绕、主题样式、VML/EMF/WMF 和高级分页尚未映射。图片受单图和累计大小限制；不能解码的图片可能跳过并在报告中说明。 |
 | ODT、OTT、FODT | 段落、标题、基础文字/段落样式、列表、表格及部分 PNG/JPEG/GIF/WebP/SVG 图片。 | 模板语义、页眉页脚、高级分页、脚注尾注、批注、修订、图表和嵌入对象不保留。FODT 不读取包外资源。 |
 | EPUB、标准封装 KEPUB | 读取章节 XHTML 并输出 PDF；可将可识别章节映射到共享版式模型。 | 不支持 DRM/密码保护。复杂 CSS、列表、表格、预格式文本或媒体内容不一定映射到结构化模型；KEPUB 专有行为和元数据不保留。 |
-| MOBI 7、AZW3/MOBI 8 | 自研 PalmDB/PalmDOC 解析器读取未加密、未压缩或 PalmDOC 压缩的 CP1252/UTF-8 文本记录；自研标记处理器把正文 HTML 转成纯文本，再封装为 EPUB 并复用 EPUB 排版路线。 | HUFF/CDIC 压缩、DRM、固定版式、嵌入资源、样式和链接重建暂不支持；标记正文会扁平化为段落文本。输入文本上限 32 MiB。 |
+| MOBI 7、AZW3/MOBI 8、AZW | 自研 PalmDB/PalmDOC 解析器读取未压缩或 PalmDOC 压缩的 CP1252/UTF-8 文本记录，自研标记处理器把正文 HTML 转成纯文本后按段落排版为 PDF。 | HUFF/CDIC 压缩、DRM、固定版式、嵌入资源、样式和链接重建暂不支持；标记正文会扁平化为段落文本。输入文本上限 32 MiB。 |
 | FB2 | 由自研 XML 解析器读取 FictionBook 2 结构并重排为 PDF；可映射标题、段落、强调、引用、诗歌、外链，以及内嵌 JPEG/PNG/GIF 图片。 | 外链图片、其他图片类型或无效 Base64 图片不支持；FB2 元数据和封面信息不映射。 |
 | RTF | 自研 RTF 控制字、分组及 ANSI/Unicode 转义解析；支持段落、粗体、斜体、下划线、删除线、字号、对齐、分页符和 `\pict` 内嵌 PNG/JPEG。单张图片载荷上限 32 MiB；图片转为 data URI 后交给通用 HTML/PDF 排版后端。 | 表格扁平化为制表符；其它图片类型、对象、页眉页脚、脚注、颜色和复杂布局未映射。 |
 | HWPX | 读取 OWPML section 顺序；段落、简单表格、制表符和换行可排版，也可写出单节 HWPX。 | 样式、分页、图片数据、页眉页脚、元数据和加密部件不支持；嵌入对象以占位文字表示；不支持旧版 HWP。 |
@@ -29,12 +34,14 @@
 
 ## 演示文稿
 
-PPTX/PPTM/POTX/POTM/PPSX/PPSM 与 ODP/OTP/FODP 可按演示顺序读取页面文字，并将页面内容排版为 PDF 或共享版式输出。当前主要保留标题、段落和简单列表。
+PPTX/PPTM/POTX/POTM/PPSX/PPSM 与 ODP/OTP/FODP 可按演示顺序读取页面文字，并将页面内容排版为 PDF。当前主要保留标题、段落和简单列表。
 
 页面尺寸、母版、形状位置、字体、图片、图表、备注、动画、模板行为和复杂样式不保留；不生成原生 PowerPoint 或 OpenDocument 演示文稿。
 
-## 共享版式输出
+## 共享版式模型与输出边界
 
-共享版式模型可写出 HTML、Markdown、Org、DocBook、AsciiDoc、Typst、LaTeX、RST、Textile、MediaWiki、Man、OPML、IPYNB、TXT、EPUB、DOCX 和 HWPX。
+文档包内部有一个共享版式模型（标题、段落、列表、表格、链接、图片），DOCX/ODT/PPTX/ODP/HWPX/EML/XPS/EPUB/FB2 的读取器都会产出它，再由 HTML→PDF 写出器生成 PDF。
 
-输出使用各目标格式的受支持子集。HTML-only 输入写结构化目标时可能降为转义纯文本；EPUB/DOCX/HWPX 输出为最小章节或 section。源元数据、图像、附件载荷、封面和复杂样式不一定保留。超链接目标可能在 TXT 中直接作为文本输出；附件通常只列名称、类型和大小。
+需要明确的是：**发布包没有公开的版式写出接口**。`text`、`ebook`、`spreadsheet` 包都是只读解析器，`document` 只公开 PDF/TXT/PNG 目标；历史文档中"可写出 HTML、Markdown、Org、DocBook、AsciiDoc、Typst、LaTeX、RST、Textile、MediaWiki、Man、OPML、IPYNB、TXT、EPUB、DOCX、HWPX"的列表与当前 API 不符，暂不成立。唯一公开的序列化接口是 `quirewise-data` 的 `qw_xml_serialize`（XML 树 → XML 字节）。
+
+转换到 PDF 时，源文件中未映射的高级样式、布局、附件、封面和元数据不会保留。

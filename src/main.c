@@ -7,6 +7,7 @@
 #include <quirewise/status.h>
 #endif
 
+#include "app_file.h"
 #include "app_options.h"
 
 #if defined(QUIREWISE_APP_PAGE_ROUTES)
@@ -35,7 +36,11 @@
 
 static void print_version(void)
 {
-    puts("Quirewise application 0.1.0");
+#ifdef QUIREWISE_APP_VERSION
+    puts("Quirewise application " QUIREWISE_APP_VERSION);
+#else
+    puts("Quirewise application 0.2.1");
+#endif
 }
 
 static void print_help(const char *name)
@@ -198,6 +203,25 @@ static char *cli_default_output(const char *input, const char *extension,
     return output;
 }
 
+static int cli_has_extension(const char *path, const char *extension)
+{
+    const char *dot;
+    size_t index = 0u;
+    if (!path || !extension) return 0;
+    dot = strrchr(path, '.');
+    if (!dot || !dot[1] || !extension[0]) return 0;
+    ++dot;
+    while (dot[index] && extension[index]) {
+        char a = dot[index];
+        char b = extension[index];
+        if (a >= 'A' && a <= 'Z') a = (char)(a - 'A' + 'a');
+        if (b >= 'A' && b <= 'Z') b = (char)(b - 'A' + 'a');
+        if (a != b) return 0;
+        ++index;
+    }
+    return dot[index] == '\0' && extension[index] == '\0';
+}
+
 static const char *cli_status_text(int status)
 {
     switch (status) {
@@ -218,7 +242,7 @@ static const char *cli_status_text(int status)
 
 static int cli_path_exists(const char *path)
 {
-    FILE *file = fopen(path, "rb");
+    FILE *file = qw_app_fopen_utf8(path, "rb");
     if (!file) return 0;
     fclose(file);
     return 1;
@@ -233,7 +257,7 @@ static int cli_write_pdf(const char *path, const uint8_t *data, size_t size,
                              "output already exists and is never overwritten");
         return QW_STATUS_ERR_IO;
     }
-    file = fopen(path, "wb");
+    file = qw_app_fopen_utf8(path, "wb");
     if (!file) {
         if (report) snprintf(report->note, sizeof(report->note),
                              "cannot create output file");
@@ -264,6 +288,14 @@ static int cli_run(const char *input, const char *output,
     const char *final_output = output;
     int status;
 
+    /* The two option structures used to be disconnected: the app carried the
+     * archive password, page box and audio track, but the library call always
+     * saw the default QwConvertOptions. Populate the shared structure so the
+     * documented options reach the library path. */
+    options.page_mode = app_options->raster_page_mode;
+    options.zip_password = app_options->archive_password;
+    options.audio_track = app_options->audio_track;
+
     if (!check) {
         target = target_name ? cli_find_target(target_name)
                              : cli_find_target("pdf");
@@ -281,6 +313,13 @@ static int cli_run(const char *input, const char *output,
                 return 1;
             }
             final_output = default_output;
+        }
+        if (!cli_has_extension(final_output, target->extension)) {
+            fprintf(stderr,
+                    "error: output name '%s' must end with .%s for --to %s\n",
+                    final_output, target->extension, target->name);
+            free(default_output);
+            return 2;
         }
     } else if (target_name) {
         fprintf(stderr, "error: --to cannot be combined with --check\n");
@@ -555,7 +594,7 @@ static int cli_parse_track(const char *text, size_t *out)
     return 1;
 }
 
-int main(int argc, char **argv)
+static int quirewise_main(int argc, char **argv)
 {
     const char *inputs[64];
     int input_count = 0;
@@ -706,3 +745,76 @@ int main(int argc, char **argv)
     return 2;
 #endif
 }
+
+/*
+ * Windows entry point.
+ *
+ * The C runtime hands MinGW/MSVC `main` arguments in the active ANSI code
+ * page, while every Quirewise API takes UTF-8 paths. Reading the wide command
+ * line and converting to UTF-8 keeps non-ASCII input and output names working
+ * on every console code page.
+ */
+#if defined(_WIN32)
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <shellapi.h>
+
+static char *qw_utf8_from_wide(const wchar_t *text)
+{
+    int length;
+    char *utf8;
+
+    if (!text) return NULL;
+    length = WideCharToMultiByte(CP_UTF8, 0, text, -1, NULL, 0, NULL, NULL);
+    if (length <= 0) return NULL;
+    utf8 = (char *)malloc((size_t)length);
+    if (!utf8) return NULL;
+    if (WideCharToMultiByte(CP_UTF8, 0, text, -1, utf8, length, NULL, NULL) <=
+        0) {
+        free(utf8);
+        return NULL;
+    }
+    return utf8;
+}
+
+int main(void)
+{
+    int argc = 0;
+    int index;
+    int rc = 2;
+    wchar_t **wide_argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    char **argv;
+
+    if (!wide_argv || argc <= 0) {
+        if (wide_argv) LocalFree(wide_argv);
+        return 2;
+    }
+    argv = (char **)calloc((size_t)argc + 1u, sizeof(char *));
+    if (!argv) {
+        LocalFree(wide_argv);
+        return 2;
+    }
+    for (index = 0; index < argc; ++index) {
+        argv[index] = qw_utf8_from_wide(wide_argv[index]);
+        if (!argv[index]) goto done;
+    }
+    rc = quirewise_main(argc, argv);
+
+done:
+    for (index = 0; index < argc; ++index) free(argv[index]);
+    free(argv);
+    LocalFree(wide_argv);
+    return rc;
+}
+
+#else
+
+int main(int argc, char **argv)
+{
+    return quirewise_main(argc, argv);
+}
+
+#endif

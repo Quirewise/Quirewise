@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(Quirewise VERSION 0.1.0 LANGUAGES C)
+project(Quirewise VERSION 0.2.1 LANGUAGES C)
 
 include(GNUInstallDirs)
 
@@ -26,6 +26,13 @@ option(QUIREWISE_LINK_COMIC "Link quirewise-comic" OFF)
 
 add_executable(quirewise src/main.c)
 target_compile_features(quirewise PRIVATE c_std_11)
+target_compile_definitions(quirewise PRIVATE
+    QUIREWISE_APP_VERSION="${PROJECT_VERSION}")
+if(WIN32)
+    # CommandLineToArgvW is used by the Windows entry point to receive UTF-8
+    # command line arguments.
+    target_link_libraries(quirewise PRIVATE shell32)
+endif()
 
 set(QW_LINK_TARGETS)
 macro(quirewise_find_library option_name package_name target_name define_name)

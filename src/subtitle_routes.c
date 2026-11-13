@@ -1,5 +1,7 @@
 #include "subtitle_routes.h"
 
+#include "app_file.h"
+
 #include <quirewise/status.h>
 #include <quirewise/subtitle.h>
 
@@ -142,7 +144,7 @@ int qw_app_subtitle_convert_file(const char *path,
     *out_size = 0u;
     if (!subtitle_extension_format(path, &format))
         return QW_STATUS_ERR_UNSUPPORTED;
-    file = fopen(path, "rb");
+    file = qw_app_fopen_utf8(path, "rb");
     if (!file) return QW_STATUS_ERR_IO;
     if (fseek(file, 0, SEEK_END) != 0 || (length = ftell(file)) < 0 ||
         fseek(file, 0, SEEK_SET) != 0) {

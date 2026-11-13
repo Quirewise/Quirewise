@@ -44,8 +44,9 @@ DXF 已映射的实体：`LINE`、`LWPOLYLINE`（含 bulge 弧段）、`POLYLINE
   `LWPOLYLINE` 的 bulge 弧段在栅格与 SVG 中均按圆弧采样绘制。
 - 资源限制：输入 256 MiB、实体 200000、点 2000000、文本累计 1 MiB、
   单次渲染 2000 万像素；超限返回 `RESOURCE_LIMIT`。
-- DWG R2010–R2018 解码、CJK 字形和智能分图属于后续阶段，不在当前发布能力内；
-  R13–R2018 当前解码 LINE/CIRCLE/ARC/LWPOLYLINE/TEXT。
+- R13–R2018 的 LINE/CIRCLE/ARC/LWPOLYLINE/TEXT 已实现并可用；DWG 图层句柄、
+  块/INSERT/ATTRIB、MTEXT/HATCH/ACIS/3D/代理对象，以及 CJK 字形和智能分图仍属后续阶段，
+  当前实体默认落在 layer 0。
 
 ## 4. 后续阶段
 

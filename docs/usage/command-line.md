@@ -28,7 +28,7 @@ quirewise --version | --libraries | --help
 | `--to FORMAT` | 目标格式：`pdf`（默认）、`txt`、`png` |
 | `--check` | 只验证输入可读，不写输出；成功打印 `OK`；PDZ/UVZ 有页无法解码时返回非零 |
 | `--quiet` | 成功时不打印路径/OK |
-| `--page image\|a4` | 页面族/漫画/图片栅格 PDF 的页面框；A4 为 595.276×841.89 点，等比缩放居中 |
+| `--page image\|a4` | DjVu/PDZ/UVZ/CBZ/CBT 与直接图片输入的页面框；`image`（默认）为像素尺寸，`a4` 为 595.276×841.89 点、等比缩放居中。CAD 输出固定 A4 |
 | `--pages auto\|body\|body+att\|all` | PDG/PDZ 容器的页面规则；`auto` 用 meta.xml 的 `<pages>` 匹配 BODY+ATT/BODY/ALL，缺 meta.xml 时回退 ALL |
 | `--archive-password TEXT` | CBZ 解包密码（`--zip-password` 为别名） |
 | `--audio-track N` | `--check` 音频容器时选择从 1 开始的音轨 |
@@ -39,11 +39,16 @@ quirewise --version | --libraries | --help
 | 输入 | 说明 |
 |---|---|
 | PDF | 直接透传 |
-| DOCX/DOCM/DOTX、ODT/OTT/FODT | 内部布局转 PDF |
-| HTML、EPUB（reflow）、FB2 | 内部 HTML/布局转 PDF |
+| DOCX/DOCM/DOTX/DOTM、ODT/OTT/FODT | 内部布局转 PDF |
+| HTML、EPUB/KEPUB（reflow）、FB2 | 内部 HTML/布局转 PDF |
 | CSV/TSV、XLSX/XLSM/XLTX/XLS/XLT、ODS/OTS/FODS | 表格渲染为 PDF 表格 |
+| PPTX/PPTM/POTX/POTM/PPSX/PPSM、ODP/OTP/FODP | 按幻灯片顺序渲染标题、段落和简单列表（只保留文字） |
+| HWPX | OWPML 段落和简单表格转 PDF |
+| EML | MIME 正文转 PDF；附件只列名称/类型/大小 |
+| MOBI/AZW3/AZW | PalmDOC 文本转 PDF；HUFF/CDIC 压缩和 DRM 内容返回不支持 |
+| HTMLZ、TXTZ、PMLZ | 取包内主文档/文本转 PDF |
 | 纯文本 / Markdown（txt/md 等） | 按行渲染段落 |
-| PNG/JPEG/GIF/BMP/WebP/TIFF 等图片 | 单页 PDF，页面框可用 `--page` 控制 |
+| PNG/JPEG/GIF/BMP/WebP/TIFF 等图片 | 单页 PDF；默认像素尺寸，可用 `--page a4` 改为 A4 |
 | DjVu | 逐页渲染为多页 PDF |
 | PDG/PDZ（`%pdgz`） | 按 `--pages` 规则重建 PDF；页载荷本身是 PDF 时由内部 PDF 引擎按 300 dpi 栅格化首页；`pdg_type 0x1A` 发行版 PDF 成员由内部 Document 引擎按成员顺序合并 |
 | UVZ | 逐页解码（图片、PDG 或 PDF 页载荷）为多页 PDF |
@@ -51,29 +56,37 @@ quirewise --version | --libraries | --help
 | SRT/VTT/LRC/ASS/SSA/SAMI/MicroDVD/SCC | 时间轴文本页转 PDF |
 | JSON/JSONL/YAML/TOML/XML/OPML/IPYNB/vCard | 类型化值树渲染为表格/列表后转 PDF |
 | CBZ（ZIP）、CBT（USTAR） | 逐页图片转多页 PDF |
-| DXF（ASCII/binary）、DWG R13–R2018 | DXF 解析图层/块/常用实体；DWG 解码 LINE/CIRCLE/ARC/LWPOLYLINE/TEXT；栅格化为 A4 单页 PDF。文本暂为占位条，可用 `--to txt` 导出文本清单 |
+| DXF（ASCII/binary）、DWG R13–R2018 | DXF 解析图层/块/常用实体；DWG 解码 LINE/CIRCLE/ARC/LWPOLYLINE/TEXT；栅格化为 A4 单页 PDF。栅格文本仍是占位条，可用 `--to txt` 导出文本清单 |
 
 PDF 输入还可以用 `--to txt`（文本抽取，无 OCR）或 `--to png`（首页栅格化，144 dpi）。
 DXF/DWG 输入可用 `--to txt` 导出图纸文本清单（每行一个 TEXT/MTEXT），用
 `--to pdf` 生成栅格页；DWG TEXT 覆盖 R13–R2018。
 
-PDZ/UVZ 转换中若有成员或页无法解码，转换仍会写出可读页，但会在 stderr 打印
+归档/页面路线中若有成员或页无法解码，转换仍会写出可读页，但会在 stderr 打印
 `warning: N page(s) skipped: ...`；`--check` 对这种情况返回非零，避免把部分可读
-误判为完整成功。
+误判为完整成功。CBZ/CBT 的坏页也计入该告警。
 
 `--check` 额外支持音频容器扫描（WAV/W64、AIFF/AIFC、CAF、DSF/DFF/DSS、M4A/MP4、Matroska/WebM、
 MPC、WMA/ASF、AU、ADTS AAC、FLAC、MP2/MP3、AMR、AC-3、DTS、TTA、TAK、WavPack、VOC、APE、
 Ogg/Opus），只解析容器/包，不解码。
+
+### 3.1 明确不可达的输入（返回 `unsupported`）
+
+RTF、XPS/OpenXPS、SVG/SVGZ、EPS/PS/AI、相机 RAW（DNG/CR3/RAF/X3F/CRW/MRW）、
+CBR/CB7、图像目录、旧版 .doc/.wps/.pages、CHM/LIT/LRF 等：对应库可能已有解析器或
+部分实现，但统一转换入口没有路由，CLI 不提供转换。详见
+[格式能力总览](../formats/support-matrix.md)。
 
 ## 4. 示例
 
 ```bash
 quirewise manual.docx -o manual.pdf
 quirewise scan.pdf --to txt -o scan.txt
-quirewise cover.png --page a4 -o cover.pdf
+quirewise slides.pptx -o slides.pdf
 quirewise book.djvu --page a4 --out-dir out
 quirewise notes.txt summary.md --out-dir out
 quirewise book.pdz --pages body+att -o book.pdf
+quirewise drawing.dxf --to txt -o drawing.txt
 quirewise track.flac --check --audio-track 1
 quirewise report.xlsx -o report.pdf --check      # 错误：--check 不写输出
 ```

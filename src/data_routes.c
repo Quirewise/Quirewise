@@ -1,5 +1,7 @@
 #include "data_routes.h"
 
+#include "app_file.h"
+
 #include <quirewise/data.h>
 #include <quirewise/status.h>
 
@@ -79,6 +81,13 @@ static int html_append(DataHtml *html, const char *text, size_t length)
     return 1;
 }
 
+/* Rendering status: 1 = success, 0 = node/depth budget exhausted,
+ * -1 = allocation failure. A bool return made an oversized document
+ * indistinguishable from an out-of-memory error. */
+#define DATA_RENDER_OK 1
+#define DATA_RENDER_BUDGET 0
+#define DATA_RENDER_FAIL (-1)
+
 static int html_escape(DataHtml *html, const char *text, size_t length)
 {
     size_t index;
@@ -94,12 +103,13 @@ static int html_escape(DataHtml *html, const char *text, size_t length)
         default: break;
         }
         if (replacement) {
-            if (!html_append(html, replacement, strlen(replacement))) return 0;
+            if (!html_append(html, replacement, strlen(replacement)))
+                return DATA_RENDER_FAIL;
         } else if (!html_append(html, text + index, 1u)) {
-            return 0;
+            return DATA_RENDER_FAIL;
         }
     }
-    return 1;
+    return DATA_RENDER_OK;
 }
 
 static int render_value(DataHtml *html, const QwDataValue *value,
@@ -108,17 +118,23 @@ static int render_value(DataHtml *html, const QwDataValue *value,
 static int render_scalar(DataHtml *html, const QwDataValue *value)
 {
     QwDataKind kind = qw_data_value_kind(value);
-    if (kind == QW_DATA_KIND_NULL) return html_append(html, "null", 4u);
+    if (kind == QW_DATA_KIND_NULL) {
+        return html_append(html, "null", 4u) ? DATA_RENDER_OK
+                                             : DATA_RENDER_FAIL;
+    }
     if (kind == QW_DATA_KIND_BOOLEAN) {
         int flag = 0;
-        if (qw_data_value_boolean(value, &flag) != QW_DATA_OK) return 0;
-        return html_append(html, flag ? "true" : "false", flag ? 4u : 5u);
+        if (qw_data_value_boolean(value, &flag) != QW_DATA_OK)
+            return DATA_RENDER_FAIL;
+        return html_append(html, flag ? "true" : "false", flag ? 4u : 5u)
+                   ? DATA_RENDER_OK
+                   : DATA_RENDER_FAIL;
     }
     {
         const char *text = NULL;
         size_t size = 0u;
         if (qw_data_value_text(value, &text, &size) != QW_DATA_OK || !text)
-            return 0;
+            return DATA_RENDER_FAIL;
         return html_escape(html, text, size);
     }
 }
@@ -130,41 +146,51 @@ static int render_value(DataHtml *html, const QwDataValue *value,
     size_t count;
     size_t index;
 
-    if (!value) return html_append(html, "null", 4u);
-    if (depth > QW_DATA_ROUTE_MAX_DEPTH) return 0;
-    if (*budget == 0u) return 0;
+    if (!value) {
+        return html_append(html, "null", 4u) ? DATA_RENDER_OK
+                                             : DATA_RENDER_FAIL;
+    }
+    if (depth > QW_DATA_ROUTE_MAX_DEPTH) return DATA_RENDER_BUDGET;
+    if (*budget == 0u) return DATA_RENDER_BUDGET;
     --*budget;
     kind = qw_data_value_kind(value);
     if (kind == QW_DATA_KIND_OBJECT) {
-        if (!html_append(html, "<table>", 7u)) return 0;
+        if (!html_append(html, "<table>", 7u)) return DATA_RENDER_FAIL;
         count = qw_data_value_count(value);
         for (index = 0u; index < count; ++index) {
             const QwDataValue *child;
             const char *key = NULL;
             size_t key_size = 0u;
+            int child_status;
             child = qw_data_object_at(value, index, &key, &key_size);
-            if (!html_append(html, "<tr><td>", 8u) ||
-                (key && key_size &&
-                 !html_escape(html, key, key_size)) ||
-                !html_append(html, "</td><td>", 9u) ||
-                !render_value(html, child, depth + 1u, budget) ||
-                !html_append(html, "</td></tr>", 10u))
-                return 0;
-            if (*budget == 0u) return 0;
+            if (!html_append(html, "<tr><td>", 8u)) return DATA_RENDER_FAIL;
+            if (key && key_size) {
+                child_status = html_escape(html, key, key_size);
+                if (child_status != DATA_RENDER_OK) return child_status;
+            }
+            if (!html_append(html, "</td><td>", 9u)) return DATA_RENDER_FAIL;
+            child_status = render_value(html, child, depth + 1u, budget);
+            if (child_status != DATA_RENDER_OK) return child_status;
+            if (!html_append(html, "</td></tr>", 10u))
+                return DATA_RENDER_FAIL;
+            if (*budget == 0u) return DATA_RENDER_BUDGET;
         }
-        return html_append(html, "</table>", 8u);
+        return html_append(html, "</table>", 8u) ? DATA_RENDER_OK
+                                                 : DATA_RENDER_FAIL;
     }
     if (kind == QW_DATA_KIND_ARRAY) {
-        if (!html_append(html, "<ul>", 4u)) return 0;
+        if (!html_append(html, "<ul>", 4u)) return DATA_RENDER_FAIL;
         count = qw_data_value_count(value);
         for (index = 0u; index < count; ++index) {
-            if (!html_append(html, "<li>", 4u) ||
-                !render_value(html, qw_data_array_at(value, index),
-                              depth + 1u, budget) ||
-                !html_append(html, "</li>", 5u))
-                return 0;
+            int child_status;
+            if (!html_append(html, "<li>", 4u)) return DATA_RENDER_FAIL;
+            child_status = render_value(html, qw_data_array_at(value, index),
+                                        depth + 1u, budget);
+            if (child_status != DATA_RENDER_OK) return child_status;
+            if (!html_append(html, "</li>", 5u)) return DATA_RENDER_FAIL;
         }
-        return html_append(html, "</ul>", 5u);
+        return html_append(html, "</ul>", 5u) ? DATA_RENDER_OK
+                                              : DATA_RENDER_FAIL;
     }
     return render_scalar(html, value);
 }
@@ -203,7 +229,7 @@ int qw_app_data_convert_file(const char *path,
     *out_size = 0u;
     if (!data_extension_format(path, &format))
         return QW_STATUS_ERR_UNSUPPORTED;
-    file = fopen(path, "rb");
+    file = qw_app_fopen_utf8(path, "rb");
     if (!file) return QW_STATUS_ERR_IO;
     if (fseek(file, 0, SEEK_END) != 0 || (length = ftell(file)) < 0 ||
         fseek(file, 0, SEEK_SET) != 0) {
@@ -243,11 +269,33 @@ int qw_app_data_convert_file(const char *path,
         !html_append(&html, "</h1><table><tr><td>",
                      strlen("</h1><table><tr><td>")))
         goto oom;
-    if (!render_value(&html, qw_data_document_root(document), 0u, &budget))
-        goto oom;
+    {
+        int render_status =
+            render_value(&html, qw_data_document_root(document), 0u, &budget);
+        if (render_status != DATA_RENDER_OK) {
+            rc = render_status == DATA_RENDER_BUDGET
+                     ? QW_STATUS_ERR_RESOURCE_LIMIT
+                     : QW_STATUS_ERR_OUT_OF_MEMORY;
+            if (report) {
+                if (render_status == DATA_RENDER_BUDGET) {
+                    snprintf(report->note, sizeof(report->note),
+                             "structured-data value tree exceeds the %u-node/"
+                             "%u-level conversion budget",
+                             (unsigned)QW_DATA_ROUTE_MAX_NODES,
+                             (unsigned)QW_DATA_ROUTE_MAX_DEPTH);
+                } else {
+                    snprintf(report->note, sizeof(report->note),
+                             "out of memory while rendering the value tree");
+                }
+            }
+            goto failed;
+        }
+    }
     if (!html_append(&html, "</td></tr></table></body></html>",
-                     strlen("</td></tr></table></body></html>")))
-        goto oom;
+                     strlen("</td></tr></table></body></html>"))) {
+        rc = QW_STATUS_ERR_OUT_OF_MEMORY;
+        goto failed;
+    }
 
     rc = qw_convert_to_pdf_memory(html.data, html.size, NULL, out_pdf,
                                   out_size, report);
@@ -265,4 +313,9 @@ oom:
     free(html.data);
     qw_data_document_free(document);
     return QW_STATUS_ERR_OUT_OF_MEMORY;
+
+failed:
+    free(html.data);
+    qw_data_document_free(document);
+    return rc;
 }

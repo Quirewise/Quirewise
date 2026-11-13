@@ -1,5 +1,7 @@
 #include "audio_check.h"
 
+#include "app_file.h"
+
 #include <quirewise/audio.h>
 #include <quirewise/status.h>
 
@@ -185,7 +187,7 @@ int qw_app_audio_check_file(const char *path, size_t audio_track,
     int ok = 0;
 
     if (!path) return QW_STATUS_ERR_INVALID_ARGUMENT;
-    file = fopen(path, "rb");
+    file = qw_app_fopen_utf8(path, "rb");
     if (!file) return QW_STATUS_ERR_IO;
     if (fseek(file, 0, SEEK_END) != 0 || (length = ftell(file)) < 0 ||
         fseek(file, 0, SEEK_SET) != 0) {

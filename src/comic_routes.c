@@ -1,5 +1,7 @@
 #include "comic_routes.h"
 
+#include "app_file.h"
+
 #include <quirewise/comic.h>
 #include <quirewise/image.h>
 #include <quirewise/status.h>
@@ -59,6 +61,7 @@ int qw_app_comic_convert_file(const char *path,
     size_t page_count;
     size_t page_index;
     size_t decoded = 0u;
+    size_t skipped = 0u;
     int rc;
 
     if (!path || !out_pdf || !out_size) return QW_STATUS_ERR_INVALID_ARGUMENT;
@@ -70,7 +73,7 @@ int qw_app_comic_convert_file(const char *path,
                              "only CBZ/CBT comic archives are supported");
         return QW_STATUS_ERR_UNSUPPORTED;
     }
-    file = fopen(path, "rb");
+    file = qw_app_fopen_utf8(path, "rb");
     if (!file) return QW_STATUS_ERR_IO;
     if (fseek(file, 0, SEEK_END) != 0 || (length = ftell(file)) < 0 ||
         fseek(file, 0, SEEK_SET) != 0) {
@@ -130,12 +133,18 @@ int qw_app_comic_convert_file(const char *path,
             continue;
         status = qw_comic_archive_read_page(archive, page_index, &page_data,
                                             &page_size);
-        if (status != QW_COMIC_OK || !page_data) continue;
+        if (status != QW_COMIC_OK || !page_data) {
+            ++skipped;
+            continue;
+        }
         memset(&image, 0, sizeof(image));
         {
             int image_status = qw_image_decode(page_data, page_size, &image);
             qw_comic_page_data_free(page_data);
-            if (image_status != QW_IMAGE_OK) continue;
+            if (image_status != QW_IMAGE_OK) {
+                ++skipped;
+                continue;
+            }
         }
         images[decoded] = image;
         pages[decoded].pixels = image.pixels;
@@ -162,8 +171,15 @@ int qw_app_comic_convert_file(const char *path,
     free(images);
     free(pages);
     if (rc == QW_STATUS_OK && report) {
-        snprintf(report->note, sizeof(report->note),
-                 "comic archive: %zu image page(s) rendered", decoded);
+        report->skipped_pages = skipped;
+        if (skipped > 0u) {
+            snprintf(report->note, sizeof(report->note),
+                     "comic archive: %zu image page(s) rendered, %zu page(s) "
+                     "could not be decoded", decoded, skipped);
+        } else {
+            snprintf(report->note, sizeof(report->note),
+                     "comic archive: %zu image page(s) rendered", decoded);
+        }
     }
     return rc;
 }

@@ -1,6 +1,6 @@
 # 统一 CLI 移植计划（C1–C4）
 
-> 状态：C1–C3 已落地（2026-11-11/12，部分选项仍缺），C4 的验收与文档大部分完成：
+> 状态（2026-11-14）：C1–C3 已落地；本页最初的"仅声明"表已按实现更新。C4 的验收与文档已对齐当前 CLI：
 > `app.smoke` 覆盖 HTML→PDF→TXT、`--check`、拒绝覆盖、PDZ/UVZ PDF 页载荷与
 > `pdg_type 0x1A` 合并。剩余项见 C2/C3 的“剩余”小节（密钥、扫描预处理、
 > 目录输入）。
@@ -13,8 +13,8 @@
 |---|---|
 | `qw_convert_to_pdf_memory` | 已实现（PDF/ZIP DOCX/ODT/flat ODF/HTML） |
 | `qw_convert_to_format_memory` | 已实现（PDF→TXT/PNG；其他输入→PDF） |
-| `qw_detect_format` / `qw_format_name` | 仅声明 |
-| `qw_convert_file` / `qw_convert_file_to_format` / `qw_check_file` | 仅声明 |
+| `qw_detect_format` / `qw_format_name` | 已实现（内容嗅探 + 格式注册表回退） |
+| `qw_convert_file` / `qw_convert_file_to_format` / `qw_check_file` | 已实现（UTF-8 路径、512 MiB 上限、不覆盖、失败删除半成品） |
 
 因此 CLI 的第一步不是参数解析，而是补齐文件级 API；CLI 本身保持薄层，只做参数、
 目标格式映射、默认输出路径与错误呈现。

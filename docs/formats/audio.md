@@ -55,7 +55,8 @@
   WavPack、APE、Musepack、AMR、ALAC、GSM、iLBC、QDM2 等只输出压缩包，包内没有对应解码器。
 - **重采样、声道映射、采样格式转换**：不在公共 API 中；调用方需自行或交给外部解码器处理。
 - **编码、muxer、播放**：库不提供任何音频输出 writer 或播放接口。
-- **统一 CLI**：`app` 仍只是组合 shell（`--version`/`--libraries`/`--help`），旧 CLI 未移植。
+- **统一 CLI**：只提供 `--check`（容器/包解析，可配 `--audio-track`），没有音频输出；
+  加密音乐的密钥选项（`--key`/`--ekey`/`--kgm-*`）仍未接线。
 - **视频**：不存在视频处理库；MP4/Matroska 解析只选择音频轨，不解析或解码视频编码。
 - **外部后端**：FFmpeg/libav 等外部后端路线不在发布包内，按支持矩阵要求返回 `UNSUPPORTED`。
 - 库内保留的 PCM 容器转码辅助实现（`audio_pcm.c`）当前没有公共入口或调用路径，不属于发布能力。

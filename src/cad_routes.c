@@ -1,4 +1,6 @@
-﻿#include "cad_routes.h"
+#include "cad_routes.h"
+
+#include "app_file.h"
 
 #include <quirewise/cad.h>
 
@@ -31,7 +33,7 @@ static int cad_read_file(const char *path, uint8_t **out_data, size_t *out_size,
     FILE *file;
     long length;
     uint8_t *data;
-    file = fopen(path, "rb");
+    file = qw_app_fopen_utf8(path, "rb");
     if (!file) {
         if (report) snprintf(report->note, sizeof(report->note),
                              "cannot open %s", path);
