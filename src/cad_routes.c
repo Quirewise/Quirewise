@@ -1,4 +1,4 @@
-#include "cad_routes.h"
+﻿#include "cad_routes.h"
 
 #include <quirewise/cad.h>
 
@@ -212,14 +212,6 @@ int qw_app_cad_convert_file(const char *input_path,
     *out_pdf = NULL;
     *out_size = 0u;
     if (cad_extension(input_path) == 0) return QW_STATUS_ERR_UNSUPPORTED;
-    if (cad_extension(input_path) == 2) {
-        if (report) {
-            snprintf(report->note, sizeof(report->note),
-                     "DWG decoding is not implemented yet; export DXF or use "
-                     "the reference go-cad pipeline");
-        }
-        return QW_STATUS_ERR_UNSUPPORTED;
-    }
     rc = cad_parse_file(input_path, &document, report);
     if (rc != QW_STATUS_OK) return rc;
     memset(&image, 0, sizeof(image));
@@ -260,10 +252,11 @@ int qw_app_cad_convert_file(const char *input_path,
         report->pages_written = 1u;
         report->format = QW_FORMAT_UNKNOWN;
         snprintf(report->note, sizeof(report->note),
-                 "DXF rasterised at %ux%u; text glyphs are placeholder bars",
+                 "CAD rasterised at %ux%u; text glyphs are placeholder bars",
                  rendered_width, rendered_height);
     }
     return rc;
 }
+
 
 
