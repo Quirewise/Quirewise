@@ -35,8 +35,7 @@ The current application executable provides the first CLI slice (C1): it reports
 the version and the libraries selected at configure time, and converts a single
 file with `--to pdf|txt|png`, `-o FILE` and `--check`. DXF drawings are routed
 through `quirewise-vector` (PDF raster or `--to txt` text inventory); DWG
-R13–R2018 supports LINE/CIRCLE/ARC/LWPOLYLINE (TEXT up to R2004) through
-PDF or `--to txt`.
+R13–R2018 supports LINE/CIRCLE/ARC/LWPOLYLINE/TEXT through PDF or `--to txt`.
 The remaining options and input routes
 follow the [CLI port plan](docs/architecture/cli-port-plan.md).
 Conversion dispatch lives in the library packages and is exercised by the

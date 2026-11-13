@@ -461,6 +461,14 @@ def main() -> int:
             check = run(exe, [str(dwg2007), "--check"], root)
             if check.stdout.strip() != "OK":
                 return fail(f"DWG R2007 --check printed {check.stdout!r}")
+            dwg_text_2007 = workspace / "app/testfile/cad/lw_example2007.dwg"
+            if dwg_text_2007.is_file():
+                text2007 = root / "cad-2007.txt"
+                run(exe, [str(dwg_text_2007), "--to", "txt", "-o",
+                          str(text2007)], root)
+                if not text2007.is_file() or b"teksto simpla" not in \
+                        text2007.read_bytes():
+                    return fail("DWG R2007 --to txt did not extract text")
         dwg2010 = workspace / "app/testfile/cad/line_2010.dwg"
         if dwg2010.is_file():
             pdf2010 = root / "cad-2010.pdf"

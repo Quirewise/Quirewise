@@ -3,7 +3,7 @@
 > **状态（2026-11-13）**：CAD 能力由 `quirewise-vector` 的 `quirewise/cad.h` 提供，
 > 是纯 C、零第三方实现的读取与渲染层。CAD 解码参考 `unitedrhino/go-cad`
 > 的能力边界，但本仓库没有链接或内置 Go 代码。DXF 覆盖常用 2D 实体；
-> DWG 已覆盖 R13/R14/R2000/R2004/R2007/R2010/R2013/R2018 的常用基础实体。
+> DWG 已覆盖 R13/R14/R2000/R2004/R2007/R2010/R2013/R2018 的常用基础实体与文本。
 
 ## 1. 输入
 
@@ -21,8 +21,8 @@ DXF 已映射的实体：`LINE`、`LWPOLYLINE`、`POLYLINE`+`VERTEX`、`CIRCLE`�
 （块展开，含比例/旋转/嵌套）、`POINT`、`SOLID`/`TRACE`/`3DFACE`、`LEADER`、
 `DIMENSION`（仅当其匿名块可作为 INSERT 展开）、`HATCH`（实心多边界
 /孔洞 even-odd、圆弧/椭圆边界；非实心按各边界轮廓描边）。DWG 当前只解码
-`LINE`/`CIRCLE`/`ARC`/`LWPOLYLINE`，`TEXT` 到 R2004 为止；其余 DWG 实体、
-图层句柄和 R2007+ 文本流留到后续阶段。未知 DXF 实体显式计数并跳过。
+`LINE`/`CIRCLE`/`ARC`/`LWPOLYLINE` 和 `TEXT`（含 R2007+ UTF-16 文本尾）；
+其余 DWG 实体与图层句柄留到后续阶段。未知 DXF 实体显式计数并跳过。
 
 ## 2. 输出
 
@@ -44,7 +44,7 @@ DXF 已映射的实体：`LINE`、`LWPOLYLINE`、`POLYLINE`+`VERTEX`、`CIRCLE`�
 - 资源限制：输入 256 MiB、实体 200000、点 2000000、文本累计 1 MiB、
   单次渲染 2000 万像素；超限返回 `RESOURCE_LIMIT`。
 - DWG R2010–R2018 解码、CJK 字形和智能分图属于后续阶段，不在当前发布能力内；
-  R13–R2018 当前只解码 LINE/CIRCLE/ARC/LWPOLYLINE；TEXT 到 R2004 为止，R2007+ TEXT 暂未接入。
+  R13–R2018 当前解码 LINE/CIRCLE/ARC/LWPOLYLINE/TEXT。
 
 ## 4. 后续阶段
 
@@ -54,8 +54,8 @@ DXF 已映射的实体：`LINE`、`LWPOLYLINE`、`POLYLINE`+`VERTEX`、`CIRCLE`�
    **当前已完成 LINE/CIRCLE/ARC/LWPOLYLINE/TEXT 的读取与测试**，图层句柄
    仍在补齐；
 2. R2004：分页 section map、页表和数据页重组；**当前已完成 LINE/CIRCLE/ARC/LWPOLYLINE/TEXT 与混合实体测试**；
-3. R2007（RS 交织流 + R21）：**当前已完成 LINE/CIRCLE/ARC/LWPOLYLINE 与混合实体测试**；
-4. R2010/R2013/R2018：UMC/OT 对象记录和更新的实体头编码；**当前已完成 LINE/CIRCLE/ARC/LWPOLYLINE 与混合实体测试**。
+3. R2007（RS 交织流 + R21）：**当前已完成 LINE/CIRCLE/ARC/LWPOLYLINE/TEXT 与混合实体测试**；
+4. R2010/R2013/R2018：UMC/OT 对象记录和更新的实体头编码；**当前已完成 LINE/CIRCLE/ARC/LWPOLYLINE/TEXT 与混合实体测试**。
 
 每步以 `unitedrhino/go-cad` 的测试语料（公开 LibreDWG 样本）做交叉验证；
 不引入 Go、LibreDWG 或其他第三方运行库。HATCH、ACIS、标注文字、CJK 字形
