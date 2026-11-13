@@ -452,6 +452,15 @@ def main() -> int:
             check = run(exe, [str(dwg2007), "--check"], root)
             if check.stdout.strip() != "OK":
                 return fail(f"DWG R2007 --check printed {check.stdout!r}")
+        dwg2010 = workspace / "app/testfile/cad/line_2010.dwg"
+        if dwg2010.is_file():
+            pdf2010 = root / "cad-2010.pdf"
+            run(exe, [str(dwg2010), "-o", str(pdf2010)], root)
+            if not pdf2010.is_file() or pdf2010.read_bytes()[:5] != b"%PDF-":
+                return fail("DWG R2010 to PDF produced no PDF")
+            check = run(exe, [str(dwg2010), "--check"], root)
+            if check.stdout.strip() != "OK":
+                return fail(f"DWG R2010 --check printed {check.stdout!r}")
 
         (root / "data.json").write_text(
             '{"name": "Quirewise", "items": [1, 2, {"ok": true}]}',
