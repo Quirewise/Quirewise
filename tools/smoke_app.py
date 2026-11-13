@@ -418,6 +418,15 @@ def main() -> int:
             run(exe, [str(cad), "--to", "txt", "-o", str(cad_txt)], root)
             if not cad_txt.is_file() or b"Sample CAD" not in cad_txt.read_bytes():
                 return fail("DXF --to txt did not extract the drawing text")
+        hatch = workspace / "app/testfile/cad/hatch.dxf"
+        if hatch.is_file():
+            hatch_pdf = root / "hatch.pdf"
+            run(exe, [str(hatch), "-o", str(hatch_pdf)], root)
+            if not hatch_pdf.is_file() or hatch_pdf.read_bytes()[:5] != b"%PDF-":
+                return fail("HATCH DXF to PDF produced no PDF")
+            check = run(exe, [str(hatch), "--check"], root)
+            if check.stdout.strip() != "OK":
+                return fail(f"HATCH --check printed {check.stdout!r}")
         dwg = workspace / "app/testfile/cad/line_2000.dwg"
         if dwg.is_file():
             dwg_pdf = root / "cad-dwg.pdf"
