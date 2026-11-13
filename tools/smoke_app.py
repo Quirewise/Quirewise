@@ -428,6 +428,12 @@ def main() -> int:
             check = run(exe, [str(dwg), "--check"], root)
             if check.stdout.strip() != "OK":
                 return fail(f"DWG --check printed {check.stdout!r}")
+        dwg_text = workspace / "app/testfile/cad/lw_entities-2d.dwg"
+        if dwg_text.is_file():
+            dwg_txt = root / "cad-dwg.txt"
+            run(exe, [str(dwg_text), "--to", "txt", "-o", str(dwg_txt)], root)
+            if not dwg_txt.is_file() or b"FOO" not in dwg_txt.read_bytes():
+                return fail("DWG --to txt did not extract the drawing text")
 
         (root / "data.json").write_text(
             '{"name": "Quirewise", "items": [1, 2, {"ok": true}]}',
