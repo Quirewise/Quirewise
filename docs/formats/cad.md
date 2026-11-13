@@ -3,7 +3,7 @@
 > **状态（2026-11-13）**：CAD 能力由 `quirewise-vector` 的 `quirewise/cad.h` 提供，
 > 是纯 C、零第三方实现的读取与渲染层。CAD 解码参考 `unitedrhino/go-cad`
 > 的能力边界，但本仓库没有链接或内置 Go 代码。DXF 覆盖常用 2D 实体；
-> DWG 已覆盖 R13/R14/R2000 的常用基础实体，R2004+ 的容器解码仍在后续阶段。
+> DWG 已覆盖 R13/R14/R2000/R2004 的常用基础实体，R2007+ 的容器解码仍在后续阶段。
 
 ## 1. 输入
 
@@ -12,7 +12,8 @@
 | DXF ASCII | 读取 `HEADER`、`TABLES/LAYER`、`BLOCKS`、`ENTITIES`；字符集按 `$ACADVER`/`$DWGCODEPAGE` 转换到 UTF-8。 |
 | DXF binary（`AutoCAD Binary DXF`） | 与 ASCII 共用同一文档模型；支持字符串、double、int16/int32/int64、布尔和二进制块分组。 |
 | DWG R13/R14/R2000（AC1012/AC1014/AC1015） | 段目录、对象图、对象记录、公共实体头，以及 `LINE`/`CIRCLE`/`ARC`/`LWPOLYLINE`/基础 `TEXT` 几何与文本。 |
-| DWG R2004+（AC1018 及以后） | 版本头可探测；分页/RS 容器解码尚未实现，返回稳定的 `QW_CAD_ERR_UNSUPPORTED`。 |
+| DWG R2004（AC1018） | 加密容器头、页表、段表、数据页 LZ77、对象图（`AcDb:Handles`）与对象数据段；同 DXF 的常用实体子集。 |
+| DWG R2007+（AC1021 及以后） | 版本头可探测；RS 交织流容器尚未实现，返回稳定的 `QW_CAD_ERR_UNSUPPORTED`。 |
 
 DXF 已映射的实体：`LINE`、`LWPOLYLINE`、`POLYLINE`+`VERTEX`、`CIRCLE`、`ARC`、
 `ELLIPSE`、`SPLINE`（按控制点折线化）、`TEXT`/`MTEXT`、`ATTDEF`、`INSERT`
@@ -26,7 +27,7 @@ DXF 已映射的实体：`LINE`、`LWPOLYLINE`、`POLYLINE`+`VERTEX`、`CIRCLE`�
 - 文档模型：实体数、图层数、边界框、文本清单（内容、位置、字高、旋转、图层）。
 - 栅格：RGBA8，按请求宽度等比渲染；线、圆、圆弧、椭圆、折线、实心多边形。
 - SVG：每层一个 group，矢量路径/圆/椭圆和真实 `<text>` 元素，带图层名与颜色。
-- CLI：`.dxf` 和 R13/R14/R2000 `.dwg` 可转 PDF（A4 单页栅格）；两者都可用
+- CLI：`.dxf` 和 R13/R14/R2000/R2004 `.dwg` 可转 PDF（A4 单页栅格）；两者都可用
   `--to txt` 输出文本清单；`--check` 验证解析与渲染。
 
 ## 3. 边界
@@ -39,8 +40,8 @@ DXF 已映射的实体：`LINE`、`LWPOLYLINE`、`POLYLINE`+`VERTEX`、`CIRCLE`�
 - 样条仅按控制点折线化，不做精确 NURBS 求值；椭圆弧参数按 DXF 约定读取。
 - 资源限制：输入 256 MiB、实体 200000、点 2000000、文本累计 1 MiB、
   单次渲染 2000 万像素；超限返回 `RESOURCE_LIMIT`。
-- DWG R2004–R2018 解码、CJK 字形和智能分图属于后续阶段，不在当前发布能力内；
-  R13/R14/R2000 当前只解码 LINE/CIRCLE/ARC/LWPOLYLINE/TEXT。
+- DWG R2007–R2018 解码、CJK 字形和智能分图属于后续阶段，不在当前发布能力内；
+  R13/R14/R2000/R2004 当前只解码 LINE/CIRCLE/ARC/LWPOLYLINE/TEXT。
 
 ## 4. 后续阶段
 
@@ -49,7 +50,7 @@ DXF 已映射的实体：`LINE`、`LWPOLYLINE`、`POLYLINE`+`VERTEX`、`CIRCLE`�
 1. R13/R14/R2000：section locator、对象映射、句柄流和常用实体记录；
    **当前已完成 LINE/CIRCLE/ARC/LWPOLYLINE/TEXT 的读取与测试**，图层句柄
    仍在补齐；
-2. R2004：分页 section map、页表和数据页重组；
+2. R2004：分页 section map、页表和数据页重组；**当前已完成 LINE/CIRCLE/ARC/LWPOLYLINE/TEXT 与混合实体测试**；
 3. R2007/R2010/R2013/R2018：RS 交织流和更新的对象编码。
 
 每步以 `unitedrhino/go-cad` 的测试语料（公开 LibreDWG 样本）做交叉验证；

@@ -434,6 +434,15 @@ def main() -> int:
             run(exe, [str(dwg_text), "--to", "txt", "-o", str(dwg_txt)], root)
             if not dwg_txt.is_file() or b"FOO" not in dwg_txt.read_bytes():
                 return fail("DWG --to txt did not extract the drawing text")
+        dwg2004 = workspace / "app/testfile/cad/line_2004.dwg"
+        if dwg2004.is_file():
+            pdf2004 = root / "cad-2004.pdf"
+            run(exe, [str(dwg2004), "-o", str(pdf2004)], root)
+            if not pdf2004.is_file() or pdf2004.read_bytes()[:5] != b"%PDF-":
+                return fail("DWG R2004 to PDF produced no PDF")
+            check = run(exe, [str(dwg2004), "--check"], root)
+            if check.stdout.strip() != "OK":
+                return fail(f"DWG R2004 --check printed {check.stdout!r}")
 
         (root / "data.json").write_text(
             '{"name": "Quirewise", "items": [1, 2, {"ok": true}]}',
