@@ -145,7 +145,7 @@ int qw_app_cad_extract_text(const char *input_path, uint8_t **out_text,
     if (!out_text || !out_size) return QW_STATUS_ERR_INVALID_ARGUMENT;
     *out_text = NULL;
     *out_size = 0u;
-    if (cad_extension(input_path) != 1) return QW_STATUS_ERR_UNSUPPORTED;
+    if (cad_extension(input_path) == 0) return QW_STATUS_ERR_UNSUPPORTED;
     rc = cad_parse_file(input_path, &document, report);
     if (rc != QW_STATUS_OK) return rc;
     count = qw_cad_text_count(document);
@@ -186,7 +186,7 @@ int qw_app_cad_extract_text(const char *input_path, uint8_t **out_text,
     *out_size = used;
     if (report) {
         snprintf(report->note, sizeof(report->note),
-                 "DXF text inventory: %zu text entities", count);
+                 "CAD text inventory: %zu text entities", count);
         report->format = QW_FORMAT_UNKNOWN;
         report->pages_written = 0u;
     }
@@ -257,6 +257,7 @@ int qw_app_cad_convert_file(const char *input_path,
     }
     return rc;
 }
+
 
 
 

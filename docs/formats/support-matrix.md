@@ -43,8 +43,8 @@
 
 `quirewise INPUT [--to pdf|txt|png]` 覆盖上表的 PDF 输出路线（含 PDZ/UVZ 的 PDF
 页载荷栅格化与 `pdg_type 0x1A` 发行版 PDF 合并）、PDF→TXT 与首页 PNG 栅格化；
-音频行只在 `--check` 下提供容器/包解析。DXF 走 CAD 栅格路线（文本暂为占位条，
-矢量文本用库级 SVG 输出）；DWG R13/R14/R2000 走同一路线，R2004+ 在 CLI 中
-返回稳定的 `UNSUPPORTED`。依赖外部
+音频行只在 `--check` 下提供容器/包解析。DXF/DWG 走 CAD 栅格路线（文本暂为
+占位条，矢量文本用库级 SVG 输出；`--to txt` 输出文本清单）；DWG R13/R14/R2000
+走同一路线，R2004+ 在 CLI 中返回稳定的 `UNSUPPORTED`。依赖外部
 后端的路线（PDF/A、RAW 去马赛克、视频等）在 CLI 中返回稳定的 `UNSUPPORTED`。
 `--page` 选择页面框，`--pages` 选择 PDG/PDZ 成员规则，参数细节见命令行文档。
