@@ -31,15 +31,20 @@ def git_command(token: str | None, *args: str) -> list[str]:
 
 
 def checkout(repo: Path, url: str, commit: str, token: str | None) -> bool:
-    if not (repo / ".git").exists():
+    fresh = not (repo / ".git").exists()
+    if fresh:
         print(f"clone {url} -> {repo}")
         if run(git_command(token, "clone", "--no-checkout", url, str(repo))) != 0:
             return False
-    dirty = subprocess.run(["git", "-C", str(repo), "status", "--porcelain"],
-                           capture_output=True, text=True).stdout.strip()
-    if dirty:
-        print(f"error: {repo} has uncommitted changes", file=sys.stderr)
-        return False
+    else:
+        # A fresh --no-checkout clone has an empty working tree, which git
+        # reports as every tracked file deleted. Only an existing checkout can
+        # be dirty in the sense this guard cares about.
+        dirty = subprocess.run(["git", "-C", str(repo), "status", "--porcelain"],
+                               capture_output=True, text=True).stdout.strip()
+        if dirty:
+            print(f"error: {repo} has uncommitted changes", file=sys.stderr)
+            return False
     print(f"checkout {commit[:12]} in {repo}")
     if run(git_command(token, "-C", str(repo), "fetch", "--quiet", "origin", commit)) != 0:
         # Servers that disallow fetching an arbitrary commit fall back to a
