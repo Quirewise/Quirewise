@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(Quirewise VERSION 0.2.1 LANGUAGES C)
+project(Quirewise VERSION 0.2.2 LANGUAGES C)
 
 include(GNUInstallDirs)
 

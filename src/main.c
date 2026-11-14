@@ -43,7 +43,7 @@ static void print_version(void)
 #ifdef QUIREWISE_APP_VERSION
     puts("Quirewise application " QUIREWISE_APP_VERSION);
 #else
-    puts("Quirewise application 0.2.1");
+    puts("Quirewise application 0.2.2");
 #endif
 }
 
