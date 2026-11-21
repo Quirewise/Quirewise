@@ -633,12 +633,18 @@ static int quirewise_main(int argc, char **argv)
         }
         if (strcmp(argument, "--pdfa") == 0) {
             app_options.pdfa_level = QW_PDFA_1B;
-            if (index + 1 < argc && strcmp(argv[index + 1], "2b") == 0) {
+            if (index + 1 < argc && strcmp(argv[index + 1], "1b") == 0) {
+                app_options.pdfa_level = QW_PDFA_1B;
+                ++index;
+            } else if (index + 1 < argc && strcmp(argv[index + 1], "2b") == 0) {
                 app_options.pdfa_level = QW_PDFA_2B;
                 ++index;
             } else if (index + 1 < argc && strcmp(argv[index + 1], "3b") == 0) {
                 app_options.pdfa_level = QW_PDFA_3B;
                 ++index;
+            } else if (index + 1 < argc && strcmp(argv[index + 1], "1a") == 0) {
+                fprintf(stderr, "error: PDF/A-1a is not supported; use 1b, 2b or 3b\n");
+                return 2;
             }
             continue;
         }

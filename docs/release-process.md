@@ -113,12 +113,28 @@ python app/tools/release_self_audit.py --workspace . `
 2. `reviewer-signoff.md` 已存在且报告包含其 SHA-256；
 3. CI 已实际执行且 `Build, test and audit` 步骤通过（见第 8 节）。
 
-tag 名沿用 `v0.2.1-rc1` 风格，在每个仓库的同一提交上创建并推送：
+tag 名沿用 `v0.2.1-rc1` 风格，在每个仓库的同一提交上创建并推送。用工具执行，
+它会把第 7 节的三个条件连同"工作区干净 / 锁一致 / HEAD 已推送 / 五套矩阵全绿"
+一起复检，任一失败就拒绝打 tag：
 
 ```powershell
-git -C app tag -a v0.2.1-rc1 -m "Quirewise v0.2.1-rc1"
-git -C app push origin v0.2.1-rc1
-# 其余 18 个仓库同理
+# 预演：只报告将会创建什么，不写任何 tag
+python app/tools/tag_release.py --workspace . --version v0.3.0-rc1 `
+  --release-dir .tmp/release/2026-11-21 `
+  --report docs/reports/RELEASE_ACCEPTANCE_REPORT_2026-11-21.md
+
+# 全部门禁通过后：本地创建并推送（push 失败会重试 5 次）
+python app/tools/tag_release.py --workspace . --version v0.3.0-rc1 `
+  --release-dir .tmp/release/2026-11-21 `
+  --report docs/reports/RELEASE_ACCEPTANCE_REPORT_2026-11-21.md --push
+```
+
+手工等价命令（仅当工具不可用时）：
+
+```powershell
+git -C app tag -a v0.3.0-rc1 -m "Quirewise v0.3.0-rc1"
+git -C app push origin v0.3.0-rc1
+# 其余 19 个仓库同理
 ```
 
 ## 8. 观察 GitHub Actions
