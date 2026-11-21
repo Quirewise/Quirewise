@@ -44,9 +44,10 @@ jobs:
         working-directory: workspace/app
         env:
           QUIREWISE_REPOS_TOKEN: ${{ secrets.QUIREWISE_REPOS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -o pipefail
-          if ! python tools/fetch_workspace.py --workspace .. 2>&1 | tee fetch-workspace.log; then
+          if ! python -u tools/fetch_workspace.py --workspace .. 2>&1 | tee fetch-workspace.log; then
             echo "::error::The workspace fetch failed; the tail of the fetch log is in the step summary."
             {
               echo "### Workspace fetch failed"
@@ -57,7 +58,7 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
             while IFS= read -r line; do
               echo "::error::fetch: $line"
-            done < <(tail -n 10 fetch-workspace.log)
+            done < <(grep -a -E 'failed repositories|fatal|error:|could not|remote:' fetch-workspace.log | head -n 10)
             exit 1
           fi
 
@@ -114,9 +115,10 @@ jobs:
         shell: pwsh
         env:
           QUIREWISE_REPOS_TOKEN: ${{ secrets.QUIREWISE_REPOS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $env:Path = "C:\msys64\mingw64\bin;$env:Path"
-          python tools/fetch_workspace.py --workspace .. 2>&1 | Tee-Object -FilePath fetch-workspace.log
+          python -u tools/fetch_workspace.py --workspace .. 2>&1 | Tee-Object -FilePath fetch-workspace.log
           if ($LASTEXITCODE -ne 0) {
             Write-Host "::error::The workspace fetch failed; the tail of the fetch log is in the step summary."
             Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "### Workspace fetch failed"
@@ -124,7 +126,7 @@ jobs:
             Get-Content fetch-workspace.log -Tail 40 | Add-Content -Path $env:GITHUB_STEP_SUMMARY
             Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '```'
             Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "A stale QUIREWISE_REPOS_TOKEN also breaks otherwise public clones; unset the secret when every sibling repository is public."
-            Get-Content fetch-workspace.log -Tail 10 | ForEach-Object { Write-Host "::error::fetch: $_" }
+            Select-String -Path fetch-workspace.log -Pattern 'failed repositories|fatal|error:|could not|remote:' | Select-Object -First 10 | ForEach-Object { Write-Host "::error::fetch: $($_.Line)" }
             exit 1
           }
 
@@ -171,9 +173,10 @@ jobs:
         working-directory: workspace/app
         env:
           QUIREWISE_REPOS_TOKEN: ${{ secrets.QUIREWISE_REPOS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -o pipefail
-          if ! python tools/fetch_workspace.py --workspace .. 2>&1 | tee fetch-workspace.log; then
+          if ! python -u tools/fetch_workspace.py --workspace .. 2>&1 | tee fetch-workspace.log; then
             echo "::error::The workspace fetch failed; the tail of the fetch log is in the step summary."
             {
               echo "### Workspace fetch failed"
@@ -184,7 +187,7 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
             while IFS= read -r line; do
               echo "::error::fetch: $line"
-            done < <(tail -n 10 fetch-workspace.log)
+            done < <(grep -a -E 'failed repositories|fatal|error:|could not|remote:' fetch-workspace.log | head -n 10)
             exit 1
           fi
 
@@ -207,7 +210,7 @@ jobs:
             -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
             -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
           cmake --build .tmp/asan --parallel 4
-          ASAN_OPTIONS=detect_leaks=0:abort_on_error=1 \
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
           UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1 \
             ctest --test-dir .tmp/asan --output-on-failure
 

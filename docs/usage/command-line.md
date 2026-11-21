@@ -46,7 +46,7 @@ quirewise --version | --libraries | --help
 | `--archive-password TEXT` | CBZ/CBT/CB7 等 ZIP/7z 归档密码（`--zip-password` 为别名） |
 | `--pdf-password TEXT` | 加密 PDF 的用户口令 |
 | `--mdd FILE` | MDX 词条的配套 MDD 资源包，用于按名内嵌图片 |
-| `--font-file FILE` | 把该 TrueType 字体嵌入 PDF 输出（CIDFontType2 + Identity-H + ToUnicode）；缺省仍用 Helvetica/STSong-Light |
+| `--font-file FILE` | 把该字体嵌入 PDF 输出：TrueType(glyf) 用 CIDFontType2、OpenType/CFF 用 CIDFontType0，均 Identity-H + ToUnicode；glyf 可变字体按默认实例嵌入。CFF2 可变字体无 PDF 1.x 表示，会返回 `unsupported` 并说明原因。缺省仍用 Helvetica/STSong-Light |
 | `--pdf-reflow` | PDF→DOCX/EPUB 输出可编辑文本段落（现为默认；显式写出仍可用） |
 | `--pdf-pages` | 强制 PDF→DOCX/EPUB 输出整页图片（回退到旧行为） |
 | `--pdfa [1b|2b|3b]` | 输出 PDF/A（默认 1b；XMP + sRGB OutputIntent + 嵌入字体，需配合 `--font-file`） |
@@ -137,7 +137,7 @@ quirewise report.xlsx -o report.pdf --check      # 错误：--check 不写输出
 
 ## 6. 明确不可达（返回 `unsupported` 或用法错误）
 
-- PDF/A-1b/2b/3b 结构输出已支持（--pdfa [1b|2b|3b] + --font-file；未做 veraPDF 外部一致性验证）、OCR、可编辑的 PDF 版式/表格重建（默认输出可编辑文本，--pdf-pages 回退整页图片）；PDF 书签/元数据可读写。
+- PDF/A-1b/2b/3b 已支持并通过 **veraPDF 1.30.4** 外部校验（`--pdfa [1b|2b|3b]` + `--font-file`）；OCR、可编辑的 PDF 版式/表格重建（默认输出可编辑文本，`--pdf-pages` 回退整页图片）；PDF 书签/元数据可读写。
 - 旧版 `.doc`/`.wps`/`.pages`、CHM/LIT/LRF/PDB/RB/SNB/TCR、DocBook 的统一转换入口。
 - DRM、HUFF/CDIC 压缩的 MOBI、注册码加密词典（`Encrypted="1"`/`"3"`）。
 - AVIF/HEIC/JPEG XL/PCD/相机 RAW 解码；EPS/PS/AI、EMF/WMF/CGM/CDR/VSD。
