@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Create and (optionally) push the release tag for one candidate version.
 
 The release process (app/docs/release-process.md) only allows a tag once every
@@ -94,10 +94,27 @@ def check_matrices(release: Path) -> tuple[bool, str]:
     return True, f"5 matrices green ({steps[0]} steps each)"
 
 
-def check_signoff(release: Path) -> tuple[bool, str]:
+def check_signoff(release: Path, app_head: str) -> tuple[bool, str]:
+    """A signature only counts when it names the commit it approves.
+
+    The file must exist, mention the app HEAD it was written against (at least
+    the first seven characters) and state a passing conclusion, so a stale or
+    blank template cannot pass the gate.
+    """
     signoff = release / "reviewer-signoff.md"
-    return signoff.is_file(), ("reviewer sign-off present" if signoff.is_file()
-                               else "reviewer-signoff.md is missing")
+    if not signoff.is_file():
+        return False, "reviewer-signoff.md is missing"
+    text = signoff.read_text(encoding="utf-8-sig", errors="replace")
+    lowered = text.lower()
+    head = app_head.strip().lower()
+    if head and head[:7] not in lowered and head not in lowered:
+        return False, (f"reviewer-signoff.md does not name the app HEAD "
+                       f"{head[:7]}")
+    passed = any(marker in lowered
+                 for marker in ("通过", "pass", "approved", "approve"))
+    if not passed:
+        return False, "reviewer-signoff.md does not record a passing conclusion"
+    return True, "reviewer sign-off names the app HEAD and passes"
 
 
 def check_docs(workspace: Path, static_prefix: Path) -> tuple[bool, str]:
@@ -185,7 +202,8 @@ def main() -> int:
          (lambda: check_remote(workspace, release / "remote-heads.json"))),
         ("matrices", lambda: check_matrices(release)),
         ("docs", lambda: check_docs(workspace, static_prefix)),
-        ("signoff", lambda: check_signoff(release)),
+        ("signoff", lambda: check_signoff(
+            release, git(app, "rev-parse", "HEAD").stdout.strip())),
         ("ci", lambda: check_ci(release, git(app, "rev-parse", "HEAD").stdout.strip())),
         ("audit", lambda: check_audit(workspace, release, static_prefix,
                                       shared_prefix, report)),

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Record whether each repository's local HEAD is present on its origin.
 
 The release report must not claim that commits are "published" just because
